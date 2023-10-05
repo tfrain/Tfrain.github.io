@@ -8,7 +8,7 @@ subtitle: 白云从湖里出来，在青翠山谷里留下一道影子
 description: 菜鸟的尝试，笨鸟的先飞
 
 keywords:
-author: Tfrain
+author: tfrain
 language: en
 timezone:
 
@@ -139,5 +139,5 @@ filter_optimize:
 ## Docs: https://hexo.io/docs/deployment.html
 deploy: 
   type: git
-  repository: git@github.com:Tfrain/Tfrain.github.io.git
+  repository: git@github.com:tfrain/tfrain.github.io.git
   branch: master
