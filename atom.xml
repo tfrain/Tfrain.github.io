@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Tfrain&#39;s  Blog</title>
+  
+  <subtitle>白云从湖里出来，在青翠山谷里留下一道影子</subtitle>
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="https://freewei.ml/"/>
+  <updated>2020-04-23T13:41:37.990Z</updated>
+  <id>https://freewei.ml/</id>
+  
+  <author>
+    <name>Tfrain</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>字节实习面经</title>
+    <link href="https://freewei.ml/2020/04/yuque/offer/"/>
+    <id>https://freewei.ml/2020/04/yuque/offer/</id>
+    <published>2020-04-21T15:11:38.000Z</published>
+    <updated>2020-04-23T13:41:37.990Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;&lt;strong&gt;疫情之下的实习面经？&lt;/strong&gt;&lt;/blockquote&gt;&lt;br&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="Life" scheme="https://freewei.ml/categories/Life/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Linux 需记</title>
+    <link href="https://freewei.ml/2019/12/yuque/pd4aum/"/>
+    <id>https://freewei.ml/2019/12/yuque/pd4aum/</id>
+    <published>2019-12-30T10:33:27.000Z</published>
+    <updated>2020-04-23T13:41:37.990Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;&lt;strong&gt;Linux 很少一部分知识&lt;/strong&gt;&lt;/blockquote&gt;&lt;br&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="Linux" scheme="https://freewei.ml/categories/Linux/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>网络记录</title>
+    <link href="https://freewei.ml/2019/12/yuque/gilftp/"/>
+    <id>https://freewei.ml/2019/12/yuque/gilftp/</id>
+    <published>2019-12-30T10:32:58.000Z</published>
+    <updated>2020-04-23T13:41:37.990Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;&lt;strong&gt;网络方面的知识&lt;/strong&gt;&lt;/blockquote&gt;&lt;br&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="network" scheme="https://freewei.ml/categories/network/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>算法记录</title>
+    <link href="https://freewei.ml/2019/12/yuque/qrw3ty/"/>
+    <id>https://freewei.ml/2019/12/yuque/qrw3ty/</id>
+    <published>2019-12-30T09:16:06.000Z</published>
+    <updated>2020-04-23T13:41:37.994Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;&lt;strong&gt;算法的阅读学习&lt;/strong&gt;&lt;/blockquote&gt;&lt;br&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="algo" scheme="https://freewei.ml/categories/algo/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>JVM 记录</title>
+    <link href="https://freewei.ml/2019/12/yuque/lhnbsd/"/>
+    <id>https://freewei.ml/2019/12/yuque/lhnbsd/</id>
+    <published>2019-12-30T09:15:07.000Z</published>
+    <updated>2020-04-23T13:41:37.986Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;&lt;strong&gt;JVM的知识记录&lt;/strong&gt;&lt;/blockquote&gt;&lt;br&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="JVM" scheme="https://freewei.ml/categories/JVM/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>MySQL 记录</title>
+    <link href="https://freewei.ml/2019/12/yuque/thihkz/"/>
+    <id>https://freewei.ml/2019/12/yuque/thihkz/</id>
+    <published>2019-12-28T04:39:03.000Z</published>
+    <updated>2020-04-23T13:41:37.990Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;br&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;&lt;strong&gt;mysql 阅读记录&lt;/strong&gt;&lt;/blockquote&gt;&lt;br&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="mysql" scheme="https://freewei.ml/categories/mysql/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Java 虚拟机是如何加载Java类的</title>
+    <link href="https://freewei.ml/2019/10/yuque/lgicea/"/>
+    <id>https://freewei.ml/2019/10/yuque/lgicea/</id>
+    <published>2019-10-05T08:39:00.000Z</published>
+    <updated>2020-04-23T13:41:37.986Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;&lt;strong&gt;脑子笨，还是捋一捋&lt;/strong&gt;&lt;/blockquote&gt;&lt;br&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="Java" scheme="https://freewei.ml/categories/Java/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>SpringBoot学习笔记(一)</title>
+    <link href="https://freewei.ml/2019/08/yuque/go8ivm/"/>
+    <id>https://freewei.ml/2019/08/yuque/go8ivm/</id>
+    <published>2019-08-12T14:04:28.000Z</published>
+    <updated>2020-04-23T13:41:37.986Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;&lt;strong&gt;SpringBoot学习笔记&lt;/strong&gt;&lt;/blockquote&gt;&lt;br&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="Java" scheme="https://freewei.ml/categories/Java/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>模板</title>
+    <link href="https://freewei.ml/2019/07/yuque/xshnz9/"/>
+    <id>https://freewei.ml/2019/07/yuque/xshnz9/</id>
+    <published>2019-07-29T15:27:46.000Z</published>
+    <updated>2020-04-23T13:41:37.990Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;&lt;strong&gt;第一句废话&lt;/strong&gt;&lt;/blockquote&gt;&lt;br&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="Linux" scheme="https://freewei.ml/categories/Linux/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>篮球赛后</title>
+    <link href="https://freewei.ml/2019/05/yuque/lundx2/"/>
+    <id>https://freewei.ml/2019/05/yuque/lundx2/</id>
+    <published>2019-05-01T14:29:00.000Z</published>
+    <updated>2020-04-23T13:41:37.990Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;img src=&quot;https://cdn.nlark.com/yuque/0/2019/jpeg/203310/1556936178491-93454d2a-c36d-426c-b67d-592448d4c479.jpeg#align=left&amp;amp;display=inline&amp;amp;height=641&amp;amp;name=basketball.jpg&amp;amp;originHeight=641&amp;amp;originWidth=960&amp;amp;size=91329&amp;amp;status=done&amp;amp;width=960&quot; alt=&quot;basketball.jpg&quot;&gt;&lt;br&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="Life" scheme="https://freewei.ml/categories/Life/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>周会分享</title>
+    <link href="https://freewei.ml/2019/03/yuque/rcibso/"/>
+    <id>https://freewei.ml/2019/03/yuque/rcibso/</id>
+    <published>2019-03-24T12:35:59.000Z</published>
+    <updated>2020-04-23T13:41:37.990Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;&lt;strong&gt;脚本使用&lt;/strong&gt;&lt;/blockquote&gt;&lt;br&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="Linux" scheme="https://freewei.ml/categories/Linux/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Vim的资源与使用</title>
+    <link href="https://freewei.ml/2019/03/yuque/pq6p97/"/>
+    <id>https://freewei.ml/2019/03/yuque/pq6p97/</id>
+    <published>2019-03-13T15:17:19.000Z</published>
+    <updated>2020-04-23T13:41:37.990Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;img src=&quot;https://cdn.nlark.com/yuque/0/2019/png/203310/1552527773485-1da446f7-b006-417b-a4cf-17e9d2d4cfd1.png#align=left&amp;amp;display=inline&amp;amp;height=400&amp;amp;name=image.png&amp;amp;originHeight=400&amp;amp;originWidth=600&amp;amp;size=77022&amp;amp;status=done&amp;amp;width=600&quot; alt=&quot;image.png&quot;&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="Vim" scheme="https://freewei.ml/categories/Vim/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>算法相关知识简介</title>
+    <link href="https://freewei.ml/2019/02/yuque/wikipedia_algorithm/"/>
+    <id>https://freewei.ml/2019/02/yuque/wikipedia_algorithm/</id>
+    <published>2019-02-04T13:25:54.000Z</published>
+    <updated>2020-04-23T13:41:37.994Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;&lt;strong&gt;维基的知识总结很优秀，具体的刷题记录全面转移到我的&lt;a href=&quot;https://tfrain.gitbook.io/leetcode/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;Gitbook&lt;/a&gt;&lt;/strong&gt;&lt;/blockquote&gt;&lt;br&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="leetcode" scheme="https://freewei.ml/categories/leetcode/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>LInux学习5</title>
+    <link href="https://freewei.ml/2019/01/yuque/linux_learning5/"/>
+    <id>https://freewei.ml/2019/01/yuque/linux_learning5/</id>
+    <published>2019-01-28T14:24:23.000Z</published>
+    <updated>2020-04-23T13:41:37.990Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;&lt;strong&gt;网络命令&lt;/strong&gt;&lt;/blockquote&gt;&lt;br&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="Linux" scheme="https://freewei.ml/categories/Linux/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Vim 实用技巧</title>
+    <link href="https://freewei.ml/2019/01/yuque/vim_skill/"/>
+    <id>https://freewei.ml/2019/01/yuque/vim_skill/</id>
+    <published>2019-01-15T03:45:00.000Z</published>
+    <updated>2020-04-23T13:41:37.994Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;blockquote class=&quot;blockquote-center&quot;&gt;&lt;strong&gt;希望由厚至薄&lt;/strong&gt;&lt;/blockquote&gt;&lt;br&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="Vim" scheme="https://freewei.ml/categories/Vim/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>servlet学习ing</title>
+    <link href="https://freewei.ml/2018/11/servlet/"/>
+    <id>https://freewei.ml/2018/11/servlet/</id>
+    <published>2018-11-01T13:40:13.000Z</published>
+    <updated>2019-08-01T04:13:56.800Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;img src=&quot;/2018/11/servlet/9.png&quot; alt=&quot;9&quot;&gt;&lt;br&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="Java" scheme="https://freewei.ml/categories/Java/"/>
+    
+      <category term="servlet" scheme="https://freewei.ml/categories/servlet/"/>
+    
+    
+      <category term="servlet" scheme="https://freewei.ml/tags/servlet/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>写在前面</title>
+    <link href="https://freewei.ml/2018/08/first_hexo/"/>
+    <id>https://freewei.ml/2018/08/first_hexo/</id>
+    <published>2018-08-31T07:18:01.000Z</published>
+    <updated>2019-08-01T04:13:54.644Z</updated>
+    
+    <summary type="html">
+    
+      &lt;blockquote class=&quot;blockquote-center&quot;&gt;&lt;strong&gt;你不能一直做一些烂事，然后自己后悔，好像后悔有用一样，你需要变好&lt;/strong&gt;&lt;/blockquote&gt;
+    
+    </summary>
+    
+      <category term="Life" scheme="https://freewei.ml/categories/Life/"/>
+    
+    
+      <category term="Life" scheme="https://freewei.ml/tags/Life/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>hexo+nexT中的其他内容</title>
+    <link href="https://freewei.ml/2018/08/hexo+nexT+something/"/>
+    <id>https://freewei.ml/2018/08/hexo+nexT+something/</id>
+    <published>2018-08-29T07:06:54.000Z</published>
+    <updated>2019-08-01T04:13:54.868Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;建议直接看最根本的东西&quot;&gt;&lt;a href=&quot;#建议直接看最根本的东西&quot; class=&quot;headerlink&quot; title=&quot; 建议直接看最根本的东西 &quot;&gt;&lt;/a&gt;&lt;strong&gt; 建议直接看最根本的东西 &lt;/strong&gt;&lt;/h2&gt;&lt;p&gt;限于本人英语水平有限，建议大家直接到github上阅读相应的仓库获取最新知识，这样能避免很多错误，也不会被网上很多已经过时的东西影响。本人的版本：&lt;/p&gt;
+&lt;h3 id=&quot;Theme-version&quot;&gt;&lt;a href=&quot;#Theme-version&quot; class=&quot;headerlink&quot; title=&quot;Theme version&quot;&gt;&lt;/a&gt;Theme version&lt;/h3&gt;&lt;p&gt;version: 5.1.4&lt;br&gt;&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="hexo" scheme="https://freewei.ml/categories/hexo/"/>
+    
+    
+      <category term="hexo" scheme="https://freewei.ml/tags/hexo/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>hexo+github+ubuntu搭建个人博客</title>
+    <link href="https://freewei.ml/2018/08/hexo+hithub_pages+nexT/"/>
+    <id>https://freewei.ml/2018/08/hexo+hithub_pages+nexT/</id>
+    <published>2018-08-25T02:00:54.000Z</published>
+    <updated>2019-08-01T04:13:54.804Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;菜鸟初步搭建须知（是我没错，备忘）&quot;&gt;&lt;a href=&quot;#菜鸟初步搭建须知（是我没错，备忘）&quot; class=&quot;headerlink&quot; title=&quot;菜鸟初步搭建须知（是我没错，备忘）&quot;&gt;&lt;/a&gt;菜鸟初步搭建须知（是我没错，备忘）&lt;/h2&gt;&lt;h3 id=&quot;相应知识&quot;&gt;&lt;a href=&quot;#相应知识&quot; class=&quot;headerlink&quot; title=&quot;相应知识&quot;&gt;&lt;/a&gt;相应知识&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;会一些基本的Linux命令和vim的操作命令。可以在&lt;a href=&quot;https://www.shiyanlou.com/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;实验楼&lt;/a&gt;上入门学习&lt;/li&gt;
+&lt;li&gt;网上已经浏览了 &lt;a href=&quot;https://hexo.io/zh-cn/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;官方文档&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;安装ubuntu和git（因为最近在学习用ubuntu，而且很多操作ubuntu上会更简单）&lt;/li&gt;
+&lt;li&gt;安装Node.js并拥有github账号&lt;/li&gt;
+&lt;li&gt;github上新建好一个专门的仓库，并最好熟悉github及其基本操作比如SSH密钥&lt;/li&gt;&lt;/ul&gt;
+    
+    </summary>
+    
+      <category term="hexo" scheme="https://freewei.ml/categories/hexo/"/>
+    
+    
+      <category term="hexo" scheme="https://freewei.ml/tags/hexo/"/>
+    
+  </entry>
+  
+</feed>

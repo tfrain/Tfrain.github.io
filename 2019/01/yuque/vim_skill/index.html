@@ -1,0 +1,4758 @@
+<!DOCTYPE html><html class="theme-next gemini use-motion" lang="en"><head>
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+<meta name="referrer" content="no-referrer">
+
+
+  
+  
+    
+    
+  
+  
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/avatar.jpg">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/avatar.jpg">
+
+
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="记录耕耘">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Tfrain's  Blog" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="希望由厚至薄">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Vim 实用技巧">
+<meta property="og:url" content="https://freewei.ml/2019/01/yuque/vim_skill/index.html">
+<meta property="og:site_name" content="Tfrain's  Blog">
+<meta property="og:description" content="希望由厚至薄">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2019/jpeg/203310/1547523970324-ad085afb-d91a-4b7a-bc5e-07c6133eeca7.jpeg#align=left&amp;display=inline&amp;height=614&amp;originHeight=693&amp;originWidth=552&amp;size=0&amp;status=done&amp;style=none&amp;width=489">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2019/png/203310/1550644590245-77a4763f-ed46-470e-9a1d-4512ea7167ac.png#align=left&amp;display=inline&amp;height=503&amp;name=image.png&amp;originHeight=503&amp;originWidth=685&amp;size=34313&amp;status=done&amp;style=none&amp;width=685">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2019/png/203310/1550645102529-39f26124-6f39-4015-9320-753465134bd9.png#align=left&amp;display=inline&amp;height=152&amp;name=image.png&amp;originHeight=152&amp;originWidth=842&amp;size=25654&amp;status=done&amp;style=none&amp;width=842">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2019/png/203310/1550645990944-5586df98-b275-4ac8-9663-185a464c59af.png#align=left&amp;display=inline&amp;height=199&amp;name=image.png&amp;originHeight=199&amp;originWidth=896&amp;size=36002&amp;status=done&amp;style=none&amp;width=896">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2019/png/203310/1550646730436-643f6d61-8093-40cb-a791-42b31a95f6a4.png#align=left&amp;display=inline&amp;height=464&amp;name=image.png&amp;originHeight=464&amp;originWidth=807&amp;size=97939&amp;status=done&amp;style=none&amp;width=807">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2019/png/203310/1550647263953-ba725e78-53c9-4888-a1c3-01bf77f715ab.png#align=left&amp;display=inline&amp;height=233&amp;name=image.png&amp;originHeight=233&amp;originWidth=747&amp;size=32937&amp;status=done&amp;style=none&amp;width=747">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2019/png/203310/1551021099056-92eee3a8-553a-4244-a911-5215fed7c090.png#align=left&amp;display=inline&amp;height=241&amp;name=image.png&amp;originHeight=301&amp;originWidth=542&amp;size=46783&amp;status=done&amp;style=none&amp;width=434">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2019/png/203310/1551022390533-baf49e0f-bcdf-4264-bee3-76f4eb4e25f8.png#align=left&amp;display=inline&amp;height=427&amp;name=image.png&amp;originHeight=534&amp;originWidth=578&amp;size=49815&amp;status=done&amp;style=none&amp;width=462">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2019/png/203310/1551022505589-cada3bcd-b055-427d-a850-31630f07c346.png#align=left&amp;display=inline&amp;height=453&amp;name=image.png&amp;originHeight=566&amp;originWidth=484&amp;size=75169&amp;status=done&amp;style=none&amp;width=387">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2019/png/203310/1551022681107-241777fb-ce43-4d52-819c-c55c1b28e6c7.png#align=left&amp;display=inline&amp;height=218&amp;name=image.png&amp;originHeight=272&amp;originWidth=685&amp;size=31159&amp;status=done&amp;style=none&amp;width=548">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2019/png/203310/1551022790391-f03ad92b-de0b-4381-9ce9-7ac70b68ef19.png#align=left&amp;display=inline&amp;height=279&amp;name=image.png&amp;originHeight=349&amp;originWidth=350&amp;size=28484&amp;status=done&amp;style=none&amp;width=280">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2019/png/203310/1551060576906-eb4d92e6-28f9-40f9-8c9c-4be5ccba3c49.png#align=left&amp;display=inline&amp;height=209&amp;name=image.png&amp;originHeight=262&amp;originWidth=438&amp;size=34262&amp;status=done&amp;style=none&amp;width=350">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2019/png/203310/1551063629792-edf970a6-eef3-440f-95bf-5eb3cff4325f.png#align=left&amp;display=inline&amp;height=242&amp;name=image.png&amp;originHeight=303&amp;originWidth=593&amp;size=47322&amp;status=done&amp;style=none&amp;width=474">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2019/png/203310/1551176775970-4a023ff6-26fa-4f41-8fb3-ecab6fe9c7da.png#align=left&amp;display=inline&amp;height=125&amp;name=image.png&amp;originHeight=125&amp;originWidth=364&amp;size=13396&amp;status=done&amp;style=none&amp;width=364">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2019/png/203310/1551176803751-7d556e52-aa61-4993-8056-4abf12f643c7.png#align=left&amp;display=inline&amp;height=174&amp;name=image.png&amp;originHeight=174&amp;originWidth=363&amp;size=15099&amp;status=done&amp;style=none&amp;width=363">
+<meta property="og:updated_time" content="2020-04-23T13:41:37.994Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Vim 实用技巧">
+<meta name="twitter:description" content="希望由厚至薄">
+<meta name="twitter:image" content="https://cdn.nlark.com/yuque/0/2019/jpeg/203310/1547523970324-ad085afb-d91a-4b7a-bc5e-07c6133eeca7.jpeg#align=left&amp;display=inline&amp;height=614&amp;originHeight=693&amp;originWidth=552&amp;size=0&amp;status=done&amp;style=none&amp;width=489">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://freewei.ml/2019/01/yuque/vim_skill/">
+
+
+
+
+
+  <title>Vim 实用技巧 | Tfrain's  Blog</title>
+  
+
+
+
+
+
+
+
+
+<script>function loadCss(l){var d=document,h=d.head,s=d.createElement('link');s.rel='stylesheet';s.href=l;!function e(f){if (d.body)return f();setTimeout(function(){e(f)})}(function(){h.appendChild(s);});}loadCss('/style.css');loadCss('https://cdn.bootcss.com/font-awesome/4.6.2/css/font-awesome.min.css');loadCss('https://unpkg.com/gitalk/dist/gitalk.css');</script><style>/* normalize.css v3.0.2 | MIT License | git.io/normalize */
+html {
+  font-family: sans-serif; /* 1 */
+  -ms-text-size-adjust: 100%; /* 2 */
+  -webkit-text-size-adjust: 100%; /* 2 */
+}
+body {
+  margin: 0;
+}
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+main,
+menu,
+nav,
+section,
+summary {
+  display: block;
+}
+audio,
+canvas,
+progress,
+video {
+  display: inline-block; /* 1 */
+  vertical-align: baseline; /* 2 */
+}
+audio:not([controls]) {
+  display: none;
+  height: 0;
+}
+[hidden],
+template {
+  display: none;
+}
+a {
+  background-color: transparent;
+}
+a:active,
+a:hover {
+  outline: 0;
+}
+abbr[title] {
+  border-bottom: 1px dotted;
+}
+b,
+strong {
+  font-weight: bold;
+}
+dfn {
+  font-style: italic;
+}
+h1 {
+  font-size: 2em;
+  margin: 0.67em 0;
+}
+mark {
+  background: #ff0;
+  color: #000;
+}
+small {
+  font-size: 80%;
+}
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+sup {
+  top: -0.5em;
+}
+sub {
+  bottom: -0.25em;
+}
+img {
+  border: 0;
+}
+svg:not(:root) {
+  overflow: hidden;
+}
+figure {
+  margin: 1em 40px;
+}
+hr {
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  height: 0;
+}
+pre {
+  overflow: auto;
+}
+code,
+kbd,
+pre,
+samp {
+  font-family: monospace, monospace;
+  font-size: 1em;
+}
+button,
+input,
+optgroup,
+select,
+textarea {
+  color: inherit; /* 1 */
+  font: inherit; /* 2 */
+  margin: 0; /* 3 */
+}
+button {
+  overflow: visible;
+}
+button,
+select {
+  text-transform: none;
+}
+button,
+html input[type="button"],
+input[type="reset"],
+input[type="submit"] {
+  -webkit-appearance: button; /* 2 */
+  cursor: pointer; /* 3 */
+}
+button[disabled],
+html input[disabled] {
+  cursor: default;
+}
+button::-moz-focus-inner,
+input::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+input {
+  line-height: normal;
+}
+input[type="checkbox"],
+input[type="radio"] {
+  box-sizing: border-box; /* 1 */
+  padding: 0; /* 2 */
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  height: auto;
+}
+input[type="search"] {
+  -webkit-appearance: textfield; /* 1 */
+  -moz-box-sizing: content-box;
+  -webkit-box-sizing: content-box; /* 2 */
+  box-sizing: content-box;
+}
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+fieldset {
+  border: 1px solid #c0c0c0;
+  margin: 0 2px;
+  padding: 0.35em 0.625em 0.75em;
+}
+legend {
+  border: 0; /* 1 */
+  padding: 0; /* 2 */
+}
+textarea {
+  overflow: auto;
+}
+optgroup {
+  font-weight: bold;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+td,
+th {
+  padding: 0;
+}
+::selection {
+  background: #262a30;
+  color: #fff;
+}
+body {
+  position: relative;
+  font-family: 'Lato', "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 14px;
+  line-height: 2;
+  color: #555;
+  background: #eee;
+}
+@media (max-width: 767px) {
+  body {
+    padding-right: 0 !important;
+  }
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  body {
+    padding-right: 0 !important;
+  }
+}
+@media (min-width: 1600px) {
+  body {
+    font-size: 16px;
+  }
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  padding: 0;
+  font-weight: bold;
+  line-height: 1.5;
+  font-family: 'Lato', "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 20px 0 15px;
+}
+h1 {
+  font-size: 22px;
+}
+@media (max-width: 767px) {
+  h1 {
+    font-size: 18px;
+  }
+}
+h2 {
+  font-size: 20px;
+}
+@media (max-width: 767px) {
+  h2 {
+    font-size: 16px;
+  }
+}
+h3 {
+  font-size: 18px;
+}
+@media (max-width: 767px) {
+  h3 {
+    font-size: 14px;
+  }
+}
+h4 {
+  font-size: 16px;
+}
+@media (max-width: 767px) {
+  h4 {
+    font-size: 12px;
+  }
+}
+h5 {
+  font-size: 14px;
+}
+@media (max-width: 767px) {
+  h5 {
+    font-size: 10px;
+  }
+}
+h6 {
+  font-size: 12px;
+}
+@media (max-width: 767px) {
+  h6 {
+    font-size: 8px;
+  }
+}
+p {
+  margin: 0 0 20px 0;
+}
+a {
+  color: #555;
+  text-decoration: none;
+  outline: none;
+  border-bottom: 1px solid #999;
+  word-wrap: break-word;
+}
+a:hover {
+  color: #222;
+  border-bottom-color: #222;
+}
+blockquote {
+  margin: 0;
+  padding: 0;
+}
+img {
+  display: block;
+  margin: auto;
+  max-width: 100%;
+  height: auto;
+}
+hr {
+  margin: 40px 0;
+  height: 3px;
+  border: none;
+  background-color: #ddd;
+  background-image: repeating-linear-gradient(-45deg, #fff, #fff 4px, transparent 4px, transparent 8px);
+}
+blockquote {
+  padding: 0 15px;
+  color: #008b8b;
+  border-left: 4px solid #428bca;
+}
+blockquote cite::before {
+  content: "-";
+  padding: 0 5px;
+}
+dt {
+  font-weight: 700;
+}
+dd {
+  margin: 0;
+  padding: 0;
+}
+kbd {
+  border: 1px solid #ccc;
+  border-radius: 0.2em;
+  box-shadow: 0.1em 0.1em 0.2em rgba(0,0,0,0.1);
+  background-color: #f9f9f9;
+  font-family: inherit;
+  background-image: -webkit-linear-gradient(top, #eee, #fff, #eee);
+  padding: 0.1em 0.3em;
+  white-space: nowrap;
+}
+.text-left {
+  text-align: left;
+}
+.text-center {
+  text-align: center;
+}
+.text-right {
+  text-align: right;
+}
+.text-justify {
+  text-align: justify;
+}
+.text-nowrap {
+  white-space: nowrap;
+}
+.text-lowercase {
+  text-transform: lowercase;
+}
+.text-uppercase {
+  text-transform: uppercase;
+}
+.text-capitalize {
+  text-transform: capitalize;
+}
+.center-block {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+.clearfix:before,
+.clearfix:after {
+  content: " ";
+  display: table;
+}
+.clearfix:after {
+  clear: both;
+}
+.pullquote {
+  width: 45%;
+}
+.pullquote.left {
+  float: left;
+  margin-left: 5px;
+  margin-right: 10px;
+}
+.pullquote.right {
+  float: right;
+  margin-left: 10px;
+  margin-right: 5px;
+}
+.affix.affix.affix {
+  position: fixed;
+}
+.translation {
+  margin-top: -20px;
+  font-size: 14px;
+  color: #999;
+}
+.scrollbar-measure {
+  width: 100px;
+  height: 100px;
+  overflow: scroll;
+  position: absolute;
+  top: -9999px;
+}
+.use-motion .motion-element {
+  opacity: 0;
+}
+table {
+  margin: 20px 0;
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  table-layout: fixed;
+  word-wrap: break-all;
+}
+table>tbody>tr:nth-of-type(odd) {
+  background-color: #f9f9f9;
+}
+table>tbody>tr:hover {
+  background-color: #f5f5f5;
+}
+caption,
+th,
+td {
+  padding: 8px;
+  text-align: left;
+  vertical-align: middle;
+  font-weight: normal;
+}
+th,
+td {
+  border-bottom: 3px solid #ddd;
+  border-right: 1px solid #eee;
+}
+th {
+  padding-bottom: 10px;
+  font-weight: 700;
+}
+td {
+  border-bottom-width: 1px;
+}
+html,
+body {
+  height: 100%;
+}
+.container {
+  position: relative;
+  min-height: 100%;
+}
+.header-inner {
+  margin: 0 auto;
+  padding: 100px 0 70px;
+  width: calc(100% - 252px);
+}
+@media (min-width: 1600px) {
+  .container .header-inner {
+    width: 900px;
+  }
+}
+.main {
+  padding-bottom: 150px;
+}
+.main-inner {
+  margin: 0 auto;
+  width: calc(100% - 252px);
+}
+@media (min-width: 1600px) {
+  .container .main-inner {
+    width: 900px;
+  }
+}
+.footer {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  min-height: 50px;
+}
+.footer-inner {
+  box-sizing: border-box;
+  margin: 20px auto;
+  width: calc(100% - 252px);
+}
+@media (min-width: 1600px) {
+  .container .footer-inner {
+    width: 900px;
+  }
+}
+pre,
+.highlight {
+  overflow: auto;
+  margin: 20px 0;
+  padding: 0;
+  font-size: 13px;
+  color: #4d4d4c;
+  background: #e6e6fa;
+  line-height: 1.6;
+}
+pre,
+code {
+  font-family: consolas, Menlo, "PingFang SC", "Microsoft YaHei", monospace;
+}
+code {
+  padding: 2px 4px;
+  word-wrap: break-word;
+  color: #555;
+  background: #eee;
+  border-radius: 3px;
+  font-size: 13px;
+}
+pre {
+  padding: 10px;
+}
+pre code {
+  padding: 0;
+  color: #4d4d4c;
+  background: none;
+  text-shadow: none;
+}
+.highlight {
+  border-radius: 1px;
+}
+.highlight pre {
+  border: none;
+  margin: 0;
+  padding: 10px 0;
+}
+.highlight table {
+  margin: 0;
+  width: auto;
+  border: none;
+}
+.highlight td {
+  border: none;
+  padding: 0;
+}
+.highlight figcaption {
+  font-size: 1em;
+  color: #4d4d4c;
+  line-height: 1em;
+  margin-bottom: 1em;
+}
+.highlight figcaption:before,
+.highlight figcaption:after {
+  content: " ";
+  display: table;
+}
+.highlight figcaption:after {
+  clear: both;
+}
+.highlight figcaption a {
+  float: right;
+  color: #4d4d4c;
+}
+.highlight figcaption a:hover {
+  border-bottom-color: #4d4d4c;
+}
+.highlight .gutter pre {
+  padding-left: 10px;
+  padding-right: 10px;
+  color: #869194;
+  text-align: right;
+  background-color: #ee0;
+}
+.highlight .code pre {
+  width: 100%;
+  padding-left: 10px;
+  padding-right: 10px;
+  background-color: $hihlight-background;
+}
+.highlight .line {
+  height: 20px;
+}
+.gutter {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.gist table {
+  width: auto;
+}
+.gist table td {
+  border: none;
+}
+pre .deletion {
+  background: #fdd;
+}
+pre .addition {
+  background: #dfd;
+}
+pre .meta {
+  color: #8959a8;
+}
+pre .comment {
+  color: #8e908c;
+}
+pre .variable,
+pre .attribute,
+pre .tag,
+pre .regexp,
+pre .ruby .constant,
+pre .xml .tag .title,
+pre .xml .pi,
+pre .xml .doctype,
+pre .html .doctype,
+pre .css .id,
+pre .css .class,
+pre .css .pseudo {
+  color: #c82829;
+}
+pre .number,
+pre .preprocessor,
+pre .built_in,
+pre .literal,
+pre .params,
+pre .constant,
+pre .command {
+  color: #f5871f;
+}
+pre .ruby .class .title,
+pre .css .rules .attribute,
+pre .string,
+pre .value,
+pre .inheritance,
+pre .header,
+pre .ruby .symbol,
+pre .xml .cdata,
+pre .special,
+pre .number,
+pre .formula {
+  color: #718c00;
+}
+pre .title,
+pre .css .hexcolor {
+  color: #3e999f;
+}
+pre .function,
+pre .python .decorator,
+pre .python .title,
+pre .ruby .function .title,
+pre .ruby .title .keyword,
+pre .perl .sub,
+pre .javascript .title,
+pre .coffeescript .title {
+  color: #4271ae;
+}
+pre .keyword,
+pre .javascript .function {
+  color: #8959a8;
+}
+.full-image.full-image.full-image.full-image {
+  border: none;
+  max-width: 100%;
+  width: auto;
+  margin: 20px auto 25px;
+}
+@media (min-width: 992px) {
+  .full-image.full-image.full-image.full-image {
+    max-width: none;
+    width: 118%;
+    margin: 0 -9%;
+  }
+}
+.blockquote-center,
+.page-home .post-type-quote blockquote,
+.page-post-detail .post-type-quote blockquote {
+  position: relative;
+  margin: 40px 0;
+  padding: 0;
+  border-left: none;
+  text-align: center;
+}
+.blockquote-center::before,
+.page-home .post-type-quote blockquote::before,
+.page-post-detail .post-type-quote blockquote::before,
+.blockquote-center::after,
+.page-home .post-type-quote blockquote::after,
+.page-post-detail .post-type-quote blockquote::after {
+  position: absolute;
+  content: ' ';
+  display: block;
+  width: 100%;
+  height: 24px;
+  opacity: 0.2;
+  background-repeat: no-repeat;
+  background-position: 0 -6px;
+  background-size: 22px 22px;
+}
+.blockquote-center::before,
+.page-home .post-type-quote blockquote::before,
+.page-post-detail .post-type-quote blockquote::before {
+  top: -20px;
+  background-image: url("../images/quote-l.svg");
+  border-top: 1px solid #ccc;
+}
+.blockquote-center::after,
+.page-home .post-type-quote blockquote::after,
+.page-post-detail .post-type-quote blockquote::after {
+  bottom: -20px;
+  background-image: url("../images/quote-r.svg");
+  border-bottom: 1px solid #ccc;
+  background-position: 100% 8px;
+}
+.blockquote-center p,
+.page-home .post-type-quote blockquote p,
+.page-post-detail .post-type-quote blockquote p,
+.blockquote-center div,
+.page-home .post-type-quote blockquote div,
+.page-post-detail .post-type-quote blockquote div {
+  text-align: center;
+}
+.post .post-body .group-picture img {
+  box-sizing: border-box;
+  padding: 0 3px;
+  border: none;
+}
+.post .group-picture-row {
+  overflow: hidden;
+  margin-top: 6px;
+}
+.post .group-picture-row:first-child {
+  margin-top: 0;
+}
+.post .group-picture-column {
+  float: left;
+}
+.page-post-detail .post-body .group-picture-column {
+  float: none;
+  margin-top: 10px;
+  width: auto !important;
+}
+.page-post-detail .post-body .group-picture-column img {
+  margin: 0 auto;
+}
+.page-archive .group-picture-container {
+  overflow: hidden;
+}
+.page-archive .group-picture-row {
+  float: left;
+}
+.page-archive .group-picture-row:first-child {
+  margin-top: 6px;
+}
+.page-archive .group-picture-column {
+  max-width: 150px;
+  max-height: 150px;
+}
+.post-body .note {
+  position: relative;
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid #eee;
+  border-left-width: 5px;
+  border-radius: 3px;
+}
+.post-body .note h2,
+.post-body .note h3,
+.post-body .note h4,
+.post-body .note h5,
+.post-body .note h6 {
+  margin-top: 0;
+  margin-bottom: 0;
+  border-bottom: initial;
+  padding-top: 0 !important;
+}
+.post-body .note p:first-child,
+.post-body .note ul:first-child,
+.post-body .note ol:first-child,
+.post-body .note table:first-child,
+.post-body .note pre:first-child,
+.post-body .note blockquote:first-child {
+  margin-top: 0;
+}
+.post-body .note p:last-child,
+.post-body .note ul:last-child,
+.post-body .note ol:last-child,
+.post-body .note table:last-child,
+.post-body .note pre:last-child,
+.post-body .note blockquote:last-child {
+  margin-bottom: 0;
+}
+.post-body .note.default {
+  border-left-color: #777;
+}
+.post-body .note.default h2,
+.post-body .note.default h3,
+.post-body .note.default h4,
+.post-body .note.default h5,
+.post-body .note.default h6 {
+  color: #777;
+}
+.post-body .note.primary {
+  border-left-color: #6f42c1;
+}
+.post-body .note.primary h2,
+.post-body .note.primary h3,
+.post-body .note.primary h4,
+.post-body .note.primary h5,
+.post-body .note.primary h6 {
+  color: #6f42c1;
+}
+.post-body .note.info {
+  border-left-color: #428bca;
+}
+.post-body .note.info h2,
+.post-body .note.info h3,
+.post-body .note.info h4,
+.post-body .note.info h5,
+.post-body .note.info h6 {
+  color: #428bca;
+}
+.post-body .note.success {
+  border-left-color: #5cb85c;
+}
+.post-body .note.success h2,
+.post-body .note.success h3,
+.post-body .note.success h4,
+.post-body .note.success h5,
+.post-body .note.success h6 {
+  color: #5cb85c;
+}
+.post-body .note.warning {
+  border-left-color: #f0ad4e;
+}
+.post-body .note.warning h2,
+.post-body .note.warning h3,
+.post-body .note.warning h4,
+.post-body .note.warning h5,
+.post-body .note.warning h6 {
+  color: #f0ad4e;
+}
+.post-body .note.danger {
+  border-left-color: #d9534f;
+}
+.post-body .note.danger h2,
+.post-body .note.danger h3,
+.post-body .note.danger h4,
+.post-body .note.danger h5,
+.post-body .note.danger h6 {
+  color: #d9534f;
+}
+.post-body .label {
+  display: inline;
+  padding: 0 2px;
+  white-space: nowrap;
+}
+.post-body .label.default {
+  background-color: #f0f0f0;
+}
+.post-body .label.primary {
+  background-color: #efe6f7;
+}
+.post-body .label.info {
+  background-color: #e5f2f8;
+}
+.post-body .label.success {
+  background-color: #e7f4e9;
+}
+.post-body .label.warning {
+  background-color: #fcf6e1;
+}
+.post-body .label.danger {
+  background-color: #fae8eb;
+}
+.post-body .tabs {
+  position: relative;
+  display: block;
+  margin-bottom: 20px;
+  padding-top: 10px;
+}
+.post-body .tabs ul.nav-tabs {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  margin-bottom: -1px;
+}
+@media (max-width: 413px) {
+  .post-body .tabs ul.nav-tabs {
+    display: block;
+    margin-bottom: 5px;
+  }
+}
+.post-body .tabs ul.nav-tabs li.tab {
+  list-style-type: none !important;
+  margin: 0 0.25em 0 0;
+  border-top: 3px solid transparent;
+  border-left: 1px solid transparent;
+  border-right: 1px solid transparent;
+}
+@media (max-width: 413px) {
+  .post-body .tabs ul.nav-tabs li.tab {
+    margin: initial;
+    border-top: 1px solid transparent;
+    border-left: 3px solid transparent;
+    border-right: 1px solid transparent;
+    border-bottom: 1px solid transparent;
+  }
+}
+.post-body .tabs ul.nav-tabs li.tab a {
+  outline: 0;
+  border-bottom: initial;
+  display: block;
+  line-height: 1.8em;
+  padding: 0.25em 0.75em;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-out;
+  transition-delay: 0s;
+}
+.post-body .tabs ul.nav-tabs li.tab a i {
+  width: 1.285714285714286em;
+}
+.post-body .tabs ul.nav-tabs li.tab.active {
+  border-top: 3px solid #fc6423;
+  border-left: 1px solid #ddd;
+  border-right: 1px solid #ddd;
+  background-color: #fff;
+}
+@media (max-width: 413px) {
+  .post-body .tabs ul.nav-tabs li.tab.active {
+    border-top: 1px solid #ddd;
+    border-left: 3px solid #fc6423;
+    border-right: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+  }
+}
+.post-body .tabs ul.nav-tabs li.tab.active a {
+  cursor: default;
+  color: #555;
+}
+.post-body .tabs .tab-content {
+  background-color: #fff;
+}
+.post-body .tabs .tab-content .tab-pane {
+  border: 1px solid #ddd;
+  padding: 20px 20px 0 20px;
+}
+.post-body .tabs .tab-content .tab-pane:not(.active) {
+  display: none !important;
+}
+.post-body .tabs .tab-content .tab-pane.active {
+  display: block !important;
+}
+.btn {
+  display: inline-block;
+  padding: 0 20px;
+  font-size: 14px;
+  color: #555;
+  background: #fff;
+  border: 2px solid #555;
+  text-decoration: none;
+  border-radius: 2px;
+  transition-property: background-color;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+  transition-delay: 0s;
+  line-height: 2;
+}
+.btn:hover {
+  border-color: #222;
+  color: #fff;
+  background: #222;
+}
+.btn +.btn {
+  margin: 0 0 8px 8px;
+}
+.btn .fa-fw {
+  width: 1.285714285714286em;
+  text-align: left;
+}
+.btn-bar {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #555;
+  border-radius: 1px;
+}
+.btn-bar+.btn-bar {
+  margin-top: 4px;
+}
+.pagination {
+  margin: 120px 0 40px;
+  text-align: center;
+  border-top: 1px solid #eee;
+}
+.page-number-basic,
+.pagination .prev,
+.pagination .next,
+.pagination .page-number,
+.pagination .space {
+  display: inline-block;
+  position: relative;
+  top: -1px;
+  margin: 0 10px;
+  padding: 0 11px;
+}
+@media (max-width: 767px) {
+  .page-number-basic,
+  .pagination .prev,
+  .pagination .next,
+  .pagination .page-number,
+  .pagination .space {
+    margin: 0 5px;
+  }
+}
+.pagination .prev,
+.pagination .next,
+.pagination .page-number {
+  border-bottom: 0;
+  border-top: 1px solid #eee;
+  transition-property: border-color;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+  transition-delay: 0s;
+}
+.pagination .prev:hover,
+.pagination .next:hover,
+.pagination .page-number:hover {
+  border-top-color: #222;
+}
+.pagination .space {
+  padding: 0;
+  margin: 0;
+}
+.pagination .prev {
+  margin-left: 0;
+}
+.pagination .next {
+  margin-right: 0;
+}
+.pagination .page-number.current {
+  color: #fff;
+  background: #ccc;
+  border-top-color: #ccc;
+}
+@media (max-width: 767px) {
+  .pagination {
+    border-top: none;
+  }
+  .pagination .prev,
+  .pagination .next,
+  .pagination .page-number {
+    margin-bottom: 10px;
+    border-top: 0;
+    border-bottom: 1px solid #eee;
+    padding: 0 10px;
+  }
+  .pagination .prev:hover,
+  .pagination .next:hover,
+  .pagination .page-number:hover {
+    border-bottom-color: #222;
+  }
+}
+.comments {
+  margin: 60px 20px 0;
+}
+.tag-cloud {
+  text-align: center;
+}
+.tag-cloud a {
+  display: inline-block;
+  margin: 10px;
+}
+.back-to-top {
+  display: none;
+  margin: 20px -10px -20px;
+  background: #eee;
+  font-size: 12px;
+  opacity: 0.6;
+  cursor: pointer;
+  text-align: center;
+  -webkit-transform: translateZ(0);
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+  transition-delay: 0s;
+}
+.back-to-top:hover {
+  opacity: 0.8;
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .back-to-top {
+    display: none !important;
+  }
+}
+@media (max-width: 767px) {
+  .back-to-top {
+    display: none !important;
+  }
+}
+.back-to-top.back-to-top-on {
+  display: block;
+}
+.header {
+  background: transparent;
+}
+.header-inner {
+  position: relative;
+}
+.headband {
+  height: 3px;
+  background: #222;
+}
+.site-meta {
+  margin: 0;
+  text-align: center;
+}
+@media (max-width: 767px) {
+  .site-meta {
+    text-align: center;
+  }
+}
+.brand {
+  position: relative;
+  display: inline-block;
+  padding: 0 40px;
+  color: #fff;
+  background: #222;
+  border-bottom: none;
+}
+.brand:hover {
+  color: #fff;
+}
+.logo {
+  display: inline-block;
+  margin-right: 5px;
+  line-height: 36px;
+  vertical-align: top;
+}
+.site-title {
+  display: inline-block;
+  vertical-align: top;
+  line-height: 36px;
+  font-size: 20px;
+  font-weight: normal;
+  font-family: 'Lato', "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+.site-subtitle {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #ddd;
+}
+.use-motion .brand {
+  opacity: 0;
+}
+.use-motion .logo,
+.use-motion .site-title,
+.use-motion .site-subtitle {
+  opacity: 0;
+  position: relative;
+  top: -10px;
+}
+.site-nav-toggle {
+  display: none;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+@media (max-width: 767px) {
+  .site-nav-toggle {
+    display: block;
+  }
+}
+.site-nav-toggle button {
+  margin-top: 2px;
+  padding: 9px 10px;
+  background: transparent;
+  border: none;
+}
+@media (max-width: 767px) {
+  .site-nav {
+    display: none;
+    margin: 0 -10px;
+    padding: 0 10px;
+    clear: both;
+    border-top: 1px solid #ddd;
+  }
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .site-nav {
+    display: block !important;
+  }
+}
+@media (min-width: 992px) {
+  .site-nav {
+    display: block !important;
+  }
+}
+.menu {
+  margin-top: 20px;
+  padding-left: 0;
+  text-align: center;
+}
+.menu .menu-item {
+  display: inline-block;
+  margin: 0 10px;
+  list-style: none;
+}
+@media screen and (max-width: 767px) {
+  .menu .menu-item {
+    margin-top: 10px;
+  }
+}
+.menu .menu-item a {
+  display: block;
+  font-size: 13px;
+  line-height: inherit;
+  border-bottom: 1px solid transparent;
+  transition-property: border-color;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+  transition-delay: 0s;
+}
+.menu .menu-item a:hover,
+.menu-item-active a {
+  border-bottom-color: #222;
+}
+.menu .menu-item .fa {
+  margin-right: 5px;
+}
+.use-motion .menu-item {
+  opacity: 0;
+}
+.post-body {
+  font-family: 'Lato', "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+@media (max-width: 767px) {
+  .post-body {
+    word-break: break-word;
+  }
+}
+.post-body .fancybox img {
+  display: block !important;
+  margin: 0 auto;
+  cursor: pointer;
+  cursor: zoom-in;
+  cursor: -webkit-zoom-in;
+}
+.post-body .image-caption,
+.post-body .figure .caption {
+  margin: -20px auto 15px;
+  text-align: center;
+  font-size: 14px;
+  color: #999;
+  font-weight: bold;
+  line-height: 1;
+}
+.post-sticky-flag {
+  display: inline-block;
+  font-size: 16px;
+  -ms-transform: rotate(30deg);
+  -webkit-transform: rotate(30deg);
+  -moz-transform: rotate(30deg);
+  -ms-transform: rotate(30deg);
+  -o-transform: rotate(30deg);
+  transform: rotate(30deg);
+}
+.use-motion .post-block,
+.use-motion .pagination,
+.use-motion .comments {
+  opacity: 0;
+}
+.use-motion .post-header {
+  opacity: 0;
+}
+.use-motion .post-body {
+  opacity: 0;
+}
+.use-motion .collection-title {
+  opacity: 0;
+}
+.posts-expand {
+  padding-top: 40px;
+}
+@media (max-width: 767px) {
+  .posts-expand {
+    margin: 0 20px;
+  }
+  .post-body pre .gutter pre {
+    padding-right: 10px;
+  }
+  .post-body .highlight {
+    margin-left: 0px;
+    margin-right: 0px;
+    padding: 0;
+  }
+  .post-body .highlight .gutter pre {
+    padding-right: 10px;
+  }
+}
+@media (min-width: 992px) {
+  .posts-expand .post-body {
+    text-align: justify;
+  }
+}
+.posts-expand .post-body h2,
+.posts-expand .post-body h3,
+.posts-expand .post-body h4,
+.posts-expand .post-body h5,
+.posts-expand .post-body h6 {
+  padding-top: 10px;
+}
+.posts-expand .post-body h2 .header-anchor,
+.posts-expand .post-body h3 .header-anchor,
+.posts-expand .post-body h4 .header-anchor,
+.posts-expand .post-body h5 .header-anchor,
+.posts-expand .post-body h6 .header-anchor {
+  float: right;
+  margin-left: 10px;
+  color: #ccc;
+  border-bottom-style: none;
+  visibility: hidden;
+}
+.posts-expand .post-body h2 .header-anchor:hover,
+.posts-expand .post-body h3 .header-anchor:hover,
+.posts-expand .post-body h4 .header-anchor:hover,
+.posts-expand .post-body h5 .header-anchor:hover,
+.posts-expand .post-body h6 .header-anchor:hover {
+  color: inherit;
+}
+.posts-expand .post-body h2:hover .header-anchor,
+.posts-expand .post-body h3:hover .header-anchor,
+.posts-expand .post-body h4:hover .header-anchor,
+.posts-expand .post-body h5:hover .header-anchor,
+.posts-expand .post-body h6:hover .header-anchor {
+  visibility: visible;
+}
+.posts-expand .post-body ul li {
+  list-style: circle;
+}
+.posts-expand .post-body img {
+  box-sizing: border-box;
+  margin: auto;
+  padding: 3px;
+  border: 1px solid #ddd;
+}
+.posts-expand .post-body .fancybox img {
+  margin: 0 auto 25px;
+}
+@media (max-width: 767px) {
+  .posts-collapse {
+    margin: 0 20px;
+  }
+  .posts-collapse .post-title,
+  .posts-collapse .post-meta {
+    display: block;
+    width: auto;
+    text-align: left;
+  }
+}
+.posts-collapse {
+  position: relative;
+  z-index: 1010;
+  margin-left: 55px;
+}
+.posts-collapse::after {
+  content: " ";
+  position: absolute;
+  top: 20px;
+  left: 0;
+  margin-left: -2px;
+  width: 4px;
+  height: 100%;
+  background: #f5f5f5;
+  z-index: -1;
+}
+@media (max-width: 767px) {
+  .posts-collapse {
+    margin: 0 20px;
+  }
+}
+.posts-collapse .collection-title {
+  position: relative;
+  margin: 60px 0;
+}
+.posts-collapse .collection-title h1,
+.posts-collapse .collection-title h2 {
+  margin-left: 20px;
+}
+.posts-collapse .collection-title small {
+  color: #bbb;
+  margin-left: 5px;
+}
+.posts-collapse .collection-title::before {
+  content: " ";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  margin-left: -4px;
+  margin-top: -4px;
+  width: 8px;
+  height: 8px;
+  background: #bbb;
+  border-radius: 50%;
+}
+.posts-collapse .post {
+  margin: 30px 0;
+}
+.posts-collapse .post-header {
+  position: relative;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+  transition-delay: 0s;
+  transition-property: border;
+  border-bottom: 1px dashed #ccc;
+}
+.posts-collapse .post-header::before {
+  content: " ";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  width: 6px;
+  height: 6px;
+  margin-left: -4px;
+  background: #bbb;
+  border-radius: 50%;
+  border: 1px solid #fff;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+  transition-delay: 0s;
+  transition-property: background;
+}
+.posts-collapse .post-header:hover {
+  border-bottom-color: #666;
+}
+.posts-collapse .post-header:hover::before {
+  background: #222;
+}
+.posts-collapse .post-meta {
+  position: absolute;
+  font-size: 12px;
+  left: 20px;
+  top: 5px;
+}
+.posts-collapse .post-comments-count {
+  display: none;
+}
+.posts-collapse .post-title {
+  margin-left: 60px;
+  font-size: 16px;
+  font-weight: normal;
+  line-height: inherit;
+}
+.posts-collapse .post-title::after {
+  margin-left: 3px;
+  opacity: 0.6;
+}
+.posts-collapse .post-title a {
+  color: #666;
+  border-bottom: none;
+}
+.page-home .post-type-quote .post-header,
+.page-post-detail .post-type-quote .post-header,
+.page-home .post-type-quote .post-tags,
+.page-post-detail .post-type-quote .post-tags {
+  display: none;
+}
+.posts-expand .post-title {
+  text-align: center;
+  word-break: break-word;
+  font-weight: 400;
+}
+.posts-expand .post-title-link {
+  display: inline-block;
+  position: relative;
+  color: #555;
+  border-bottom: none;
+  line-height: 1.2;
+  vertical-align: top;
+}
+.posts-expand .post-title-link::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: #000;
+  visibility: hidden;
+  -webkit-transform: scaleX(0);
+  -moz-transform: scaleX(0);
+  -ms-transform: scaleX(0);
+  -o-transform: scaleX(0);
+  transform: scaleX(0);
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+  transition-delay: 0s;
+}
+.posts-expand .post-title-link:hover::before {
+  visibility: visible;
+  -webkit-transform: scaleX(1);
+  -moz-transform: scaleX(1);
+  -ms-transform: scaleX(1);
+  -o-transform: scaleX(1);
+  transform: scaleX(1);
+}
+.posts-expand .post-title-link .fa {
+  font-size: 16px;
+}
+.posts-expand .post-meta {
+  margin: 3px 0 60px 0;
+  color: #999;
+  font-family: 'Lato', "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 12px;
+  text-align: center;
+}
+.posts-expand .post-meta .post-category-list {
+  display: inline-block;
+  margin: 0;
+  padding: 3px;
+}
+.posts-expand .post-meta .post-category-list-link {
+  color: #999;
+}
+.posts-expand .post-meta .post-description {
+  font-size: 14px;
+  margin-top: 2px;
+}
+.post-meta-divider {
+  margin: 0 0.5em;
+}
+.post-meta-item-icon {
+  margin-right: 3px;
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .post-meta-item-icon {
+    display: inline-block;
+  }
+}
+@media (max-width: 767px) {
+  .post-meta-item-icon {
+    display: inline-block;
+  }
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .post-meta-item-text {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  .post-meta-item-text {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  .posts-expand .post-comments-count {
+    display: none;
+  }
+}
+.post-button {
+  margin-top: 40px;
+}
+.posts-expand .post-tags {
+  margin-top: 40px;
+  text-align: center;
+}
+.posts-expand .post-tags a {
+  display: inline-block;
+  margin-right: 10px;
+  font-size: 13px;
+}
+.post-nav {
+  display: table;
+  margin-top: 15px;
+  width: 100%;
+  border-top: 1px solid #eee;
+}
+.post-nav-divider {
+  display: table-cell;
+  width: 10%;
+}
+.post-nav-item {
+  display: table-cell;
+  padding: 10px 0 0 0;
+  width: 45%;
+  vertical-align: top;
+}
+.post-nav-item a {
+  position: relative;
+  display: block;
+  line-height: 25px;
+  font-size: 14px;
+  color: #555;
+  border-bottom: none;
+}
+.post-nav-item a:hover {
+  color: #222;
+  border-bottom: none;
+}
+.post-nav-item a:active {
+  top: 2px;
+}
+.post-nav-item .fa {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  font-size: 12px;
+}
+.post-nav-next a {
+  padding-left: 15px;
+}
+.post-nav-prev {
+  text-align: right;
+}
+.post-nav-prev a {
+  padding-right: 15px;
+}
+.post-nav-prev .fa {
+  right: 0;
+  left: auto;
+}
+.posts-expand .post-eof {
+  display: block;
+  margin: 80px auto 60px;
+  width: 8%;
+  height: 1px;
+  background: #ccc;
+  text-align: center;
+}
+.post:last-child .post-eof.post-eof.post-eof {
+  display: none;
+}
+.post-gallery {
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: separate;
+}
+.post-gallery-row {
+  display: table-row;
+}
+.post-gallery .post-gallery-img {
+  display: table-cell;
+  text-align: center;
+  vertical-align: middle;
+  border: none;
+}
+.post-gallery .post-gallery-img img {
+  max-width: 100%;
+  max-height: 100%;
+  border: none;
+}
+.fancybox-close,
+.fancybox-close:hover {
+  border: none;
+}
+#rewardButton {
+  cursor: pointer;
+  border: 0;
+  outline: 0;
+  border-radius: 5px;
+  padding: 0;
+  margin: 0;
+  letter-spacing: normal;
+  text-transform: none;
+  text-indent: 0px;
+  text-shadow: none;
+}
+#rewardButton span {
+  display: inline-block;
+  width: 80px;
+  height: 35px;
+  border-radius: 5px;
+  color: #fff;
+  font-weight: 400;
+  font-style: normal;
+  font-variant: normal;
+  font-stretch: normal;
+  font-size: 18px;
+  font-family: "Microsoft Yahei";
+  background: #f44336;
+}
+#rewardButton span:hover {
+  background: #f7877f;
+}
+#QR {
+  padding-top: 20px;
+}
+#QR a {
+  border: 0;
+}
+#QR img {
+  width: 180px;
+  max-width: 100%;
+  display: inline-block;
+  margin: 0.8em 2em 0 2em;
+}
+#bitcoin:hover p {
+  animation: roll 0.1s infinite linear;
+  -webkit-animation: roll 0.1s infinite linear;
+  -moz-animation: roll 0.1s infinite linear;
+}
+@-moz-keyframes roll {
+  from {
+    -webkit-transform: rotateZ(30deg);
+    -moz-transform: rotateZ(30deg);
+    -ms-transform: rotateZ(30deg);
+    -o-transform: rotateZ(30deg);
+    transform: rotateZ(30deg);
+  }
+  to {
+    -webkit-transform: rotateZ(-30deg);
+    -moz-transform: rotateZ(-30deg);
+    -ms-transform: rotateZ(-30deg);
+    -o-transform: rotateZ(-30deg);
+    transform: rotateZ(-30deg);
+  }
+}
+@-webkit-keyframes roll {
+  from {
+    -webkit-transform: rotateZ(30deg);
+    -moz-transform: rotateZ(30deg);
+    -ms-transform: rotateZ(30deg);
+    -o-transform: rotateZ(30deg);
+    transform: rotateZ(30deg);
+  }
+  to {
+    -webkit-transform: rotateZ(-30deg);
+    -moz-transform: rotateZ(-30deg);
+    -ms-transform: rotateZ(-30deg);
+    -o-transform: rotateZ(-30deg);
+    transform: rotateZ(-30deg);
+  }
+}
+@-o-keyframes roll {
+  from {
+    -webkit-transform: rotateZ(30deg);
+    -moz-transform: rotateZ(30deg);
+    -ms-transform: rotateZ(30deg);
+    -o-transform: rotateZ(30deg);
+    transform: rotateZ(30deg);
+  }
+  to {
+    -webkit-transform: rotateZ(-30deg);
+    -moz-transform: rotateZ(-30deg);
+    -ms-transform: rotateZ(-30deg);
+    -o-transform: rotateZ(-30deg);
+    transform: rotateZ(-30deg);
+  }
+}
+@keyframes roll {
+  from {
+    -webkit-transform: rotateZ(30deg);
+    -moz-transform: rotateZ(30deg);
+    -ms-transform: rotateZ(30deg);
+    -o-transform: rotateZ(30deg);
+    transform: rotateZ(30deg);
+  }
+  to {
+    -webkit-transform: rotateZ(-30deg);
+    -moz-transform: rotateZ(-30deg);
+    -ms-transform: rotateZ(-30deg);
+    -o-transform: rotateZ(-30deg);
+    transform: rotateZ(-30deg);
+  }
+}
+.post-copyright {
+  margin: 2em 0 0;
+  padding: 0.5em 1em;
+  border-left: 3px solid #ff1700;
+  background-color: #f9f9f9;
+  list-style: none;
+}
+.rtl.post-body p,
+.rtl.post-body a,
+.rtl.post-body h1,
+.rtl.post-body h2,
+.rtl.post-body h3,
+.rtl.post-body h4,
+.rtl.post-body h5,
+.rtl.post-body h6,
+.rtl.post-body li,
+.rtl.post-body ul,
+.rtl.post-body ol {
+  direction: rtl;
+  font-family: UKIJ Ekran;
+}
+.rtl.post-title {
+  font-family: UKIJ Ekran;
+}
+.sidebar {
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  z-index: 1040;
+  box-shadow: inset 0 2px 6px #000;
+  background: #222;
+  -webkit-transform: translateZ(0);
+}
+.sidebar a {
+  color: #999;
+  border-bottom-color: #555;
+}
+.sidebar a:hover {
+  color: #eee;
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .sidebar {
+    display: none !important;
+  }
+}
+@media (max-width: 767px) {
+  .sidebar {
+    display: none !important;
+  }
+}
+.sidebar-inner {
+  position: relative;
+  padding: 20px 10px;
+  color: #999;
+  text-align: center;
+}
+.site-overview-wrap {
+  overflow: hidden;
+}
+.site-overview {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.sidebar-toggle {
+  position: fixed;
+  right: 30px;
+  bottom: 45px;
+  width: 14px;
+  height: 14px;
+  padding: 5px;
+  background: #222;
+  line-height: 0;
+  z-index: 1050;
+  cursor: pointer;
+  -webkit-transform: translateZ(0);
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .sidebar-toggle {
+    display: none !important;
+  }
+}
+@media (max-width: 767px) {
+  .sidebar-toggle {
+    display: none !important;
+  }
+}
+.sidebar-toggle-line {
+  position: relative;
+  display: inline-block;
+  vertical-align: top;
+  height: 2px;
+  width: 100%;
+  background: #fff;
+  margin-top: 3px;
+}
+.sidebar-toggle-line:first-child {
+  margin-top: 0;
+}
+.site-author-image {
+  display: block;
+  margin: 0 auto;
+  padding: 2px;
+  max-width: 120px;
+  height: auto;
+  border: 1px solid #eee;
+  border-radius: 50%;
+  transition: 2s all;
+}
+.site-author-image:hover {
+  -webkit-transform: rotate(360deg);
+  -moz-transform: rotate(360deg);
+  -ms-transform: rotate(360deg);
+  -o-transform: rotate(360deg);
+  transform: rotate(360deg);
+}
+.site-author-name {
+  margin: 0;
+  text-align: center;
+  color: #222;
+  font-weight: 600;
+}
+.site-description {
+  margin-top: 0;
+  text-align: center;
+  font-size: 13px;
+  color: #999;
+}
+.site-state {
+  overflow: hidden;
+  line-height: 1.4;
+  white-space: nowrap;
+  text-align: center;
+}
+.site-state-item {
+  display: inline-block;
+  padding: 0 15px;
+  border-left: 1px solid #eee;
+}
+.site-state-item:first-child {
+  border-left: none;
+}
+.site-state-item a {
+  border-bottom: none;
+}
+.site-state-item-count {
+  display: block;
+  text-align: center;
+  color: inherit;
+  font-weight: 600;
+  font-size: 16px;
+}
+.site-state-item-name {
+  font-size: 13px;
+  color: #999;
+}
+.feed-link {
+  margin-top: 20px;
+}
+.feed-link a {
+  display: inline-block;
+  padding: 0 15px;
+  color: #fc6423;
+  border: 1px solid #fc6423;
+  border-radius: 4px;
+}
+.feed-link a i {
+  color: #fc6423;
+  font-size: 14px;
+}
+.feed-link a:hover {
+  color: #fff;
+  background: #fc6423;
+}
+.feed-link a:hover i {
+  color: #fff;
+}
+.links-of-author {
+  margin-top: 20px;
+}
+.links-of-author a {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  border-bottom-color: #555;
+  font-size: 13px;
+}
+.links-of-author a:before {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 3px;
+  content: " ";
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffff74;
+}
+.links-of-blogroll {
+  font-size: 13px;
+}
+.links-of-blogroll-title {
+  margin-top: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.links-of-blogroll-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.links-of-blogroll-item {
+  padding: 2px 10px;
+}
+.links-of-blogroll-item a {
+  max-width: 280px;
+  box-sizing: border-box;
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.sidebar-nav {
+  margin: 0 0 20px;
+  padding-left: 0;
+}
+.sidebar-nav li {
+  display: inline-block;
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+  font-size: 14px;
+  color: #555;
+}
+.sidebar-nav li:hover {
+  color: #fc6423;
+}
+.page-post-detail .sidebar-nav-toc {
+  padding: 0 5px;
+}
+.page-post-detail .sidebar-nav-overview {
+  margin-left: 10px;
+}
+.sidebar-nav .sidebar-nav-active {
+  color: #fc6423;
+  border-bottom-color: #fc6423;
+}
+.sidebar-nav .sidebar-nav-active:hover {
+  color: #fc6423;
+}
+.sidebar-panel {
+  display: none;
+}
+.sidebar-panel-active {
+  display: block;
+}
+.post-toc-empty {
+  font-size: 14px;
+  color: #666;
+}
+.post-toc-wrap {
+  overflow: hidden;
+}
+.post-toc {
+  overflow: auto;
+}
+.post-toc ol {
+  margin: 0;
+  padding: 0 2px 5px 10px;
+  text-align: left;
+  list-style: none;
+  font-size: 14px;
+}
+.post-toc ol > ol {
+  padding-left: 0;
+}
+.post-toc ol a {
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+  transition-delay: 0s;
+  transition-property: all;
+  color: #666;
+  border-bottom-color: #ccc;
+}
+.post-toc ol a:hover {
+  color: #000;
+  border-bottom-color: #000;
+}
+.post-toc .nav-item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: justify;
+  white-space: nowrap;
+  line-height: 1.8;
+}
+.post-toc .nav .nav-child {
+  display: none;
+}
+.post-toc .nav .active > .nav-child {
+  display: block;
+}
+.post-toc .nav .active-current > .nav-child {
+  display: block;
+}
+.post-toc .nav .active-current > .nav-child > .nav-item {
+  display: block;
+}
+.post-toc .nav .active > a {
+  color: #fc6423;
+  border-bottom-color: #fc6423;
+}
+.post-toc .nav .active-current > a {
+  color: #fc6423;
+}
+.post-toc .nav .active-current > a:hover {
+  color: #fc6423;
+}
+.footer {
+  font-size: 14px;
+  color: #999;
+}
+.footer img {
+  border: none;
+}
+.footer-inner {
+  text-align: center;
+}
+.with-love {
+  display: inline-block;
+  margin: 0 5px;
+}
+.powered-by,
+.theme-info {
+  display: inline-block;
+}
+.cc-license {
+  margin-top: 10px;
+  text-align: center;
+}
+.cc-license .cc-opacity {
+  opacity: 0.7;
+  border-bottom: none;
+}
+.cc-license .cc-opacity:hover {
+  opacity: 0.9;
+}
+.cc-license img {
+  display: inline-block;
+}
+.theme-next #ds-thread #ds-reset {
+  color: #555;
+}
+.theme-next #ds-thread #ds-reset .ds-replybox {
+  margin-bottom: 30px;
+}
+.theme-next #ds-thread #ds-reset .ds-replybox .ds-avatar,
+.theme-next #ds-reset .ds-avatar img {
+  box-shadow: none;
+}
+.theme-next #ds-thread #ds-reset .ds-textarea-wrapper {
+  border-color: #c7d4e1;
+  background: none;
+  border-top-right-radius: 3px;
+  border-top-left-radius: 3px;
+}
+.theme-next #ds-thread #ds-reset .ds-textarea-wrapper textarea {
+  height: 60px;
+}
+.theme-next #ds-reset .ds-rounded-top {
+  border-radius: 0;
+}
+.theme-next #ds-thread #ds-reset .ds-post-toolbar {
+  box-sizing: border-box;
+  border: 1px solid #c7d4e1;
+  background: #f6f8fa;
+}
+.theme-next #ds-thread #ds-reset .ds-post-options {
+  height: 40px;
+  border: none;
+  background: none;
+}
+.theme-next #ds-thread #ds-reset .ds-toolbar-buttons {
+  top: 11px;
+}
+.theme-next #ds-thread #ds-reset .ds-sync {
+  top: 5px;
+}
+.theme-next #ds-thread #ds-reset .ds-post-button {
+  top: 4px;
+  right: 5px;
+  width: 90px;
+  height: 30px;
+  border: 1px solid #c5ced7;
+  border-radius: 3px;
+  background-image: linear-gradient(#fbfbfc, #f5f7f9);
+  color: #60676d;
+}
+.theme-next #ds-thread #ds-reset .ds-post-button:hover {
+  background-position: 0 -30px;
+  color: #60676d;
+}
+.theme-next #ds-thread #ds-reset .ds-comments-info {
+  padding: 10px 0;
+}
+.theme-next #ds-thread #ds-reset .ds-sort {
+  display: none;
+}
+.theme-next #ds-thread #ds-reset li.ds-tab a.ds-current {
+  border: none;
+  background: #f6f8fa;
+  color: #60676d;
+}
+.theme-next #ds-thread #ds-reset li.ds-tab a.ds-current:hover {
+  background-color: #e9f0f7;
+  color: #60676d;
+}
+.theme-next #ds-thread #ds-reset li.ds-tab a {
+  border-radius: 2px;
+  padding: 5px;
+}
+.theme-next #ds-thread #ds-reset .ds-login-buttons p {
+  color: #999;
+  line-height: 36px;
+}
+.theme-next #ds-thread #ds-reset .ds-login-buttons .ds-service-list li {
+  height: 28px;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list a {
+  background: none;
+  padding: 5px;
+  border: 1px solid;
+  border-radius: 3px;
+  text-align: center;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list a:hover {
+  color: #fff;
+  background: #666;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-weibo {
+  color: #fc9b00;
+  border-color: #fc9b00;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-weibo:hover {
+  background: #fc9b00;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-qq {
+  color: #60a3ec;
+  border-color: #60a3ec;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-qq:hover {
+  background: #60a3ec;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-renren {
+  color: #2e7ac4;
+  border-color: #2e7ac4;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-renren:hover {
+  background: #2e7ac4;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-douban {
+  color: #37994c;
+  border-color: #37994c;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-douban:hover {
+  background: #37994c;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-kaixin {
+  color: #fef20d;
+  border-color: #fef20d;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-kaixin:hover {
+  background: #fef20d;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-netease {
+  color: #f00;
+  border-color: #f00;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-netease:hover {
+  background: #f00;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-sohu {
+  color: #ffcb05;
+  border-color: #ffcb05;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-sohu:hover {
+  background: #ffcb05;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-baidu {
+  color: #2831e0;
+  border-color: #2831e0;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-baidu:hover {
+  background: #2831e0;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-google {
+  color: #166bec;
+  border-color: #166bec;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-google:hover {
+  background: #166bec;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-weixin {
+  color: #00ce0d;
+  border-color: #00ce0d;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-weixin:hover {
+  background: #00ce0d;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-more-services {
+  border: none;
+}
+.theme-next #ds-thread #ds-reset .ds-service-list .ds-more-services:hover {
+  background: none;
+}
+.theme-next #ds-reset .duoshuo-ua-admin {
+  display: inline-block;
+  color: #f00;
+}
+.theme-next #ds-reset .duoshuo-ua-platform,
+.theme-next #ds-reset .duoshuo-ua-browser {
+  color: #ccc;
+}
+.theme-next #ds-reset .duoshuo-ua-platform .fa,
+.theme-next #ds-reset .duoshuo-ua-browser .fa {
+  display: inline-block;
+  margin-right: 3px;
+}
+.theme-next #ds-reset .duoshuo-ua-separator {
+  display: inline-block;
+  margin-left: 5px;
+}
+.theme-next .this_ua {
+  background-color: #ccc !important;
+  border-radius: 4px;
+  padding: 0 5px !important;
+  margin: 1px 1px !important;
+  border: 1px solid #bbb !important;
+  color: #fff;
+  display: inline-block !important;
+}
+.theme-next .this_ua.admin {
+  background-color: #d9534f !important;
+  border-color: #d9534f !important;
+}
+.theme-next .this_ua.platform.iOS,
+.theme-next .this_ua.platform.Mac,
+.theme-next .this_ua.platform.Windows {
+  background-color: #39b3d7 !important;
+  border-color: #46b8da !important;
+}
+.theme-next .this_ua.platform.Linux {
+  background-color: #3a3a3a !important;
+  border-color: #1f1f1f !important;
+}
+.theme-next .this_ua.platform.Android {
+  background-color: #00c47d !important;
+  border-color: #01b171 !important;
+}
+.theme-next .this_ua.browser.Mobile,
+.theme-next .this_ua.browser.Chrome {
+  background-color: #5cb85c !important;
+  border-color: #4cae4c !important;
+}
+.theme-next .this_ua.browser.Firefox {
+  background-color: #f0ad4e !important;
+  border-color: #eea236 !important;
+}
+.theme-next .this_ua.browser.Maxthon,
+.theme-next .this_ua.browser.IE {
+  background-color: #428bca !important;
+  border-color: #357ebd !important;
+}
+.theme-next .this_ua.browser.baidu,
+.theme-next .this_ua.browser.UCBrowser,
+.theme-next .this_ua.browser.Opera {
+  background-color: #d9534f !important;
+  border-color: #d43f3a !important;
+}
+.theme-next .this_ua.browser.Android,
+.theme-next .this_ua.browser.QQBrowser {
+  background-color: #78ace9 !important;
+  border-color: #4cae4c !important;
+}
+.post-spread {
+  margin-top: 20px;
+  text-align: center;
+}
+.jiathis_style {
+  display: inline-block;
+}
+.jiathis_style a {
+  border: none;
+}
+.fa {
+  font-family: FontAwesome !important;
+}
+.post-spread {
+  margin-top: 20px;
+  text-align: center;
+}
+.bdshare-slide-button-box a {
+  border: none;
+}
+.bdsharebuttonbox {
+  display: inline-block;
+}
+.bdsharebuttonbox a {
+  border: none;
+}
+.local-search-pop-overlay {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 2080;
+  background-color: rgba(0,0,0,0.3);
+}
+.local-search-popup {
+  display: none;
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  margin-left: -350px;
+  width: 700px;
+  height: 80%;
+  padding: 0;
+  background: #fff;
+  color: #333;
+  z-index: 9999;
+  border-radius: 5px;
+}
+@media (max-width: 767px) {
+  .local-search-popup {
+    padding: 0;
+    top: 0;
+    left: 0;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+}
+.local-search-popup ul.search-result-list {
+  padding: 0;
+  margin: 0 5px;
+}
+.local-search-popup p.search-result {
+  border-bottom: 1px dashed #ccc;
+  padding: 5px 0;
+}
+.local-search-popup a.search-result-title {
+  font-weight: bold;
+  font-size: 16px;
+}
+.local-search-popup .search-keyword {
+  border-bottom: 1px dashed #f00;
+  font-weight: bold;
+  color: #f00;
+}
+.local-search-popup .local-search-header {
+  padding: 5px;
+  height: 36px;
+  background: #f5f5f5;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+}
+.local-search-popup #local-search-result {
+  overflow: auto;
+  position: relative;
+  padding: 5px 25px;
+  height: calc(100% - 55px);
+}
+.local-search-popup .local-search-input-wrapper {
+  display: inline-block;
+  width: calc(100% - 90px);
+  height: 36px;
+  line-height: 36px;
+  padding: 0 5px;
+}
+.local-search-popup .local-search-input-wrapper input {
+  padding: 8px 0;
+  height: 20px;
+  display: block;
+  width: 100%;
+  outline: none;
+  border: none;
+  background: transparent;
+  vertical-align: middle;
+}
+.local-search-popup .search-icon,
+.local-search-popup .popup-btn-close {
+  display: inline-block;
+  font-size: 18px;
+  color: #999;
+  height: 36px;
+  width: 18px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.local-search-popup .search-icon {
+  float: left;
+}
+.local-search-popup .popup-btn-close {
+  border-left: 1px solid #eee;
+  float: right;
+  cursor: pointer;
+}
+.local-search-popup #no-result {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  -webkit-transform: translate(-50%, -50%);
+  -moz-transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
+  -o-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  color: #ccc;
+}
+.site-uv,
+.site-pv,
+.page-pv {
+  display: inline-block;
+}
+.site-uv .busuanzi-value,
+.site-pv .busuanzi-value,
+.page-pv .busuanzi-value {
+  margin: 0 5px;
+}
+.gt-header a,
+.gt-comments a,
+.gt-popup a {
+  border-bottom: none;
+}
+.gt-container .gt-popup .gt-action.is--active:before {
+  top: 0.7em;
+}
+.-hoofoo-share-buttons {
+  display: inline-block;
+}
+.-hoofoo-share-title {
+  font-size: 1.1em;
+  font-weight: 200;
+}
+.-hoofoo-share-ui-button {
+  cursor: pointer;
+  background-color: #555;
+  color: #fff;
+  font-size: 24px;
+  line-height: 40px;
+  width: 40px;
+  height: 40px;
+  margin: 10px;
+  border-radius: 25px;
+  float: left;
+  transition: background 0.4s;
+  -moz-transition: background 0.4s; /* Firefox 4 */
+  -webkit-transition: background 0.4s; /* Safari 和 Chrome */
+  -o-transition: background 0.4s;
+}
+.-hoofoo-share-weibo:hover {
+  background-color: #cf3f41;
+}
+.-hoofoo-share-weixin:hover {
+  background-color: #18a01a;
+}
+.-hoofoo-share-qq:hover {
+  background-color: #950c0c;
+}
+.-hoofoo-share-twitter:hover {
+  background-color: #2ab3e6;
+}
+.-hoofoo-share-more:hover {
+  background-color: #777;
+}
+.-mob-share-weixin-qrcode-content {
+  border-radius: 4px;
+  -webkit-box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  -moz-box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  -o-box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+.-mob-share-weixin-qrcode {
+  margin: 5% !important;
+  width: 90% !important;
+  height: auto !important;
+}
+.-mob-share-weixin-qrcode-close {
+  background-image: url("/lib/fancybox/source/fancybox_sprite.png") !important;
+}
+.-mob-share-weixin-qrcode-close {
+  overflow: hidden;
+  line-height: 100px !important;
+  position: absolute !important;
+  top: -18px !important;
+  right: -18px !important;
+  width: 36px !important;
+  height: 36px !important;
+  cursor: pointer !important;
+  z-index: 8040 !important;
+}
+@media only screen and (-webkit-min-device-pixel-ratio: 1.5), only screen and (min--moz-device-pixel-ratio: 1.5), only screen and (min-device-pixel-ratio: 1.5) {
+  .-mob-share-weixin-qrcode-close {
+    background-image: url("/lib/fancybox/source/fancybox_sprite@2x.png") !important;
+    background-size: 44px 152px !important; /*The size of the normal image, half the size of the hi-res image*/
+  }
+}
+.-mob-share-close {
+  height: 4em !important;
+  font-size: 0.8em !important;
+  line-height: 4em !important;
+  background: #555 !important;
+  color: #fff !important;
+}
+.page-archive .archive-page-counter {
+  position: relative;
+  top: 3px;
+  left: 20px;
+}
+@media (max-width: 767px) {
+  .page-archive .archive-page-counter {
+    top: 5px;
+  }
+}
+.page-archive .posts-collapse .archive-move-on {
+  position: absolute;
+  top: 11px;
+  left: 0;
+  margin-left: -6px;
+  width: 10px;
+  height: 10px;
+  opacity: 0.5;
+  background: #555;
+  border: 1px solid #fff;
+  border-radius: 50%;
+}
+.category-all-page .category-all-title {
+  text-align: center;
+}
+.category-all-page .category-all {
+  margin-top: 20px;
+}
+.category-all-page .category-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.category-all-page .category-list-item {
+  margin: 5px 10px;
+}
+.category-all-page .category-list-count {
+  color: #bbb;
+}
+.category-all-page .category-list-count:before {
+  display: inline;
+  content: " (";
+}
+.category-all-page .category-list-count:after {
+  display: inline;
+  content: ") ";
+}
+.category-all-page .category-list-child {
+  padding-left: 10px;
+}
+#schedule ul#event-list {
+  padding-left: 30px;
+}
+#schedule ul#event-list hr {
+  margin: 20px 0 45px 0 !important;
+  background: #222;
+}
+#schedule ul#event-list hr:after {
+  display: inline-block;
+  content: 'NOW';
+  background: #222;
+  color: #fff;
+  font-weight: bold;
+  text-align: right;
+  padding: 0 5px;
+}
+#schedule ul#event-list li.event {
+  margin: 20px 0px;
+  background: #f9f9f9;
+  padding-left: 10px;
+  min-height: 40px;
+}
+#schedule ul#event-list li.event h2.event-summary {
+  margin: 0;
+  padding-bottom: 3px;
+}
+#schedule ul#event-list li.event h2.event-summary:before {
+  display: inline-block;
+  font-family: FontAwesome;
+  font-size: 8px;
+  content: '\f111';
+  vertical-align: middle;
+  margin-right: 25px;
+  color: #bbb;
+}
+#schedule ul#event-list li.event span.event-relative-time {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 400;
+  padding-left: 12px;
+  color: #bbb;
+}
+#schedule ul#event-list li.event span.event-details {
+  display: block;
+  color: #bbb;
+  margin-left: 56px;
+  padding-top: 3px;
+  padding-bottom: 6px;
+  text-indent: -24px;
+  line-height: 18px;
+}
+#schedule ul#event-list li.event span.event-details:before {
+  text-indent: 0;
+  display: inline-block;
+  width: 14px;
+  font-family: FontAwesome;
+  text-align: center;
+  margin-right: 9px;
+  color: #bbb;
+}
+#schedule ul#event-list li.event span.event-details.event-location:before {
+  content: '\f041';
+}
+#schedule ul#event-list li.event span.event-details.event-duration:before {
+  content: '\f017';
+}
+#schedule ul#event-list li.event-past {
+  background: #fcfcfc;
+}
+#schedule ul#event-list li.event-past > * {
+  opacity: 0.6;
+}
+#schedule ul#event-list li.event-past h2.event-summary {
+  color: #bbb;
+}
+#schedule ul#event-list li.event-past h2.event-summary:before {
+  color: #dfdfdf;
+}
+#schedule ul#event-list li.event-now {
+  background: #222;
+  color: #fff;
+  padding: 15px 0 15px 10px;
+}
+#schedule ul#event-list li.event-now h2.event-summary:before {
+  -webkit-transform: scale(1.2);
+  -moz-transform: scale(1.2);
+  -ms-transform: scale(1.2);
+  -o-transform: scale(1.2);
+  transform: scale(1.2);
+  color: #fff;
+  animation: dot-flash 1s alternate infinite ease-in-out;
+}
+#schedule ul#event-list li.event-now * {
+  color: #fff !important;
+}
+@-moz-keyframes dot-flash {
+  from {
+    opacity: 1;
+    -webkit-transform: scale(1.1);
+    -moz-transform: scale(1.1);
+    -ms-transform: scale(1.1);
+    -o-transform: scale(1.1);
+    transform: scale(1.1);
+  }
+  to {
+    opacity: 0;
+    -webkit-transform: scale(1);
+    -moz-transform: scale(1);
+    -ms-transform: scale(1);
+    -o-transform: scale(1);
+    transform: scale(1);
+  }
+}
+@-webkit-keyframes dot-flash {
+  from {
+    opacity: 1;
+    -webkit-transform: scale(1.1);
+    -moz-transform: scale(1.1);
+    -ms-transform: scale(1.1);
+    -o-transform: scale(1.1);
+    transform: scale(1.1);
+  }
+  to {
+    opacity: 0;
+    -webkit-transform: scale(1);
+    -moz-transform: scale(1);
+    -ms-transform: scale(1);
+    -o-transform: scale(1);
+    transform: scale(1);
+  }
+}
+@-o-keyframes dot-flash {
+  from {
+    opacity: 1;
+    -webkit-transform: scale(1.1);
+    -moz-transform: scale(1.1);
+    -ms-transform: scale(1.1);
+    -o-transform: scale(1.1);
+    transform: scale(1.1);
+  }
+  to {
+    opacity: 0;
+    -webkit-transform: scale(1);
+    -moz-transform: scale(1);
+    -ms-transform: scale(1);
+    -o-transform: scale(1);
+    transform: scale(1);
+  }
+}
+@keyframes dot-flash {
+  from {
+    opacity: 1;
+    -webkit-transform: scale(1.1);
+    -moz-transform: scale(1.1);
+    -ms-transform: scale(1.1);
+    -o-transform: scale(1.1);
+    transform: scale(1.1);
+  }
+  to {
+    opacity: 0;
+    -webkit-transform: scale(1);
+    -moz-transform: scale(1);
+    -ms-transform: scale(1);
+    -o-transform: scale(1);
+    transform: scale(1);
+  }
+}
+.page-post-detail .sidebar-toggle-line {
+  background: #fc6423;
+}
+.page-post-detail .comments {
+  overflow: hidden;
+}
+.header {
+  position: relative;
+  margin: 0 auto;
+  width: 75%;
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .header {
+    width: auto;
+  }
+}
+@media (max-width: 767px) {
+  .header {
+    width: auto;
+  }
+}
+.header-inner {
+  position: absolute;
+  top: 0;
+  overflow: hidden;
+  padding: 0;
+  width: 240px;
+  background: #fff;
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.06), 0 1px 5px 0 rgba(0,0,0,0.12);
+  border-radius: initial;
+}
+@media (min-width: 1600px) {
+  .container .header-inner {
+    width: 240px;
+  }
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .header-inner {
+    position: relative;
+    width: auto;
+    border-radius: initial;
+  }
+}
+@media (max-width: 767px) {
+  .header-inner {
+    position: relative;
+    width: auto;
+    border-radius: initial;
+  }
+}
+.main:before,
+.main:after {
+  content: " ";
+  display: table;
+}
+.main:after {
+  clear: both;
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .main {
+    padding-bottom: 100px;
+  }
+}
+@media (max-width: 767px) {
+  .main {
+    padding-bottom: 100px;
+  }
+}
+.container .main-inner {
+  width: 75%;
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .container .main-inner {
+    width: auto;
+  }
+}
+@media (max-width: 767px) {
+  .container .main-inner {
+    width: auto;
+  }
+}
+.content-wrap {
+  float: right;
+  box-sizing: border-box;
+  padding: 40px;
+  width: calc(100% - 252px);
+  background: #fff;
+  min-height: 700px;
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.06), 0 1px 5px 0 rgba(0,0,0,0.12);
+  border-radius: initial;
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .content-wrap {
+    width: 100%;
+    padding: 20px;
+    border-radius: initial;
+  }
+}
+@media (max-width: 767px) {
+  .content-wrap {
+    width: 100%;
+    padding: 20px;
+    min-height: auto;
+    border-radius: initial;
+  }
+}
+.sidebar {
+  position: static;
+  float: left;
+  margin-top: 300px;
+  width: 240px;
+  background: #eee;
+  box-shadow: none;
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .sidebar {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  .sidebar {
+    display: none;
+  }
+}
+.sidebar-toggle {
+  display: none;
+}
+.footer-inner {
+  width: 75%;
+  padding-left: 260px;
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .footer-inner {
+    width: auto;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
+@media (max-width: 767px) {
+  .footer-inner {
+    width: auto;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
+.sidebar-position-right .header-inner {
+  right: 0;
+}
+.sidebar-position-right .content-wrap {
+  float: left;
+}
+.sidebar-position-right .sidebar {
+  float: right;
+}
+.sidebar-position-right .footer-inner {
+  padding-left: 0;
+  padding-right: 260px;
+}
+.site-brand-wrapper {
+  position: relative;
+}
+.site-meta {
+  padding: 20px 0;
+  color: #fff;
+  background: #222;
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .site-meta {
+    box-shadow: 0 0 16px rgba(0,0,0,0.5);
+  }
+}
+@media (max-width: 767px) {
+  .site-meta {
+    box-shadow: 0 0 16px rgba(0,0,0,0.5);
+  }
+}
+.brand {
+  padding: 0;
+  background: none;
+}
+.brand:hover {
+  color: #fff;
+}
+.site-subtitle {
+  margin: 10px 10px 0;
+  font-weight: initial;
+}
+.site-search form {
+  display: none;
+}
+.site-nav {
+  border-top: none;
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .site-nav {
+    display: none !important;
+  }
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .site-nav-on {
+    display: block !important;
+  }
+}
+.menu .menu-item {
+  display: block;
+  margin: 0;
+}
+.menu .menu-item a {
+  position: relative;
+  box-sizing: border-box;
+  padding: 5px 20px;
+  text-align: left;
+  line-height: inherit;
+  transition-property: background-color;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+  transition-delay: 0s;
+}
+.menu .menu-item a:hover,
+.menu-item-active a {
+  background: #f9f9f9;
+  border-bottom-color: #fff;
+}
+.menu .menu-item br {
+  display: none;
+}
+.menu-item-active a:after {
+  content: " ";
+  position: absolute;
+  top: 50%;
+  margin-top: -3px;
+  right: 15px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #bbb;
+}
+.btn-bar {
+  background-color: #fff;
+}
+.site-nav-toggle {
+  left: 20px;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -webkit-transform: translateY(-50%);
+  -moz-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+  -o-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .site-nav-toggle {
+    display: block;
+  }
+}
+.use-motion .sidebar .motion-element {
+  opacity: 1;
+}
+.sidebar {
+  margin-left: -100%;
+  right: auto;
+  bottom: auto;
+  -webkit-transform: none;
+}
+.sidebar-inner {
+  box-sizing: border-box;
+  width: 240px;
+  color: #555;
+  background: #fff;
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.06), 0 1px 5px 0 rgba(0,0,0,0.12), 0 -1px 0.5px 0 rgba(0,0,0,0.09);
+  border-radius: initial;
+  opacity: 0;
+}
+.sidebar-inner.affix {
+  position: fixed;
+  top: 12px;
+}
+.sidebar-inner.affix-bottom {
+  position: absolute;
+}
+.site-overview {
+  text-align: left;
+}
+.site-author:before,
+.site-author:after {
+  content: " ";
+  display: table;
+}
+.site-author:after {
+  clear: both;
+}
+.sidebar a {
+  color: #555;
+}
+.sidebar a:hover {
+  color: #222;
+}
+.site-state-item {
+  padding: 0 10px;
+}
+.links-of-author-item a:before {
+  display: none;
+}
+.links-of-author-item a {
+  border-bottom: none;
+  text-decoration: underline;
+}
+.feed-link {
+  border-top: 1px dotted #ccc;
+  border-bottom: 1px dotted #ccc;
+  text-align: center;
+}
+.feed-link a {
+  display: block;
+  color: #fc6423;
+  border: none;
+}
+.feed-link a:hover {
+  background: none;
+  color: #e34603;
+}
+.feed-link a:hover i {
+  color: #e34603;
+}
+.links-of-author {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.links-of-author-item {
+  margin: 5px 0 0;
+  width: 50%;
+}
+.links-of-author-item a {
+  max-width: 216px;
+  box-sizing: border-box;
+  display: inline-block;
+  margin-right: 0;
+  margin-bottom: 0;
+  padding: 0 5px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.links-of-author-item a {
+  display: block;
+  text-decoration: none;
+}
+.links-of-author-item a:hover {
+  border-radius: 4px;
+  background: #eee;
+}
+.links-of-author-item .fa {
+  margin-right: 2px;
+  font-size: 16px;
+}
+.links-of-author-item .fa-globe {
+  font-size: 15px;
+}
+.links-of-blogroll {
+  text-align: center;
+  margin-top: 20px;
+  padding: 3px 0 0;
+  border-top: 1px dotted #ccc;
+}
+.links-of-blogroll-title {
+  margin-top: 0;
+}
+.links-of-blogroll-item {
+  padding: 0;
+}
+.links-of-blogroll-inline:before,
+.links-of-blogroll-inline:after {
+  content: " ";
+  display: table;
+}
+.links-of-blogroll-inline:after {
+  clear: both;
+}
+.links-of-blogroll-inline .links-of-blogroll-item {
+  margin: 5px 0 0;
+  width: 50%;
+  display: inline-block;
+  width: unset;
+}
+.links-of-blogroll-inline .links-of-blogroll-item a {
+  max-width: 216px;
+  box-sizing: border-box;
+  display: inline-block;
+  margin-right: 0;
+  margin-bottom: 0;
+  padding: 0 5px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.content-wrap {
+  padding: initial;
+  background: initial;
+  box-shadow: initial;
+  border-radius: initial;
+}
+.post-block {
+  padding: 40px;
+  background: #fff;
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.06), 0 1px 5px 0 rgba(0,0,0,0.12);
+  border-radius: initial;
+}
+#posts > article + article .post-block {
+  margin-top: 12px;
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.06), 0 1px 5px 0 rgba(0,0,0,0.12), 0 -1px 0.5px 0 rgba(0,0,0,0.09);
+  border-radius: initial;
+}
+.comments {
+  padding: 40px;
+  margin: initial;
+  margin-top: 12px;
+  background: #fff;
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.06), 0 1px 5px 0 rgba(0,0,0,0.12), 0 -1px 0.5px 0 rgba(0,0,0,0.09);
+  border-radius: initial;
+}
+.posts-expand {
+  padding-top: initial;
+}
+.post-nav-divider {
+  width: 4%;
+}
+.post-nav-item {
+  width: 48%;
+}
+.post-eof,
+.post-spread {
+  display: none !important;
+}
+.pagination {
+  margin: 12px 0 0;
+  border-top: initial;
+  background: #fff;
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.06), 0 1px 5px 0 rgba(0,0,0,0.12), 0 -1px 0.5px 0 rgba(0,0,0,0.09);
+  border-radius: initial;
+  padding: 10px 0 10px;
+}
+.pagination .prev,
+.pagination .next,
+.pagination .page-number {
+  margin-bottom: initial;
+  top: initial;
+}
+.main {
+  padding-bottom: initial;
+}
+.footer {
+  bottom: auto;
+}
+.post-header h1,
+.post-header h2 {
+  margin: initial;
+}
+.posts-expand .post-title-link {
+  line-height: inherit;
+}
+.posts-expand .post-title {
+  font-size: 1.7em;
+}
+.post-body h1 {
+  font-size: 1.6em;
+  border-bottom: 1px solid #eee;
+}
+.post-body h2 {
+  font-size: 1.45em;
+  border-bottom: 1px solid #eee;
+}
+.post-body h3 {
+  font-size: 1.3em;
+  border-bottom: 1px dotted #eee;
+}
+.post-body h4 {
+  font-size: 1.2em;
+}
+.post-body h5 {
+  font-size: 1.07em;
+}
+.post-body h6 {
+  font-size: 1.03em;
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .content-wrap {
+    padding: 10px;
+  }
+  .posts-expand {
+    margin: initial;
+  }
+  .posts-expand .post-button {
+    margin-top: 20px;
+  }
+  .post-block {
+    padding: 20px;
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.06), 0 1px 5px 0 rgba(0,0,0,0.12), 0 -1px 0.5px 0 rgba(0,0,0,0.09);
+    border-radius: initial;
+  }
+  #posts > article + article .post-block {
+    margin-top: 10px;
+  }
+  .comments {
+    margin-top: 10px;
+    padding: 10px 20px;
+  }
+  .pagination {
+    margin: 10px 0 0;
+  }
+}
+@media (max-width: 767px) {
+  .content-wrap {
+    padding: 8px;
+  }
+  .posts-expand {
+    margin: initial;
+  }
+  .posts-expand .post-button {
+    margin-top: 12px;
+  }
+  .posts-expand img {
+    padding: initial !important;
+  }
+  .post-block {
+    padding: 12px;
+    min-height: auto;
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.06), 0 1px 5px 0 rgba(0,0,0,0.12), 0 -1px 0.5px 0 rgba(0,0,0,0.09);
+    border-radius: initial;
+  }
+  #posts > article + article .post-block {
+    margin-top: 8px;
+  }
+  .comments {
+    margin-top: 8px;
+    padding: 0 12px;
+  }
+  .pagination {
+    margin: 8px 0 0;
+  }
+}
+.post-body p a {
+  color: #0593d3;
+  border-bottom: none;
+}
+.post-body p a:hover {
+  color: #0477ab;
+  text-decoration: underline;
+}
+@media screen and (min-width: 1200px) {
+  body {
+    background-image: url("/images/vl.jpg");
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: 1%;
+    background-size: 100%;
+  }
+  #footer a {
+    color: #eee;
+  }
+}
+.main-inner {
+  opacity: 0.9;
+}
+#sidebar p,
+#sidebar span,
+#sidebar a {
+  color: #d2691e;
+}
+</style><noscript><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.6.2/css/font-awesome.min.css"><link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css"></noscript></head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Tfrain's  Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">白云从湖里出来，在青翠山谷里留下一道影子</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-gitbook">
+          <a href="https://tfrain.gitbook.io/leetcode/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-git"></i> <br>
+            
+            Gitbook
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-library">
+          <a href="/library" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-book"></i> <br>
+            
+            Library
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://freewei.ml/2019/01/yuque/vim_skill/">
+
+    <span hidden="" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Tfrain">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden="" itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tfrain's  Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Vim 实用技巧</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-15T11:45:00+08:00">
+                2019-01-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Vim/" itemprop="url" rel="index">
+                    <span itemprop="name">Vim</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Words count in article:</span>
+                
+                <span title="Words count in article">
+                  7,157
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Reading time ≈</span>
+                
+                <span title="Reading time">
+                  26
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p></p><blockquote class="blockquote-center"><strong>希望由厚至薄</strong></blockquote><br><a id="more"></a><p></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/jpeg/203310/1547523970324-ad085afb-d91a-4b7a-bc5e-07c6133eeca7.jpeg#align=left&amp;display=inline&amp;height=614&amp;originHeight=693&amp;originWidth=552&amp;size=0&amp;status=done&amp;style=none&amp;width=489" alt=""><br><a name="a4d3b02a"></a></p>
+<h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p> 学习Vim，最难受的就是它对新手出名的不友好，网上一大堆乱七八糟的东西，还是自己进行学习对自己的帮助最大。建议首先学习 :vimtutor 入门vim学习。最好会盲打，自己看了这本 vim 实用技巧。<br><a name="454d0617"></a></p>
+<h1 id="第-1-章-Vim解决问题的方式"><a href="#第-1-章-Vim解决问题的方式" class="headerlink" title="第 1 章 Vim解决问题的方式"></a>第 1 章 Vim解决问题的方式</h1><p>{char} 是指任意字符<br><cr> 指<enter><br>cw会删除光标位置到当前词位置结尾处的文本，并进入插入模式<br>&gt;G是首行缩进<br>C=c$ 删除到行尾再插入<br>o=A<cr>下一行插入<br>s删除光标处再插入<br>@：重复命令行命令<br>&amp;重复替换命令<br>f{char} 搜索，; 下一个字符，, 上一个字符<br>* 可以查看当前光标下的单词<br>理想模式：用一个键移动，另一键执行。又称为 “.范式”。<br><a name="d65edfb7"></a></cr></enter></cr></p>
+<h1 id="第一部分-模式"><a href="#第一部分-模式" class="headerlink" title="第一部分 模式"></a>第一部分 模式</h1><p>Vim 提供一个区分模式的用户界面，就是说在 Vim 中按键盘上的任意键所产生的结果可能会不一样，而这取决于当前正处于哪种模式，以及如何在各模式间切换，是极其重要的。在本书的这一部分，我们将学习每种模式的工作方式及其用途。<br><a name="f5859b09"></a></p>
+<h2 id="第-2-章-普通模式"><a href="#第-2-章-普通模式" class="headerlink" title="第 2 章 普通模式"></a>第 2 章 普通模式</h2><p>b 把光标移动到单词开头<br>daw 在单词末尾也能删除<br><c-a> 在数字上执行加一，不在数字上，在当前行正向查找一个数字，10<c-a><br><c-x> 在数字上执行减一<br>最好不要用数字 d2w 这样，因为 . 能很好代替，但是 c3w 有用，行中间来快速进行修改<br>g~ 反转大小写，gu 转成小写，gU转成大写。gUap 将一段转换为大写，g 当成操作符前缀<br>gc{motion} 切换为注释状态，gcap 切换当前段落的注释状态。gcG 当前行到文件结尾间的所有内容注释掉，gcc 注释当前行，gg=G 自动缩进整个文件。<br><a name="e67876bd"></a></c-x></c-a></c-a></p>
+<h2 id="第-3-章-插入模式"><a href="#第-3-章-插入模式" class="headerlink" title="第 3 章 插入模式"></a>第 3 章 插入模式</h2><p>在输入错误时，专业打字员会建议先删除整个单词，然后再重新输入一遍。<br><c-h> 删除前一个字符（同退格键）<c-w> 删除前一个单词<c-u> 删至行首。<br>&lt;c-[&gt;切换到普通模式，<c-o> 切换到插入-普通模式。在此模式中，可以执行一个普通模式命令，执行完后，马上又返回到插入模式</c-o></c-u></c-w></c-h></p>
+<table>
+<thead>
+<tr>
+<th>按键操作</th>
+<th>缓冲区内容</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>yt,</td>
+<td>Practical Vim, by Drew Neil<br>Read Drew Neil’s</td>
+<td></td>
+</tr>
+<tr>
+<td>jA␣</td>
+<td>Practical Vim, by Drew Neil<br>Read Drew Neil’s</td>
+<td></td>
+</tr>
+<tr>
+<td><c-r>0</c-r></td>
+<td>Practical Vim, by Drew Neil<br>Read Drew Neil’s Practical Vim</td>
+<td></td>
+</tr>
+<tr>
+<td>.<esc></esc></td>
+<td>Practical Vim, by Drew Neil<br>Read Drew Neil’s Practical Vim.</td>
+</tr>
+</tbody>
+</table>
+<p>yt, 命令把“Practical Vim”复制到复制专用寄存器中,<c-r>0 把刚才复制的文本粘贴到光<br>标所在位置<br>= 符号指明使用表达式寄存器,<c-r>=6*35<cr>，将执行结果插入到文档的当前位置<br><c-v>{code}根据字符编码插入字符，{code} 是要插入字符的编码，<c-v>065插入A<br><c-v>u{1234} 以十六进制字符编码插入字符<br>ga 分别以十进制和十六进制的形式显示出其字符编码<br><c-k>{char1}{char2} 插入以<strong>二合字母</strong>{char1}{char2}表示的字符，<c-k>?I 表示的“¿”字符，二合字母 12 指1⁄2<br>R 命令可以由普通模式进入替换模式，“,␣b” 替换原有的“. ␣ B”字符<br>gR 进入虚拟替换模式(Virtual Replace mode)，把制表符当成一组空格进行处理，输入制表符占据的最后一个字符，该字符会替换制表符。<br><a name="4e7f5ecd"></a></c-k></c-k></c-v></c-v></c-v></cr></c-r></c-r></p>
+<h2 id="第-4-章-可视模式"><a href="#第-4-章-可视模式" class="headerlink" title="第 4 章 可视模式"></a>第 4 章 可视模式</h2><p>viw 来高亮选择这个词,用 c 命令进行修改<br>V 激活面向行的可视模式<br><c-v> 激活面向列块的可视模式<br>gv 重选上次的高亮选区<br>o 切换高亮选区的活动端，vbb ，o ，e<br>重复执行面向行的可视命令，Vj ，&gt;.<br>vit 可被解读为高亮选中标签内部的内容(visually select inside the tag),it 命令是一种被称为文本对象(text object)<br>gUit 要优于 vitU 命令，首选操作符命令，再者是可是模式命令，可视模式擅长一次性处理和动作命令难以构建的文本范围<br>技巧24 面向列块的可是模式编辑表格数据，在一行下生成分割线 yyp，Vr-<br>列块可视模式,插入操作只影响顶行，但实际影响所有，插入模式时间很短暂<br>I 命令把光标置于当前行的开头<br><a name="007fa2d7"></a></c-v></p>
+<h2 id="第-5-章-命令行模式"><a href="#第-5-章-命令行模式" class="headerlink" title="第 5 章 命令行模式"></a>第 5 章 命令行模式</h2><p>有些命令在插入模式和命令行模式中可以通用。例如,可以用 <c-w> 和 <c-u>分别删除至上个单词的开头及行首,也可以用 <c-v> 或 <c-k> 来插入键盘上找不到的字符,还可以用 <c-r>{register} 命令把任意寄存器的内容插入到命令行。Ex 命令可以在任意位置执行</c-r></c-k></c-v></c-u></c-w></p>
+<p>:3d 等于 3G dd 一定程度上要比普通模式命令要快<br>. 代表当前行的地址，:.,$d 这样的命令可能很实用<br>% 代表当前文件中的所有行，:%s/Practical/Pragmatic/<br>可视模式加命令行模式，VG，输入 ：命令行上就会预先填充一个范围 :’&lt;,’&gt; 。代表高亮选区的范围<br>:6copy. 命令解读为“为第 6 行创建一份副本,并放到当前行下方”，:copy 简写:co 或是 :t<br>:t6 把当前行复制到第 6 行下方，:t$ 把当前行复制到文本结尾<br>快速跳回原先的位置( <c-o> )，在复制距离较远的行时, :t 命令通常更加高效。<br>: yyp 会使用寄存器，不想覆盖默认寄存器中的当前内容时，可以考虑使用 :t. 来复制行<br>:’&lt;,’&gt;m$ 等于 :’&lt;,’&gt;m$，重复上次的 Ex 命令 @:<br>‘&lt;,’&gt;normal . 命令可以解读为“对高亮选区中的每一行,对其执行普通模式下的 . 命令”。<br>:%normal i// 把整个 JavaScript 文件注释掉<br>:normal 命令则让我们可以把具有强大表现力的 Vim 普通模式命令与具有大范围影响力的 Ex 命令结合在一起<br>遍历缓冲区列表的条目，:bn[ext] 可以在列表中逐项正向移动,而 :bp[revious] 命令则进行反向移动</c-o></p>
+<p>逐个查看每个缓冲区 :bnext，@: 命令和:bprevious 命令可能会出现反向遍历缓冲区列表，将人搞糊涂，更好用<c-o> 命令，该命令会回到跳转列表的上条记录。想往回跳,就用 <c-o> 命令。</c-o></c-o></p>
+<p><c-d> 命令会让 Vim 显示可用的补全列表，按 <tab> 键依次显示<br><c-r><c-w> 用于插入光标下的单词，插入光标下的字串<c-r><c-a>，一般和 * 、:%s 一起使用，:%s//<c-r><c-w>/g<br>命令行窗口就像是一个常规的 Vim 缓冲区,只不过它的每行内容都对应着命令历史中的一个条目。我们可以用 k 及 j 键在历史中向前或向后移动,也可以用 Vim 的查找功能查找某一行。在按下 <cr> 键时,将会把当前行的内容当成 Ex 命令加以执行。好处是强大的vim编辑能力可以派上用场。<br>q: 调出命令行窗口，J 命令合并下一行，命令行窗口处于打开状态时,它会始终拥有焦点。<br><ctrl-f> 从命令行模式切换到命令行窗口，已经输入到命令行上的内容仍然会得以保留<br>:!ls 执行 Shell 中的程序，在 Vim 的命令行中,符号 % 代表当前文件名(指调用了shell程序时)<br>执行几条命令:shell 命令来启动一个交互的 shell 会话,用 exit 命令可以退出此 shell 并返回 Vim<br>把 Vim 置于后台，看书 p 94 <br>命令会产生大量输出，用:read !{cmd} 命令，它让我们把命令的标准输出重定向到缓冲区。<br>:write !{cmd} 做相反的事。它把缓冲区内容作为指定 {cmd} 的标准输入<br>:write! sh 把缓冲区内容写到一个名为 sh 的文件，叹号放得位置不同,命令的作用]也大相径庭。<br>:write !sh 命 令 的 作 用 是 在 shell 中 执 行 当 前 缓 冲 区 中 的 每 行 内 容<br>Vim 把过滤器定义为“一个由标准输入读取文本,并对其进行某种形式的修改后输出到标准输出的程序”<br>:2,$!sort -t’,’ -k2，命令行结合 shell 来对文本进行处理。<br>Vim 提供了一种方便的快捷方式来设置 :[range]!{filter} 命令中的范围。我们可以用 !{motion} 操作符切换到命令行模式,并把指定 {motion} 所涵盖的范围预置在命令行上，如果我们把光标移到第 2 行,然后执行 !G ,Vim 就会打开命令行并把范围 :.,$! 预置在命令行上。虽然此后我们仍需输入剩下的 {filter} 命令,但这毕竟节省了部分工作。<br>:read !{cmd} 在 shell 中执行 {cmd} ,并把其标准输出插入到光标下方<br>:[range]write !{cmd} 在 shell 中执行 {cmd} ,以 [range] 作为其标准输入<br>:[range]!{filter} 使用外部程序 {filter} 过滤指定的 [range]<br><a name="b76203f4"></a></ctrl-f></cr></c-w></c-r></c-a></c-r></c-w></c-r></tab></c-d></p>
+<h1 id="第二部分-文件"><a href="#第二部分-文件" class="headerlink" title="第二部分 文件"></a>第二部分 文件</h1><p>在本书的这一部分，我们将学习如何使用文件及缓冲区。Vim 允许在一个编辑会话中编辑多个文件，我们既可以每次显示一个文件，也可以把工作区分成若干个分割窗口或标签页，每个窗口或标签页包含一个独立的缓冲区。另外，我们还会看到在 Vim 中打开文件的机种不同方式，并掌握一些方法来解决无法把缓冲区保存到文件的问题。<br><a name="d239b0a0"></a></p>
+<h2 id="第-6-章-管理多个文件"><a href="#第-6-章-管理多个文件" class="headerlink" title="第 6 章 管理多个文件"></a>第 6 章 管理多个文件</h2><p>我们编辑的只是内存中的映像，也就是 Vim 术语中的“缓冲区”。 </p>
+<p>:ls 命令会列出所有被载入到内存中的缓冲区的列表， :bnext 命令可以切换到列表中的下一个缓冲区，% 符号指明哪个缓冲区在当前窗口中可见，而 # 符号则代表轮换文件。按 &lt;C-^&gt; 可以在当前文件和轮换文件间快速切换。</p>
+<p>:bprev (bp) 和 :bnext (bn)在列表中反向或正向移动；而 :bfirst 和 :blast 则分别跳到列表的开头和结尾</p>
+<figure class="highlight bash"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">《 1 <span class="comment">#  "a.txt"   line 1</span></span><br><span class="line">	 2 %a  <span class="string">"b.txt"</span>   line 1</span><br></pre></td></tr></tbody></table></figure>
+<p>:buffer N 命令直接凭编号跳转到一个缓冲区，:buffer {bufname} 格式实现同样的功能。{bufname} 只需包含文件路径中 足以唯一标识此缓冲区的字符即可</p>
+<p>删除缓冲区，可以用 :bdelete 命令, :5,10bd ,删除编号 5～10（包含 5 和 10）的缓冲区</p>
+<p>用 :argdo 命令可以在参数列表中的每个文件上执行一条 Ex 命令。 当不带参数运行 :args 命令时，它会打印当前参数列表的内容。 :args {arglist} {arglist} 可以包括文件名、通配符，甚至是一条 shell 命令的输出结果</p>
+<p>填充参数列表最简单的方式是逐一指定文件的名字：➾ :args index.html app.js  <strong> 通配符也匹配 0 个或多个字符，但它可以递归进入指定目录的子目录 :args </strong>/<em>.js ,  :args **/</em>.js *<em>/</em>.css  :args <code>cat .chapters</code></p>
+<p>按 Go 在缓冲区的结尾增加一个空行,缓冲区 a.txt 前有一个 + 号，表示这个缓冲区被修改过了,被标记为 h，表示它是一个隐藏缓冲区（hidden）</p>
+<p>:w[rite] 把缓冲区内容写入磁盘 :e[dit]! 把磁盘文件内容读入缓冲区（即回滚所做修改） :qa[ll]! 关闭所有窗口，摒弃修改而无需警告 :wa[ll]! 把所有改变的缓冲区写入磁盘 </p>
+<p>启用‘hidden’选项,运行完 :argdo {cmd} 后,一切正常，可以运行 :argdo write （或 :wall）来保存所有的缓冲区。</p>
+<p>用 <c-w>s 命令可以水平切分此窗口，使之成 为两个高度相同的窗口；或者可以用 <c-w>v 命令对其进行垂直切分，这样会产生两 个宽度相同的窗口</c-w></c-w></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/png/203310/1550644590245-77a4763f-ed46-470e-9a1d-4512ea7167ac.png#align=left&amp;display=inline&amp;height=503&amp;name=image.png&amp;originHeight=503&amp;originWidth=685&amp;size=34313&amp;status=done&amp;style=none&amp;width=685" alt="image.png"><br>编辑长文件时,可以滚动其中一个窗口，使之显示缓冲区的一部分，这样，在修改第二 个窗口中缓冲区的另外一部分时，就可以参考第一个窗口中的内容。</p>
+<p>:sp[lit] {file} 水平切分当前窗口，并在新窗口中载入{file} :vsp[lit] {file} 垂直切分当前窗口，并在新窗口中载入{file}<br><c-w>w 在窗口间循环切换 <c-w>h 切换到左边的窗口 <c-w>j 切换到下边的窗口 <c-w>k 切换到上边的窗口 <c-w>l 切换到右边的窗口,按住 <ctrl> 键，然后再输入 ww （或 wj ，或上表中的其他命令）来切换活动窗口。 </ctrl></c-w></c-w></c-w></c-w></c-w></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/png/203310/1550645102529-39f26124-6f39-4015-9320-753465134bd9.png#align=left&amp;display=inline&amp;height=152&amp;name=image.png&amp;originHeight=152&amp;originWidth=842&amp;size=25654&amp;status=done&amp;style=none&amp;width=842" alt="image.png"></p>
+<p><c-w>= 使所有窗口等宽、等高 <c-w>_ 最大化活动窗口的高度 <c-w>|  最大化活动窗口的宽度 [N]<c-w>_  把活动窗口的高度设为[N]行 [N]<c-w>| 把活动窗口的宽度设为[N]列,用鼠标做最好</c-w></c-w></c-w></c-w></c-w></p>
+<p>用 :edit 命令打开一个文件时，Vim 却不会自动创建一 个新标签页，而是会创建一个新缓冲区，并把该缓冲区显示到当前窗口。应该把标签页想成容纳一系 列窗口的容器</p>
+<p>:lcd {path} 命令让我们可以设置当前窗口的本地工作目录。如果我们创建了一 个新标签页，并用 :lcd 命令切换到另一个目录，那么就可以把每个标签页限制在不 同的工程范围内。用 :tabedit {filename} 命令可以打开一个新的标签页，如果省略了 {filename} 参数的话，那么 Vim 会创建一个新标签页，里面包含一个空缓冲区</p>
+<p><c-w>T 命 令把当前窗口移到一个新标签页中 :tabc[lose] 关闭当前标签页及其中的所有窗口 :tabo[nly] 只保留活动标签页，关闭所有其他标签页<br><img src="https://cdn.nlark.com/yuque/0/2019/png/203310/1550645990944-5586df98-b275-4ac8-9663-185a464c59af.png#align=left&amp;display=inline&amp;height=199&amp;name=image.png&amp;originHeight=199&amp;originWidth=896&amp;size=36002&amp;status=done&amp;style=none&amp;width=896" alt="image.png"></c-w></p>
+<p> :tabmove [N] 命令可以重新排列标签页。省略了 [N]，当前标签页会被移到结尾，如果支持鼠标，则用鼠标拖拽</p>
+<p><a name="a185fab5"></a></p>
+<h2 id="第-7-章-打开及保存文件"><a href="#第-7-章-打开及保存文件" class="headerlink" title="第 7 章 打开及保存文件"></a>第 7 章 打开及保存文件</h2><p>:edit {file} 命令可以接受相对于工作目录的文件路径</p>
+<p>% 符号代表活动缓冲区的完整文件路径，:h 修饰符会去除文件名，但保留路径中的其他部分 :edit %:h<tab>M<tab> </tab></tab></p>
+<p> $ vim . 在按<cr> 键时，Vim 会打开光标下的条 目。如果光标位于目录上，那么此窗口的内容会更新为该目录的内容；如果光标位于文件上，那么该文件会被载入一个缓冲区里，并把它显示在当前窗口中。这将导致当 前窗口中的文件管理器被该缓冲区的内容所替代<br><img src="https://cdn.nlark.com/yuque/0/2019/png/203310/1550646730436-643f6d61-8093-40cb-a791-42b31a95f6a4.png#align=left&amp;display=inline&amp;height=464&amp;name=image.png&amp;originHeight=464&amp;originWidth=807&amp;size=97939&amp;status=done&amp;style=none&amp;width=807" alt="image.png"></cr></p>
+<p>:edit . :e. 打开文件管理器，并显示当前工作目录 :Explore :E 打开文件管理器，并显示活动缓冲区所在的目录 :E 及 :e. 命令表现得有些古怪，因为它们会用文件管理器替换掉当前窗口的内容，想象成一张纸牌，如果在调出文 件管理器后，又想切换回刚才正在编辑的那个文件，此时可以使用 &lt;C-^&gt; 命令。 </p>
+<p>杀手级功能，其名字正因为此功能而来，即 netrw 可 以通过网络读写文件。该插件可以利用多种协议读写网络文件，包括 scp、ftp、curl 及 wget，这取决于你的系统上可以用哪些协议。（手动流汗）</p>
+<p><c-g> 命令用于显示当前文件的文件名及状态，以超级用户执行，tee /etc/hosts &gt; /dev/null。这条命令会把缓冲区的内容当作标准输入，并用它来覆盖 /etc/hosts 文件的内容，下面文件与缓冲区的内容刚好是完全一致的。<br><img src="https://cdn.nlark.com/yuque/0/2019/png/203310/1550647263953-ba725e78-53c9-4888-a1c3-01bf77f715ab.png#align=left&amp;display=inline&amp;height=233&amp;name=image.png&amp;originHeight=233&amp;originWidth=747&amp;size=32937&amp;status=done&amp;style=none&amp;width=747" alt="image.png"><br><a name="3852f4b5"></a></c-g></p>
+<h1 id="第三部分-更快地移动及跳转"><a href="#第三部分-更快地移动及跳转" class="headerlink" title="第三部分 更快地移动及跳转"></a>第三部分 更快地移动及跳转</h1><p>动作命令是进行 Vim 操作的最重要的一些命令。我们不仅可以用它们四处移动光标，还能够用它们与操作符待决模式配合使用，指定一段文本范围并在其上进行操作。在本书的这一部分，我们将结识一些最为有用的动作命令，另外，我们还会学习 Vim 的跳转命令，这些命令让我们可以在文件间快速地跳转。<br><a name="ec48adac"></a></p>
+<h2 id="第-8-章-用动作命令在文档中移动"><a href="#第-8-章-用动作命令在文档中移动" class="headerlink" title="第 8 章 用动作命令在文档中移动"></a>第 8 章 用动作命令在文档中移动</h2><p>我们不用把手从本位行上移开，就可以上下左右移动，操作符待决模式中最出彩的明星是文本对象<br>如果你在一行中连续按了两次以上的 h 键，那就是在浪费时间（手动流汗）。</p>
+<p>即 j、k、0和 $ 都用于操作实际行，而如果在这些 键前加上 g 前缀的话，就会让 Vim 对屏幕行进行操作</p>
+<p>w 正向移动到下一单词的开头   (for-)word<br>b 反向移动到当前单词/上一单词的开头  back-word<br>e 正向移动到当前单词/下一单词的结尾<br>ge 反向移动到上一单词的结尾<br><img src="https://cdn.nlark.com/yuque/0/2019/png/203310/1551021099056-92eee3a8-553a-4244-a911-5215fed7c090.png#align=left&amp;display=inline&amp;height=241&amp;name=image.png&amp;originHeight=301&amp;originWidth=542&amp;size=46783&amp;status=done&amp;style=none&amp;width=434" alt="image.png"><br>ea 命令连在一起可被解读为“在当前单词结尾后添加”<br>gea 命令当成“在上一单词结尾后 添加”的命令</p>
+<p>我们之前遇到过的每个面向单词的动作命令，都有一个面向字串的命令与其对 应，这当中包括 W、B、E和 gE<br>一个单词由字母、数字、下划线，或其他非空白字符的序列组成，单词间以空白 字符分隔，字串的定义则更简单，它由非空白字符序列组成， 字串间以空白字符分隔</p>
+<p>Vim 会记录 上次执行过的 f{char} 命令，随后用 ; 命令就可以重复该命令了，用 , 命令就可以再跳回来<br>f{char} 正向移动到下一个 {char} 所在之处<br>F{char} 反向移动到上一个 {char} 所在之处<br>t{char} 正向移动到下一个 {char} 所在之处的前一个字符上<br>T{char} 反向移动到上一个 {char} 所在之处的后一个字符上<br>; 重复上次的字符查找命令<br>, 反转方向查找上次的字符查找命令<br> f,dt.训练成手指的下意识动作（删除 , 和 . 之间的内容）</p>
+<p>缺省的<leader> 键是 \</leader></p>
+<p>查找命令不仅限于在普通模式下使用，我们也可以在可视模式及操作符待决模式 中使用它，用来完成实际的工作<br>删除工作会更方便，先高亮然后通过命令行模式进行大范围选择。<br>d/ge<cr> 用 /ge<cr> 查找动作告诉 d{motion} 命令删除什么。查找命令是 一个开动作，也就是说，虽然光标是在单词“gets”开头的“g”上的，但此字符却被 排除在删除操作之外，用 v 还需要 h 一下<br>把 d{motion} 操作符与查找动作结 合在一起使用，这是个很大的进步，你可以好好在朋友和同事们面前炫耀一番了</cr></cr></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/png/203310/1551022390533-baf49e0f-bcdf-4264-bee3-76f4eb4e25f8.png#align=left&amp;display=inline&amp;height=427&amp;name=image.png&amp;originHeight=534&amp;originWidth=578&amp;size=49815&amp;status=done&amp;style=none&amp;width=462" alt="image.png"></p>
+<p>可以把 i 想成“inside”，而把 a 想成 “around” 或“all”。<br><img src="https://cdn.nlark.com/yuque/0/2019/png/203310/1551022505589-cada3bcd-b055-427d-a850-31630f07c346.png#align=left&amp;display=inline&amp;height=453&amp;name=image.png&amp;originHeight=566&amp;originWidth=484&amp;size=75169&amp;status=done&amp;style=none&amp;width=387" alt="image.png"></p>
+<p>文本对象自身并不是动作命令，我们不能用它们在文档中移动。但是我们却可以 在可视模式及操作符待决模式中使用文本对象 ：每当在命令语法里看到 {motion} 时，你也可以在这个地方使用文本对象，常见的例子包括 d{motion}、 c{motion}和 y{motion} <br>把 ci” 命令解读为“修改双引号内部的内容”，把 cit 命令解读为“修 改标签内部的内容”。另外，我们也可以很容易地用 yit 命令拷贝标签内的文本，或 者是用 dit 删除这些文本。</p>
+<p>如果说 f{char} 和 /pattern<cr> 命令如同单足飞踹， 那么文本对象则像是一次攻击两个目标的剪刀腿<br><img src="https://cdn.nlark.com/yuque/0/2019/png/203310/1551022681107-241777fb-ce43-4d52-819c-c55c1b28e6c7.png#align=left&amp;display=inline&amp;height=218&amp;name=image.png&amp;originHeight=272&amp;originWidth=685&amp;size=31159&amp;status=done&amp;style=none&amp;width=548" alt="image.png"></cr></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/png/203310/1551022790391-f03ad92b-de0b-4381-9ce9-7ac70b68ef19.png#align=left&amp;display=inline&amp;height=279&amp;name=image.png&amp;originHeight=349&amp;originWidth=350&amp;size=28484&amp;status=done&amp;style=none&amp;width=280" alt="image.png"><br>iw 和 aw 之间的区别很微妙，为什么会需要这样两个文本对象呢？<br>ciw 命令只删除该单词，而不删除其前后的空白字符，随后它会进入插入模式， 这刚好是我们想要的效果。如果用的是 caw 的话，那最后两个单词就会连在一起<br>一般来说，d{motion} 命令和 aw、as 和 ap 配合起来使用比较好，而 c{motion} 命令和 iw 及类似的文本对象一起用效果会更好。</p>
+<p>m{a-zA-Z} 命令会用选定的字母标记当前光标所在位置,mm 和 `m 命令是一对便于使用的命令，它们分别设置位置标记 m，以及跳转到 该标记<br><img src="https://cdn.nlark.com/yuque/0/2019/png/203310/1551060576906-eb4d92e6-28f9-40f9-8c9c-4be5ccba3c49.png#align=left&amp;display=inline&amp;height=209&amp;name=image.png&amp;originHeight=262&amp;originWidth=438&amp;size=34262&amp;status=done&amp;style=none&amp;width=350" alt="image.png"><br>% 命令允许我们在一组开、闭括号间跳转,在执行 % 命令时，Vim 会 自动为发生跳转的地方设置一个位置标记, % 命令只能用在配对的括号上,所以利用替换命令时最好利用位置标记，防止陷阱。<br><a name="08071332"></a></p>
+<h2 id="第-9-章-在文件间跳转"><a href="#第-9-章-在文件间跳转" class="headerlink" title="第 9 章 在文件间跳转"></a>第 9 章 在文件间跳转</h2><p>:jumps 查看跳转列表的内容，如果我们运行 :edit 命令 打开了一个新文件，那么就可以用 <c-o> 和 <c-i> 命令在这个新文 件以及原本的文件之间来回跳转，会始终在 当前活动窗口的跳转列表范围内进行跳转， Vim 本来就把 <c-i> 和 <tab> 当成同一个东西。映射需谨慎。</tab></c-i></c-i></c-o></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/png/203310/1551063629792-edf970a6-eef3-440f-95bf-5eb3cff4325f.png#align=left&amp;display=inline&amp;height=242&amp;name=image.png&amp;originHeight=303&amp;originWidth=593&amp;size=47322&amp;status=done&amp;style=none&amp;width=474" alt="image.png"><br>Vim 会在编辑会话期间维护一张表，里面记载我们对每个缓冲区所做的修改， 此表就是所谓的改变列表 :changes，用 g; 和 g, 命令反向或正向遍历改变列表。改变列表中则保存了多组位置。我们可以多次按 g; 命令，每次它都会把 我们带到改变列表中较早的一个位置，而 `. 则总是把我们带到改变列表的最后一项。</p>
+<p>执行 gf 命令“go to file”加上 .rb 扩展名，用 ‘suffixesadd’ 选项做到这一点 :set suffixesadd+=.rb<br>查看 ‘path’ 选项的值<br>:set path?<br>《 path=.,/usr/include,,<br>&lt;C-]&gt; 命令的作用也类似。它也需要进行一些配置（在技巧 102 中讨论），然而 一旦正确配置好，它就允许我们从函数调用的地方直接跳到该函数定义的地方</p>
+<p>用两次按键就可以打开你的 vimrc 文件，先打开你的 vimrc 文件，按 mV 设置一个全局标记（助记词 V 代 表 vimrc），然后切换到另一个文件中按 `V</p>
+<p>缺省情况下，:vimgrep 会直接跳到它所找到的第一处匹配上，这或许会切换到 另外一个文件。<br>一般来说，要养成在使用与 quickfix 列表有关的命令前，如:grep、:vimgrep 及:make，设置全局标记的习惯。另外，在执行与缓冲区列表或参数列表有关的命令前， 如:args {arglist}和:argdo（参见技巧 37），也要设置全局标记。 你总共可以设置 26 个全局位置标记，可以迅速跳回。</p>
+<p><a name="2e0bcfbf"></a></p>
+<h1 id="第四部分-寄存器"><a href="#第四部分-寄存器" class="headerlink" title="第四部分 寄存器"></a>第四部分 寄存器</h1><p>Vim 的寄存器是一组用于保存文件的简单容器。它们既可像剪贴板那样，剪切、复制和粘贴文本；也可以记录一系列按键操作，把它们录制成宏。通过本书的这一部分，我们将掌握这一核心功能。<br><a name="59b9a56d"></a></p>
+<h2 id="第-10-章-复制与粘贴"><a href="#第-10-章-复制与粘贴" class="headerlink" title="第 10 章 复制与粘贴"></a>第 10 章 复制与粘贴</h2><p>xp，可被用于“调换光标之后的两个字符”ddp，可被用于“调换当前行和它的下一行” </p>
+<p>diw 命令不仅删除了单词，而且还将它拷贝到了无名寄存器，按 P时得到的是刚刚删除的单词，而不是之前复制的单词，给命令加 “{register} 前缀的方式指定要用的寄存器，Vim 将缺省使用无 名寄存器。”ayiw复制，用 “bdd删除，”ap粘贴，可以解决无名寄存器的问题，使用复制寄存器也可以解决，黑洞集训器从删除方面也可以解决</p>
+<p>Vim 的 delete 命令也与标准剪切操作的作用一致。也就是说，该命令会先把 指定文本复制到寄存器后再从文档中删掉，引用黑洞寄存器，”_d{motion}会执行真正的删除操作。</p>
+<p>无名寄存器（””）， “”p，它完全等同于 p命令，x 和 d{motion} 经常被当作“删除”命 令。这其实是用词不当，把它们理解为“剪切”命令会更合适</p>
+<p>复制专用寄存器（”0）使用 y{motion} 命令时，要复制的文本不仅会被拷贝到无名寄存器中，而且也被拷贝到了复制专用寄存器中，因为专用，只有 y 能触发</p>
+<p>检查无名寄存器和复制专用寄存器的内容，:reg “0 ，小问题用复制专用寄存器，如果碰到需要将一段或多段文本粘贴到多处的情况，有名寄存器就会大显神通。用小写字母引用有名寄存器，会覆盖该寄存器的原有内容，而换用大写字母的话，则会将新内容添加到该寄存器的原有内容之后</p>
+<p>如果我们在外部程序中用剪切或复制命令获取了文本，就可以通过 “+p 命令（或 在插入模式下用 <c-r>+）将其粘贴到 Vim 内部。相反地，如果在 Vim 的复制或删除 命令之前加入 “+ ，相应的文本将被捕获至系统剪贴板。<br>“+ X11 剪贴板，用剪切、复制与粘贴命令操作 “<em> X11 主剪贴板，用鼠标中键操作把它们粘贴出来，Windows与Mac OS X操作系统并没有主剪贴板的概念，因此 “+ 寄存器与 “</em> 寄 存器可以混用，它们都代表系统剪贴板。</c-r></p>
+<p>表达式寄存器（”=）当我们从表达式寄存器获取内容时，Vim 将跳到命 令行模式，并显示提示符“=”。这时，我们可以输入一段 Vim 脚本表达式并按 <cr> 执行，如果返回的是字符串（或者可被强制转换成字符串的数据），Vim 将会使用它</cr></p>
+<p>只读寄存器 “% 当前文件名 “# 轮换文件名 “. 上次插入的文本 “: 上次执行的Ex命令 “/ 上次查找的模式 </p>
+<p>在可视模式下使用 p 命令时，Vim 将用我们指定的寄存器内容来替换高亮选区中的文本，可视再次解决了文本”丢失”现象，我们输入 u 撤销上次的修改。然后，按 gv重选上一次高亮选区的内容，再按一次 p键。发生了什么？显然什么也没发生，第一次使用 p时，之所以成功，是因为无名寄存器恰巧包含了我们想要的 文本。但在第二次使用 p时，无名寄存器包含的是被覆盖的内容，所以可是模式替换内容也会进入无名寄存器</p>
+<p>在 Vim 的可视模式下使用 p命令时。首先，从无名寄存器里取出内容，然后，把高亮选区中的内容存入无名寄存器。（花里胡哨）</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2019/png/203310/1551176775970-4a023ff6-26fa-4f41-8fb3-ecab6fe9c7da.png#align=left&amp;display=inline&amp;height=125&amp;name=image.png&amp;originHeight=125&amp;originWidth=364&amp;size=13396&amp;status=done&amp;style=none&amp;width=364" alt="image.png"><br><img src="https://cdn.nlark.com/yuque/0/2019/png/203310/1551176803751-7d556e52-aa61-4993-8056-4abf12f643c7.png#align=left&amp;display=inline&amp;height=174&amp;name=image.png&amp;originHeight=174&amp;originWidth=363&amp;size=15099&amp;status=done&amp;style=none&amp;width=363" alt="image.png"><br>c3w命令删除“chips and fish”并重新输入“fish and chips”， 应该会更快地完成任务。但是，以上方法可被用于交换更长的短语</p>
+<p>p 命令旨在将寄存器中的文本粘贴到光标之后，P 命令用于将文本插入到光标之前，puP 和 Pup几乎成了下意识动作。当要粘贴的内容来自于面向行的寄存器时，p 和 P 命令会把它们粘贴至当前行的 上一行或下一行。这一点比面向字符的行为更直观</p>
+<p>在插入模式下，我们可以通过输入 <c-r>“ 来插入无名寄存器的内容，或者输入 <c-r>0来插入复制专用寄存器的内容<br>gp和 gP命令也值得关注，它们会把光标的位置移到被粘贴出来的文本结尾而不是开头。 当复制多行文本时，gP命令尤为管用，P 和 gP 命令区别</c-r></c-r></p>
+<p>如果你运行的 Vim 是已集成系统剪贴板的版本，就可以完全避免与’paste’ 选项打交道了。普通模式下的 “+p 命令用来粘贴加号寄存器中的内容，即系统剪 贴板的镜像。<br><a name="b51d83bf"></a></p>
+<h2 id="第-11章-宏"><a href="#第-11章-宏" class="headerlink" title="第 11章 宏"></a>第 11章 宏</h2>
+      
+    </div>
+    
+    
+    
+
+      <div>
+    
+        <div>
+
+    
+<style type="text/css">
+#test_1 {font-weight:bold;
+color:#080808;
+}
+</style>
+        <div> <blockquote class="blockquote-center" id="test_1"> ------------- 已阅留爪&nbsp; (ฅ´ω`ฅ) -------------</blockquote>
+        </div>
+    
+</div>
+
+
+    
+      </div>
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>家贫无从致钱以买纸质书</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.png" alt="Tfrain WeChat Pay">
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.jpg" alt="Tfrain Alipay">
+        <p>Alipay</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>Post author:</strong>
+    Tfrain
+  </li>
+  <li class="post-copyright-link">
+    <strong>Post link:</strong>
+    <a href="https://freewei.ml/2019/01/yuque/vim_skill/" title="Vim 实用技巧">https://freewei.ml/2019/01/yuque/vim_skill/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>Copyright Notice: </strong>
+    All articles in this blog are licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/" rel="external nofollow" target="_blank">CC BY-NC-SA 3.0</a> unless stating additionally.
+  </li>
+</ul>
+
+      </div>
+    
+
+    <div>
+    
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/11/servlet/" rel="next" title="servlet学习ing">
+                <i class="fa fa-chevron-left"></i> servlet学习ing
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/01/yuque/linux_learning5/" rel="prev" title="LInux学习5">
+                LInux学习5 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          ---
+abbrlink: 1
+---
+
+
+  
+    <div id="gitalk-container"></div>
+
+  
+
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.jpg" alt="Tfrain">
+            
+              <p class="site-author-name" itemprop="name">Tfrain</p>
+              <p class="site-description motion-element" itemprop="description">菜鸟的尝试，笨鸟的先飞</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+		
+  		<div class="site-state-item site-state-tags">
+   		 <a href="/">
+     		 <span class="site-state-item-count">3</span>
+  		    <span class="site-state-item-name">tags</span>
+   		 </a>
+ 		 </div>
+		
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/Tfrain" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:weichengdouble@outlook.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-globe"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.yuque.com/tfrain/boke" title="语雀" target="_blank">语雀</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://whalechoi.cn/" title="可爱的choi" target="_blank">可爱的choi</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#第-1-章-Vim解决问题的方式"><span class="nav-number">2.</span> <span class="nav-text">第 1 章 Vim解决问题的方式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#第一部分-模式"><span class="nav-number">3.</span> <span class="nav-text">第一部分 模式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#第-2-章-普通模式"><span class="nav-number">3.1.</span> <span class="nav-text">第 2 章 普通模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#第-3-章-插入模式"><span class="nav-number">3.2.</span> <span class="nav-text">第 3 章 插入模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#第-4-章-可视模式"><span class="nav-number">3.3.</span> <span class="nav-text">第 4 章 可视模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#第-5-章-命令行模式"><span class="nav-number">3.4.</span> <span class="nav-text">第 5 章 命令行模式</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#第二部分-文件"><span class="nav-number">4.</span> <span class="nav-text">第二部分 文件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#第-6-章-管理多个文件"><span class="nav-number">4.1.</span> <span class="nav-text">第 6 章 管理多个文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#第-7-章-打开及保存文件"><span class="nav-number">4.2.</span> <span class="nav-text">第 7 章 打开及保存文件</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#第三部分-更快地移动及跳转"><span class="nav-number">5.</span> <span class="nav-text">第三部分 更快地移动及跳转</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#第-8-章-用动作命令在文档中移动"><span class="nav-number">5.1.</span> <span class="nav-text">第 8 章 用动作命令在文档中移动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#第-9-章-在文件间跳转"><span class="nav-number">5.2.</span> <span class="nav-text">第 9 章 在文件间跳转</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#第四部分-寄存器"><span class="nav-number">6.</span> <span class="nav-text">第四部分 寄存器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#第-10-章-复制与粘贴"><span class="nav-number">6.1.</span> <span class="nav-text">第 10 章 复制与粘贴</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#第-11章-宏"><span class="nav-number">6.2.</span> <span class="nav-text">第 11章 宏</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">© 2018 — <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+  </span>
+  <span class="author" itemprop="copyrightHolder">Tfrain</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme — <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a></div>
+
+
+
+
+        
+<div class="busuanzi-count">
+<script async="" src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  
+  
+    
+  
+
+  
+  
+    
+  
+
+  
+  
+    
+  
+
+  
+  
+    
+  
+
+  
+  
+    
+  
+
+
+  
+
+
+  
+
+  
+
+
+
+  
+  
+
+
+  
+
+  
+
+
+
+  
+  
+
+
+
+
+  
+
+
+  
+
+
+
+  
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+   
+
+
+
+
+  
+
+  
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  <!-- 公正民主 -->
+  
+  <!--崩溃欺骗-->
+  
+
+
+<script type="text/javascript" src="/bundle.js"></script><script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+;
+
+        var gitalk = new Gitalk({
+          clientID: '9dea84ab174d91e0b78e',
+          clientSecret: '4f87ec0f7588f49870f12b26c40d085d07ad1c19',
+          repo: 'Tfrain.github.io',
+          owner: 'Tfrain',
+          admin: ['Tfrain'],
+          id: location.pathname,
+          distractionFreeMode: 'true'
+        })
+        gitalk.render('gitalk-container')           
+       ;
+
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script></body></html>
