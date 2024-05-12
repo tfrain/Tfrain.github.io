@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>Database interviews:What are the necessary conditions for a deadlock to occur? How do I resolve deadlocks? - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/mysql-interview6/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Database interviews:What are the necessary conditions for a deadlock to occur? How do I resolve deadlocks?">
+<meta property="og:url" content="https://programmerscareer.com/mysql-interview6/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-1-Introduction-to-Deadlocks">1&nbsp;&nbsp;<b>Topic: 1.1 Introduction to Deadlocks</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-2-Understanding-Necessary-Conditions-for-a-Deadlock">2&nbsp;&nbsp;<b>Topic: 1.2 Understanding Necessary Conditions for a Deadlock</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-3-Detecting-Deadlocks-in-MySQL">3&nbsp;&nbsp;<b>Topic 1.3: Detecting Deadlocks in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-4-Preventing-Deadlocks">4&nbsp;&nbsp;<b>Topic 1.4: Preventing Deadlocks</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-5-Resolving-Deadlocks">5&nbsp;&nbsp;<b>Topic 1.5: Resolving Deadlocks</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-6-Troubleshooting-Deadlocks">6&nbsp;&nbsp;<b>Topic 1.6: Troubleshooting Deadlocks</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-7-Review-and-Assessments">7&nbsp;&nbsp;<b>Topic: 1.7 Review and Assessments</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview6/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview6/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            Database interviews:What are the necessary conditions for a deadlock to occur? How do I resolve deadlocks?
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            14 minutes read (About 2146 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-1-1-Introduction-to-Deadlocks"><a href="#Topic-1-1-Introduction-to-Deadlocks" class="headerlink" title="Topic: 1.1 Introduction to Deadlocks"></a><strong>Topic: 1.1 Introduction to Deadlocks</strong></h1><p>Deadlocks are a condition in a multithreading environment when two or more threads are unable to proceed because each is waiting for the others to release resources. In the context of a MySQL database, a deadlock occurs when two or more transactions mutually hold and request for locks, creating a cycle of dependencies.</p>
+<p>In a transaction, a thread might need to lock multiple tables or rows, which can sometimes lead to a situation where the thread needs a resource that’s locked by another thread. Meanwhile, that thread might be waiting for a resource locked by the first thread. This is known as a deadlock.</p>
+<p>Let me illustrate this with a simple story:</p>
+<p>Imagine two comic book fans, Alice and Bob. Alice has the latest ‘Superbot’ comic which Bob wants. At the same time, Bob has the newest ‘Megagirl’ comic, which Alice wants. Now, Alice is not willing to give up her ‘Superbot’ comic until she has the ‘Megagirl’ comic in her hands, and Bob too, won’t give up his ‘Megagirl’ comic until he has the ‘Superbot’ comic. So, both are waiting for each other to let go of their comics, which results in a deadlock.</p>
+<p>In terms of database transactions, Alice and Bob could be transactions, and the comic books could be the locked resources.</p>
+<h1 id="Topic-1-2-Understanding-Necessary-Conditions-for-a-Deadlock"><a href="#Topic-1-2-Understanding-Necessary-Conditions-for-a-Deadlock" class="headerlink" title="Topic: 1.2 Understanding Necessary Conditions for a Deadlock"></a><strong>Topic: 1.2 Understanding Necessary Conditions for a Deadlock</strong></h1><p>To understand how deadlocks occur, we need to be familiar with Coffman’s Conditions, which are a set of four conditions that must all hold for a deadlock to occur. These are named after Edward G. Coffman, Jr., who first articulated them. The conditions are:</p>
+<ol>
+<li><strong>Mutual Exclusion</strong>: At least one resource must be held in a non-shareable mode. This means only one process (or thread) can use the resource at any given time. If another process requests the resource, the requesting process must be delayed until the resource has been released.</li>
+<li><strong>Hold and Wait (Resource Holding)</strong>: A process must be holding at least one resource and waiting to acquire additional resources that are currently being held by other processes.</li>
+<li><strong>No Preemption</strong>: Resources cannot be forcibly removed from the processes holding them until the resources are used to completion. The resources can only be released voluntarily by the process holding them.</li>
+<li><strong>Circular Wait</strong>: A circular chain of processes exists where each process holds one resource while requesting another resource held by another process in the chain. Essentially, there’s a process P1 that is waiting for a resource that is held by process P2, and P2 is waiting for a resource held by P1. This makes a circular chain of waiting processes.</li>
+</ol>
+<p>These 4 conditions inherently provide a logical structure to understand and structure the prevention policies. By ensuring that at least one of the above conditions never occurs, we can prevent the formation of deadlocks.</p>
+<h1 id="Topic-1-3-Detecting-Deadlocks-in-MySQL"><a href="#Topic-1-3-Detecting-Deadlocks-in-MySQL" class="headerlink" title="Topic 1.3: Detecting Deadlocks in MySQL"></a><strong>Topic 1.3: Detecting Deadlocks in MySQL</strong></h1><p>In MySQL, the InnoDB storage engine automatically detects deadlocks and resolves them by rolling back one of the transactions involved. Therefore, your application should always be ready to re-issue a transaction if it gets rolled back due to a deadlock.</p>
+<p>When a deadlock occurs in MySQL, it’s immediately detected and resolved by the system. This is achieved by the&nbsp;<em>wait-for graph</em>&nbsp;deadlock detection mechanism, where MySQL maintains information about which transactions are waiting for locks held by which other transactions. With this approach, MySQL can check for cycles in the wait-for graph. If it detects a cycle, this indicates a deadlock, and it’ll roll back one of the transactions to break the deadlock.</p>
+<p>To give you more insight into the situation, MySQL also provides diagnostic information when it detects and resolves a deadlock. This information can be obtained from the&nbsp;<code>SHOW ENGINE INNODB STATUS</code>&nbsp;command, which will showcase the latest deadlock error.</p>
+<p>However, it’s important to note that deadlocks are not necessarily a sign of a design flaw or error. In some high concurrency systems, deadlocks may happen from time to time and can be considered a cost of doing business. But of course, if you are experiencing them frequently, it may be worth investigating further to see if there can be improvements in the transaction processing.</p>
+<h1 id="Topic-1-4-Preventing-Deadlocks"><a href="#Topic-1-4-Preventing-Deadlocks" class="headerlink" title="Topic 1.4: Preventing Deadlocks"></a><strong>Topic 1.4: Preventing Deadlocks</strong></h1><p>Here are several strategies for preventing deadlocks:</p>
+<ol>
+<li><strong>Order Your Locks</strong>: Always lock tables in the same order. For example, if all your transactions lock the ‘orders’ table before the ‘products’ table, you won’t have one transaction locking ‘orders’ and a second transaction locking ‘product’ and waiting for ‘orders’.</li>
+<li><strong>Keep Transactions Short and Fast</strong>: The shorter a transaction, the less likely it is to lock a row that’s needed by another transaction.</li>
+<li><strong>Error Handling</strong>: Since InnoDB automatically detects deadlocks and rolls back a transaction, you need to be ready to catch that error in your code and retry the transaction.</li>
+<li><strong>Use Lower Isolation Levels</strong>: If possible, use the Read Committed isolation level rather than Repeatable Read to lessen the chance of deadlocks.</li>
+<li><strong>Avoid Hotspots</strong>: If you can avoid frequently updated rows, you can reduce the likelihood of deadlocks. For instance, instead of having a counter table that gets updated each time an operation is performed, consider using a different strategy to count operations.</li>
+</ol>
+<h1 id="Topic-1-5-Resolving-Deadlocks"><a href="#Topic-1-5-Resolving-Deadlocks" class="headerlink" title="Topic 1.5: Resolving Deadlocks"></a><strong>Topic 1.5: Resolving Deadlocks</strong></h1><p>When it comes to resolving deadlocks, the ideal circumstance is that deadlocks are detected and handled automatically by MySQL’s InnoDB storage engine. InnoDB uses a mechanism known as&nbsp;<em>wait-for graph</em>&nbsp;to detect deadlocks. When a deadlock happens, InnoDB chooses one of the transactions and kills it, thereby resolving the deadlock.</p>
+<p>While this takes care of resolving the deadlock, it is important for application developers to handle these scenarios within the application. When InnoDB kills a transaction due to a deadlock, it raises an error that needs to be caught in your application, and, typically, the transaction that was terminated should be retried.</p>
+<p>The automatic deadlock detection in InnoDB resolves deadlocks as they happen, but in certain cases, the detection and killing of a transaction can take substantial time, impacting your application’s performance. That is why it is also important to design your application to avoid deadlocks as much as possible.</p>
+<p>Although it’s hard to prevent deadlocks entirely in high concurrency systems, trying to minimize them as much as possible will lead to a smoother and more efficient operation of your database system. Good coding practices, efficient design of your tables, and correctly applying transactions and lock controls, can help you avert most deadlocks.</p>
+<h1 id="Topic-1-6-Troubleshooting-Deadlocks"><a href="#Topic-1-6-Troubleshooting-Deadlocks" class="headerlink" title="Topic 1.6: Troubleshooting Deadlocks"></a><strong>Topic 1.6: Troubleshooting Deadlocks</strong></h1><p>Investigating and troubleshooting deadlocks can provide valuable insights to prevent them or improve the response time. MySQL includes several tools that can assist in this process.</p>
+<ol>
+<li><strong>SHOW ENGINE INNODB STATUS</strong>: This command outputs a text-based report that includes information about the most recent deadlock if one has occurred. It’s essential to run this command as soon as possible after the deadlock because its information is lost with the next one.</li>
+<li><strong>InnoDB Monitors</strong>: These are more detailed and extensive reports about InnoDB’s internal workings, including deadlocks. There are standard, lock, and mutex monitors.</li>
+<li><strong>Performance Schema</strong>: MySQL’s Performance Schema can be configured to capture detailed data about events, including transaction events. This data is stored in tables and can be queried like other MySQL data.</li>
+<li><strong>Binary Logs</strong>: MySQL’s binary logs can help determine the sequence of queries that led to the deadlock. These logs require that you have the binary log enabled and that you’re logging in ROW format.</li>
+<li><strong>Error Log</strong>: Deadlocks are logged here if you have innodb_print_all_deadlocks configuration enabled.</li>
+</ol>
+<p>By analyzing these sources, you can determine which transactions were involved in a deadlock and what resources they were trying to access. In many cases, careful analysis may point to a better way to order locks or a better transaction size to prevent foreseeable deadlocks.</p>
+<h1 id="Topic-1-7-Review-and-Assessments"><a href="#Topic-1-7-Review-and-Assessments" class="headerlink" title="Topic: 1.7&nbsp;Review and Assessments"></a>Topic: 1.7&nbsp;<strong>Review and Assessments</strong></h1><p><strong>Example Problem:</strong><br>Assume that you encounter a deadlock in your MySQL database. You decide to run the command&nbsp;<code>SHOW ENGINE INNODB STATUS</code>&nbsp;for more information.</p>
+<p>The&nbsp;<code>LATEST DETECTED DEADLOCK</code>&nbsp;section gives you the following output:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">LATEST DETECTED DEADLOCK  </span><br><span class="line">------------------------  </span><br><span class="line">2022-08-24 23:08:02 7f3e6e2fd700  </span><br><span class="line">*** (1) TRANSACTION:  </span><br><span class="line">TRANSACTION 118945420, ACTIVE 22 sec inserting  </span><br><span class="line">mysql tables in use 1, locked 1  </span><br><span class="line">1700 lock struct(s), heap size 187648, 1249789 row lock(s), undo log entries 1  </span><br><span class="line">MySQL thread id 155, OS thread handle 0x7f3e6e3e7700, query id 25749768 localhost user  </span><br><span class="line">INSERT INTO customer (id, name, address) VALUES (3, 'John Doe', '123 Main St')  </span><br><span class="line">*** (1) WAITING FOR THIS LOCK TO BE GRANTED:  </span><br><span class="line">RECORD LOCKS space id 66873 page no 70541 n bits 600 index `id` of table `test`.`customer` trx id 118945420 lock mode S waiting up to 3 years total: 47.56T, and currently at 47.68T to rise above: 47.68T  </span><br><span class="line">*** (2) TRANSACTION:  </span><br><span class="line">TRANSACTION 118945416, ACTIVE (PREPARED) 13 sec committing, thread declared inside InnoDB 476  </span><br><span class="line">mysql tables in use 1, locked 1  </span><br><span class="line">1 lock struct(s), heap size 368, 0 row lock(s)  </span><br><span class="line">MySQL thread id 117, OS thread handle 0x7f3e6e2fd700, query id 25749765 localhost user  </span><br><span class="line">COMMIT  </span><br><span class="line">*** (2) HOLDS THE LOCK(S):  </span><br><span class="line">RECORD LOCKS space id 66873 page no 70541 n bits 600 index `id` of table `test`.`customer` trx id 118945416 lock mode S  </span><br><span class="line">*** (2) WAITING FOR THIS LOCK TO BE GRANTED:  </span><br><span class="line">RECORD LOCKS space id 66873 page no 70541 n bits 600 index `id` of table `test`.`customer` trx id 118945416 lock_mode X waiting up to 3 years total: 47.68T to rise above: 47.56T  </span><br><span class="line">*** WE ROLL BACK TRANSACTION (1)</span><br></pre></td></tr></tbody></table></figure>
+
+<p>Based on this information, what is causing the deadlock and how could you potentially resolve it?</p>
+<p><strong>Now let’s test your knowledge.</strong></p>
+<p><strong>Question 1 — Simple Familiar Problem (Difficulty 3/10):</strong></p>
+<p>What are the four conditions that must be present for a deadlock as per Coffman’s conditions? Provide a brief explanation of each condition.</p>
+<p><strong>Question 2 — Complex Familiar Problem (Difficulty 6/10):</strong></p>
+<p>What steps would you take to proactively prevent or minimize deadlock occurrences?</p>
+<p><strong>Question 3 — Complex Unfamiliar Problem (Difficulty 9/10):</strong></p>
+<p>Why does MySQL InnoDB engine automatically resolve deadlocks by rolling back a transaction? What are the advantages and potential disadvantages of this approach?</p>
+<p><strong>Please always try to get to the answer by yourself first before asking for help.</strong></p>
+<hr>
+<p><strong>Solution for Example Problem</strong>:</p>
+<p>The deadlock occurred because two transactions were each waiting for resource more than the individual ones. The transaction (1) was waiting for an S-mode (read) lock on the&nbsp;<code>id</code>&nbsp;index of the&nbsp;<code>customer</code>&nbsp;table, that was being held by transaction (2). At the same time, transaction (2) was waiting for an X-mode (write) lock on the very same resource while transaction (2) held an S-mode (read) lock.</p>
+<p>This scenario means that neither transaction could proceed, resulting in a deadlock. The resolution could be to ensure the transactions request locks in the same order, as it is one of the well-known techniques to avoid deadlock.</p>
+<p><strong>Solution to Question 1:</strong></p>
+<p>Coffman’s deadlock conditions are as follows:</p>
+<ol>
+<li><strong>Mutual Exclusion:</strong>&nbsp;A resource can only be held by one process at a time.</li>
+<li><strong>Hold and Wait:</strong>&nbsp;Processes already holding resources can request new resources.</li>
+<li><strong>No Preemption:</strong>&nbsp;Only the process holding the resource can release it.</li>
+<li><strong>Circular Wait:</strong>&nbsp;A circular chain of processes exists where each process holds a resource needed by the next process in the chain.</li>
+</ol>
+<p><strong>Solution to Question 2:</strong></p>
+<p>Multiple approaches can be deployed to prevent or minimize deadlocks:</p>
+<ol>
+<li><strong>Setting Lock Timeout:</strong>&nbsp;By limiting how long a transaction waits to acquire a lock, you can minimize wait time and potentially resolve deadlocks.</li>
+<li><strong>Ordering Locks:</strong>&nbsp;Having transactions request locks in a specific order can prevent deadlocks by eliminating the circular wait condition.</li>
+<li><strong>Frequent Committing:</strong>&nbsp;Smaller transactions that commit frequently are less likely to clash with other transactions.</li>
+<li><strong>Deadlock Detection Tools:</strong>&nbsp;Utilize built-in or third-party tools to determine when and why deadlocks occur so programmatic resolutions can be applied.</li>
+</ol>
+<p><strong>Solution to Question 3:</strong></p>
+<p>When a deadlock occurs in MySQL, the InnoDB engine automatically chooses the smallest transaction (the one with fewest row locks) and rolls it back to break the deadlock</p>
+<p><strong>Advantages:</strong></p>
+<ol>
+<li>This automatic resolution helps to keep the database running smoothly without manual intervention.</li>
+</ol>
+<p><strong>Potential Disadvantages:</strong></p>
+<ol>
+<li>If the transaction that is rolled back is large or critical, rolling it back might lead to data not being updated or saved correctly.</li>
+<li>Continuous rollbacks due to deadlocks can negatively affect performance.</li>
+<li>Not all business logic scenarios may suit automatic rollback.</li>
+</ol>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/mysql-interview6/">https://programmerscareer.com/zh-cn/mysql-interview6/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote></body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/mysql-interview5/">DataBase interviews: Briefly describe the difference between optimistic locks and pessimistic locks and the usage scenarios</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/mysql-interview7/">MySQL interviews: What is an SQL injection attack? How can such attacks be prevented?</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/mysql-interview6/';
+        this.page.identifier = 'mysql-interview6/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

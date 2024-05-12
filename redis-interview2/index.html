@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>Redis interviews: how to implement Distributed Locks with Redis - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/redis-interview2/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Let’s draft a learning plan for Redis with a focus on implementing Distributed Locks.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis interviews: how to implement Distributed Locks with Redis">
+<meta property="og:url" content="https://programmerscareer.com/redis-interview2/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Let’s draft a learning plan for Redis with a focus on implementing Distributed Locks.">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-1-Deep-Dive-into-Redis">1&nbsp;&nbsp;<b>Topic: 1.1 Deep Dive into Redis.</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-2-Understanding-Locks-in-Databases">2&nbsp;&nbsp;<b>Topic: 1.2 Understanding Locks in Databases.</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-3-The-Need-for-Distributed-Locks">3&nbsp;&nbsp;<b>Topic: 1.3 The Need for Distributed Locks</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-4-Implementing-Distributed-Locks-using-Redis">4&nbsp;&nbsp;<b>Topic: 1.4 Implementing Distributed Locks using Redis.</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-5-Redis-Transactions">5&nbsp;&nbsp;<b>Topic: 1.5 Redis Transactions</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-6-Case-Study-—-Using-Redis-Distributed-Locks-in-Real-world-Applications">6&nbsp;&nbsp;<b>Topic: 1.6 Case Study — Using Redis Distributed Locks in Real-world Applications</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-7-Review-and-Assessments">7&nbsp;&nbsp;<b>Topic: 1.7 Review and Assessments</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/redis-interview2/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/redis-interview2/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            Redis interviews: how to implement Distributed Locks with Redis
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/redis/">redis</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            17 minutes read (About 2571 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Let’s draft a learning plan for Redis with a focus on implementing Distributed Locks.</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-1-1-Deep-Dive-into-Redis"><a href="#Topic-1-1-Deep-Dive-into-Redis" class="headerlink" title="Topic: 1.1 Deep Dive into Redis."></a><strong>Topic: 1.1 Deep Dive into Redis</strong>.</h1><p>Redis, which stands for Remote Dictionary Server, is an open-source, in-memory data structure store used as a database, cache, and message broker. It has built-in replication, Lua scripting, LRU eviction, transactions, and various levels of on-disk persistence. Interestingly, Redis can handle multiple types of data structures like strings, hashes, lists, sets, sorted sets with range queries, bitmaps, and more.</p>
+<p>First, let’s discuss some of the&nbsp;<strong>core features of Redis</strong>.</p>
+<ol>
+<li><strong>Performance</strong>: Redis holds its database entirely in memory and uses disk only for persistence, enabling it to process data very quickly.</li>
+<li><strong>Persistence</strong>: Redis gives you the option with RDB (Redis DataBase file) and AOF (Append Only File) to persist your data either periodically or by logging every change.</li>
+<li><strong>Atomic Operations</strong>: Redis operations like APPEND, INCR, etc., are atomic, meaning they’re completed entirely or not executed at all. This ensures data integrity, even in concurrent environments.</li>
+<li><strong>Data Structures</strong>: Redis isn’t just a simple key-value store; it’s a data structures server that supports strings, hashes, lists, sets, and more.</li>
+<li><strong>Pub/Sub Capabilities</strong>: Redis includes built-in commands for messaging and queueing systems, using the Publish/Subscribe paradigm.</li>
+<li><strong>Scripting</strong>: Redis allows for scripting in Lua, effectively turning atomic commands into powerful scripts to process data on the server-side.</li>
+</ol>
+<p>Next is&nbsp;<strong>Redis data types</strong>. Redis supports a variety of data types:</p>
+<ul>
+<li><strong>Strings</strong>: They are the simplest data type in Redis and can store any data, for example, a JPEG image or a serialized Ruby object.</li>
+<li><strong>Lists</strong>: A list in Redis is a series of ordered values. Think of it as a linked-list.</li>
+<li><strong>Sets</strong>: An unordered collection of strings with the addition and removal of items happening in constant time. A set can’t have repeated members.</li>
+<li><strong>Sorted sets</strong>: Every member of Sorted Sets is associated with score, which is used to sort the set elements from smallest to largest score.</li>
+<li><strong>Hashes</strong>: They are maps composed of fields associated with values, where both the field and the value are strings.</li>
+</ul>
+<p>Redis’s functionality and features make it a versatile system used in caching, session caching, full page cache, message queue applications, leaderboards and counting, real-time analytics, and much more.</p>
+<h1 id="Topic-1-2-Understanding-Locks-in-Databases"><a href="#Topic-1-2-Understanding-Locks-in-Databases" class="headerlink" title="Topic: 1.2 Understanding Locks in Databases."></a><strong>Topic: 1.2 Understanding Locks in Databases</strong>.</h1><p>As we’re gradually progressing toward understanding Distributed Locks with Redis, understanding the basic concept of locks in databases is essential.</p>
+<p>In databases, especially databases that allow concurrent transactions (simultaneous transactions), locks play a vital role in maintaining the consistency of data and preventing data anomalies.</p>
+<p>In simple terms, a&nbsp;<strong>lock</strong>&nbsp;in the context of a database is a mark or flag that the database assigns to a piece of data (which could be a row, a table, or even an entire database). This lock serves to control the access and modifications by concurrent transactions.</p>
+<p>Understand that locks are generally of two types:&nbsp;<strong>Shared Locks</strong>&nbsp;(S locks) — which allow read operations, and&nbsp;<strong>Exclusive Locks</strong>&nbsp;(X locks) — which allow write operations.</p>
+<p>Detailed explanation:</p>
+<ul>
+<li><strong>Shared Locks</strong>&nbsp;are also referred to as ‘Read Locks’. If a shared lock is held on data, it can be read by the transaction holding the lock, but it cannot modify it. Other transactions can also acquire shared locks and read the data, but none can write into it. Thus, shared locks help maintain a level of consistency when the data is being read by ensuring that the data isn’t altered by any other transaction during the read operation.</li>
+<li><strong>Exclusive Locks</strong>, on the other hand, are also known as ‘Write Locks’. If an exclusive lock is held on data, not only can the transaction read the data, it can also modify it. However, no other transaction can acquire any lock (shared or exclusive) on the same data. Exclusive locks, thus, serve to maintain data integrity by ensuring that no other transaction accesses the data while it is being modified.</li>
+</ul>
+<p>In the concept of “locking”, a major challenge is dealing with potential&nbsp;<strong>deadlocks</strong>, which is a state where two or more transactions are waiting indefinitely for each other to release resources. Solving deadlocks involves their detection and implementing approaches like ‘wait-die’ or ‘wound-wait’ schemes, which is a deeper topic.</p>
+<h1 id="Topic-1-3-The-Need-for-Distributed-Locks"><a href="#Topic-1-3-The-Need-for-Distributed-Locks" class="headerlink" title="Topic: 1.3 The Need for Distributed Locks"></a><strong>Topic: 1.3 The Need for Distributed Locks</strong></h1><p>You have already learned about the function of locks in databases. They provide a way to regulate access and prevent conflicts when many processes/transactions are trying to read and write to shared data.</p>
+<p>Now imagine a scenario where you aren’t working with a single database, but a distributed system. A&nbsp;<strong>distributed system</strong>&nbsp;is one where components located on networked computers communicate and coordinate their actions only by passing messages.</p>
+<p>In such an environment, merely using regular locks won’t suffice. Herein lays the necessity for&nbsp;<strong>distributed locks</strong>.</p>
+<p>A&nbsp;<strong>distributed lock</strong>&nbsp;or global lock allows multiple distributed processes to synchronize their operations, typically to prevent conflicts while accessing shared resources in a distributed system. In other words, it works across multiple systems or nodes in a network and ensures that only a single client can own a lock at a time, no matter where the client is in the network.</p>
+<p>Some high-level use cases of distributed locks are:</p>
+<ol>
+<li>In a&nbsp;<strong>microservices architecture</strong>, where multiple independent applications are communicating with each other, distributed locks can regulate access to shared resources.</li>
+<li><strong>Data replication or sharding</strong>&nbsp;often require ensuring the consistency of write operations across several locations/databases.</li>
+<li><strong>Coordinating distributed transactions</strong>&nbsp;across various microservices and databases.</li>
+<li>Solving complex real-world problems like leader election, task distribution and synchronization, and ensuring idempotency in distributed systems.</li>
+<li><strong>Service discovery protocols</strong>&nbsp;where microservices need to know about other’s presence require a reliable mechanism to avoid race conditions and conflicts. These protocols often use distributed locks to avoid conflicts while updating the common registry.</li>
+</ol>
+<p>These were just a few examples, and there are many more situations where distributed locks come into play in a distributed system.</p>
+<p>Please remember that distributed locks aren’t without challenges — consistency, availability, and network partitions (CAP theorem) all have their part to play. But as we progress, we’ll delve deeper into understanding how we can implement distributed locks using Redis in our further lessons.</p>
+<h1 id="Topic-1-4-Implementing-Distributed-Locks-using-Redis"><a href="#Topic-1-4-Implementing-Distributed-Locks-using-Redis" class="headerlink" title="Topic: 1.4 Implementing Distributed Locks using Redis."></a><strong>Topic: 1.4 Implementing Distributed Locks using Redis</strong>.</h1><p>First and foremost, it’s crucial to understand that a distributed lock should satisfy the following properties:</p>
+<ul>
+<li>Mutual Exclusion: At any point in time, only one client can hold a lock.</li>
+<li>Deadlock Free: Eventually, every lock request must succeed.</li>
+<li>Fault Tolerant: If a client holding a lock crashes, the system should recover.</li>
+</ul>
+<p>Redis provides commands (such as SETNX, EXPIRE) that can potentially create a locking system. But issues regarding expiry of lock key and releasing of lock by a client other than the one holding it can ensue. Therefore, to address and overcome these issues, the&nbsp;<strong>Redlock (Redis distributed lock)</strong>&nbsp;algorithm was introduced by Salvatore Sanfilippo (creator of Redis).</p>
+<p>The workings of the Redlock algorithm are as follows:</p>
+<ol>
+<li>When a client wishes to acquire a lock with some resource, it generates a unique random string (value).</li>
+<li>This client then tries to acquire the lock in all the N Redis masters using the SETNX command (set value if the key doesn’t exist) and attaching a time-to-live (TTL) with it.</li>
+<li>If the client succeeds in setting it on the majority of masters (&gt; N/2), it considers the lock to be acquired successfully.</li>
+<li>If the lock setting fails in the majority of instances, the client will try to delete the key from all the instances (even from those where it initially succeeded), waits for a random delay, and then tries steps 1–3 again.</li>
+<li>To release a lock, it simply sends a DEL command to delete the key.</li>
+</ol>
+<p>With this, you can create a robust distributed locking system with Redis. Remember, the success of this algorithm rests heavily on synchronized clocks across the Redis nodes as TTL values are associated with locks.</p>
+<h1 id="Topic-1-5-Redis-Transactions"><a href="#Topic-1-5-Redis-Transactions" class="headerlink" title="Topic: 1.5 Redis Transactions"></a><strong>Topic: 1.5 Redis Transactions</strong></h1><p>Redis transactions allow the execution of a group of commands in a single step. First, all commands are queued, and with a final command, all of them are run sequentially. Redis transactions use two primary commands:&nbsp;<code>MULTI</code>&nbsp;and&nbsp;<code>EXEC</code>.</p>
+<p>Here’s an example of a Redis transaction:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">MULTI  </span><br><span class="line">INCR foo  </span><br><span class="line">INCR bar  </span><br><span class="line">EXEC</span><br></pre></td></tr></tbody></table></figure>
+
+<p>In this example, we’re incrementing the values of both ‘foo’ and ‘bar’ keys, and this increment operation is done in a transaction.&nbsp;<code>MULTI</code>&nbsp;is the command that marks the start of the transaction block and&nbsp;<code>EXEC</code>&nbsp;marks the end and triggers the execution.</p>
+<p>Redis transactions have the ‘all-or-nothing’ property. This means if a command fails, all the commands in the transaction are rolled back. It’s important to note that Redis commands don’t fail often because they have been designed to fail during the syntax check of the command, which always happens before the command is queued.</p>
+<p>From a locking perspective, it’s critical to note that Redis uses “optimistic locking” — locks are not held during the execution of the transaction. Instead, you can use the&nbsp;<code>WATCH</code>&nbsp;command on one or more keys. If those keys are modified by another client before your transaction executes, your transaction will be canceled, allowing you to handle race conditions safely.</p>
+<p>Keep these principles in mind:</p>
+<ul>
+<li>Redis transactions are atomic, meaning all commands are executed or none are.</li>
+<li>Redis uses optimistic locking to handle concurrent transactions.</li>
+</ul>
+<h1 id="Topic-1-6-Case-Study-—-Using-Redis-Distributed-Locks-in-Real-world-Applications"><a href="#Topic-1-6-Case-Study-—-Using-Redis-Distributed-Locks-in-Real-world-Applications" class="headerlink" title="Topic: 1.6 Case Study — Using Redis Distributed Locks in Real-world Applications"></a><strong>Topic: 1.6 Case Study — Using Redis Distributed Locks in Real-world Applications</strong></h1><p>Distributed locks are used in a variety of applications that require coordination and synchronization across multiple systems, processes, or threads. Here are some real-world use cases:</p>
+<ol>
+<li><strong>E-commerce Platform</strong>: A popular use case for distributed locking is inventory management in an online shopping platform. When multiple users attempt to purchase the last item in stock simultaneously, distributed locks can be used to ensure that only one purchase operation for that item succeeds, preventing overselling.</li>
+<li><strong>Banking Systems</strong>: Distributed locks can play a crucial role in financial transactions. For instance, consider a scenario in which two operations (debit and credit) are performed concurrently. It’s necessary to ensure that these operations are done in an atomic way to prevent inconsistencies in the balance.</li>
+<li><strong>Online Ticket Booking</strong>: A distributed lock can ensure that a single seat can’t be booked by multiple users in a concurrent booking operation.</li>
+<li><strong>Master Election in Distributed Systems</strong>: In a distributed system, distributed locks can be used to handle fail-overs by electing a new master node when the existing master node fails.</li>
+</ol>
+<p>Looking at these use cases, it’s clear that distributed locks cater to the needs of a complex, distributed application system where maintaining data consistency, integrity, and coordination among various services is the top priority.</p>
+<h1 id="Topic-1-7-Review-and-Assessments"><a href="#Topic-1-7-Review-and-Assessments" class="headerlink" title="Topic: 1.7 Review and Assessments"></a><strong>Topic: 1.7 Review and Assessments</strong></h1><p>Over the course of our sessions, we’ve gained a rich understanding of Redis, its built-in support for distributed locks, and how it’s leveraged in real-world applications. We’ve also dived deep into Redis transactions and gained insights into how they participate in distributed locks.</p>
+<p>We have covered numerous concepts, such as:</p>
+<ul>
+<li>Deep dive into Redis: We expanded on the basics, diving deeper into Redis’s features like its data types and Pub/Sub capabilities.</li>
+<li>Understanding Locks in Databases: We got a general overview of locks in databases, their utility, and types.</li>
+<li>Need for Distributed Locks: We saw the need for Distributed Locks and their role in enhancing performance in large-scale applications.</li>
+<li>Implementing Distributed Locks with Redis: We discussed how we can achieve distributed locks using Redis.</li>
+<li>Redis Transactions: We covered transactions in Redis, its commands, and how they work alongside distributed locks.</li>
+<li>Real-world applications of Redis Distributed Locks: We looked at various use case scenarios where Redis Distributed Locks have been applied.</li>
+</ul>
+<p><strong>Example Problem</strong>: Assume you’re developing an online ticket booking system. There is a scenario in which a single seat is being booked by multiple users simultaneously. How would you prevent this scenario using Redis distributed locks?</p>
+<p>Here’s how we might solve this problem:</p>
+<p>First, we would implement a lock on the seat when a user begins the booking process. This lock would prevent other users from booking the same seat.</p>
+<p>Here’s an example of how we could implement this in Redis:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SET lock:seat_id value NX EX 30</span><br></pre></td></tr></tbody></table></figure>
+
+<p>In this command,&nbsp;<code>lock:seat_id</code>&nbsp;is the lock identifier (where the seat_id is the ID of the seat being booked),&nbsp;<code>value</code>&nbsp;is a unique string to identify the process that has the lock,&nbsp;<code>NX</code>&nbsp;tells Redis to only set the key if it doesn’t already exist, and&nbsp;<code>EX 30</code>&nbsp;sets an expiration for the lock of 30 seconds.</p>
+<p>The return value of the command will either be&nbsp;<code>OK</code>&nbsp;or&nbsp;<code>None</code>. If the return value is&nbsp;<code>OK</code>, it means we successfully acquired the lock. If it’s&nbsp;<code>None</code>, it means another process has the lock.</p>
+<p>Now let’s test your understanding.</p>
+<p><strong>Simple Problem (3/10)</strong>: Why do we need a distributed locking system in a large-scale application?</p>
+<p><strong>Moderate Problem (6/10)</strong>: What are the key principles to remember about Redis transactions?</p>
+<p><strong>Complex Problem (9/10)</strong>: How would you solve a common problem in distributed systems, such as the fail-over scenario, using distributed locks in Redis?</p>
+<hr>
+<p><strong>Simple Problem (3/10)</strong>: We need a distributed locking system in large-scale applications to handle concurrency and to ensure data integrity in a distributed system. For instance, if multiple clients are trying to access and modify the same piece of data simultaneously, a distributed lock helps ensure that only one client can access and modify that data at a time, thus preventing race conditions, inconsistencies, and other potential issues.</p>
+<p><strong>Moderate Problem (6/10)</strong>: The key principles to remember about Redis transactions are as follows:</p>
+<ol>
+<li>Redis transactions provide a way to execute a batch of commands atomically.</li>
+<li>The&nbsp;<code>MULTI</code>&nbsp;command is used to start a transaction, and&nbsp;<code>EXEC</code>&nbsp;is used to execute the transaction.</li>
+<li>The&nbsp;<code>WATCH</code>&nbsp;command can be used to implement optimistic locking. It helps abort the transaction if the watched key has changed.</li>
+<li>If a command fails within a transaction, Redis still executes the rest of the commands in the transaction.</li>
+</ol>
+<p><strong>Complex Problem (9/10)</strong>: Distributed locks can play a crucial role in handling fail-overs in a distributed system. In the event of a fail-over (where a node in a cluster fails), we have to elect a new master node. A distributed lock can be used to ensure that the election process proceeds without conflicts and that only one node is elected as the new master. We could use a similar locking pattern as earlier, where the lock represents the master node. Whichever node can successfully acquire the lock becomes the new master.</p>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/redis-interview2/">https://programmerscareer.com/zh-cn/redis-interview2/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/redis-interview1/">Redis interviews: The application, advantages and disadvantages of skiplists in Redis</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/redis-interview3/">Redis interviews: If the Redis master node is down, how do you recover the data?</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/redis-interview2/';
+        this.page.identifier = 'redis-interview2/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

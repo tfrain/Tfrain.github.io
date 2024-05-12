@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>Redis interviews: If the Redis master node is down, how do you recover the data? - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/redis-interview3/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Let’s outline your tailored curriculum to learn about Redis. This plan will particularly focus on the scenario when the Redis master node goes down and the process to recover the data.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis interviews: If the Redis master node is down, how do you recover the data?">
+<meta property="og:url" content="https://programmerscareer.com/redis-interview3/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Let’s outline your tailored curriculum to learn about Redis. This plan will particularly focus on the scenario when the Redis master node goes down and the process to recover the data.">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Redis-Architecture">1&nbsp;&nbsp;<b>Topic: Redis Architecture</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Redis-Server-and-Client">1.1&nbsp;&nbsp;Redis Server and Client</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Redis-Data-Structures">1.2&nbsp;&nbsp;Redis Data Structures</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Persistence-—-A-Glimpse">1.3&nbsp;&nbsp;Persistence — A Glimpse</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Replication-in-Redis">2&nbsp;&nbsp;<b>Topic: Replication in Redis</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Understanding-Master-Replica-Configuration-in-Redis">2.1&nbsp;&nbsp;Understanding Master-Replica Configuration in Redis</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-In-depth-into-Redis-Persistence">3&nbsp;&nbsp;<b>Topic: In-depth into Redis Persistence</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#RDB-Redis-Database-Backup">3.1&nbsp;&nbsp;RDB (Redis Database Backup)</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#AOF-Append-Only-File">3.2&nbsp;&nbsp;AOF (Append Only File)</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Choosing-Between-RDB-and-AOF">3.3&nbsp;&nbsp;Choosing Between RDB and AOF</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Redis-Backups">4&nbsp;&nbsp;<b>Topic: Redis Backups</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Creating-Backups">4.1&nbsp;&nbsp;Creating Backups</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Restoring-from-Backups">4.2&nbsp;&nbsp;Restoring from Backups</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Redis-Sentinel">5&nbsp;&nbsp;<b>Topic: Redis Sentinel</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Redis-Master-Node-Failure-—-An-Overview">6&nbsp;&nbsp;<b>Topic: Redis Master Node Failure — An Overview</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Redis-Master-Node-Data-Recovery">7&nbsp;&nbsp;<b>Topic: Redis Master Node Data Recovery</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Review-and-Assessments">8&nbsp;&nbsp;<b>Topic: Review and Assessments</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Problem-1">8.1&nbsp;&nbsp;Problem 1:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Problem-2">8.2&nbsp;&nbsp;Problem 2:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Problem-3">8.3&nbsp;&nbsp;Problem 3:</a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/redis-interview3/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/redis-interview3/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            Redis interviews: If the Redis master node is down, how do you recover the data?
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/redis/">redis</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            22 minutes read (About 3286 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Let’s outline your tailored curriculum to learn about Redis. This plan will particularly focus on the scenario when the Redis master node goes down and the process to recover the data.</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-Redis-Architecture"><a href="#Topic-Redis-Architecture" class="headerlink" title="Topic: Redis Architecture"></a><strong>Topic</strong>: Redis Architecture</h1><p>Redis stands for Remote Dictionary Server. It’s an open-source, in-memory data structure store that can be used as a database, cache, and message broker. One of the main reasons Redis performs so well is because it does all its operations in memory and avoids seeking time needed for disk operations.</p>
+<p>Redis supports a variety of data structures like strings, hashes, sets, lists, etc. Let’s dive a bit deeper into the architecture of Redis.</p>
+<h2 id="Redis-Server-and-Client"><a href="#Redis-Server-and-Client" class="headerlink" title="Redis Server and Client"></a>Redis Server and Client</h2><p>Fundamentally, the Redis data store system comprises two main roles: a Redis client and a Redis server.</p>
+<p>The&nbsp;<strong>Redis client</strong>&nbsp;is a standalone application that connects to a Redis server and executes commands against the server. The client could be anything from a small script that connects to Redis to manage application sessions, to a massive system that uses Redis for caching data in memory for speedy access.</p>
+<p>The&nbsp;<strong>Redis server</strong>, on the other hand, is the powerhouse. It is where your data lives, where data is cached into memory, where data structures are maintained, and the server processes all the commands a client sends over.</p>
+<h2 id="Redis-Data-Structures"><a href="#Redis-Data-Structures" class="headerlink" title="Redis Data Structures"></a>Redis Data Structures</h2><p>The fundamental principle to understand about Redis architecture is that it is a&nbsp;<strong>key-value</strong>&nbsp;data store — which means every piece of data you store in a Redis server will contain a key and a value. What sets Redis apart is the types of values it can store. Redis supports a variety of data structures such as:</p>
+<ul>
+<li><strong>Strings</strong></li>
+<li><strong>Hashes</strong></li>
+<li><strong>Lists</strong></li>
+<li><strong>Sets</strong></li>
+<li><strong>Sorted sets</strong></li>
+</ul>
+<p>Each data structure has its own set of commands for managing the data. For example, if you’re working with a list, you can execute commands like&nbsp;<code>LPUSH</code>,&nbsp;<code>LRANGE</code>, etc. to manipulate the list. These data structures make Redis extremely versatile, allowing it to solve many different types of problems efficiently.</p>
+<h2 id="Persistence-—-A-Glimpse"><a href="#Persistence-—-A-Glimpse" class="headerlink" title="Persistence — A Glimpse"></a>Persistence — A Glimpse</h2><p>One of the key components of Redis architecture is its ability to persist data to disk. Imagine if all the data you’d stored in memory was wiped out if your Redis server shutdown — not very efficient, is it? To mitigate this, Redis provides a few different strategies for persisting data to disk such that it can be recovered in the event of a shutdown or failure. We’ll cover this aspect in more detail in the upcoming lesson.</p>
+<p>Now that we have an understanding of the basics of Redis architecture, we’ll gradually dig deeper into more sophisticated concepts like data replication, backups, and high availability with Redis Sentinel in subsequent lessons.</p>
+<h1 id="Topic-Replication-in-Redis"><a href="#Topic-Replication-in-Redis" class="headerlink" title="Topic: Replication in Redis"></a><strong>Topic</strong>: Replication in Redis</h1><p>Replication is a mechanism that allows your data to be automatically copied from a master server to one or more replica servers. Replication offers two main benefits:</p>
+<ul>
+<li><strong>Performance Improvement</strong>: You can distribute read traffic away from the master server to replica servers. This allows the master server to handle fewer requests and improves overall performance.</li>
+<li><strong>Data Redundancy</strong>: Your data will be stored on multiple servers, providing a fail-safe option should the master server go down. This fault tolerance is crucial in production environments.</li>
+</ul>
+<h2 id="Understanding-Master-Replica-Configuration-in-Redis"><a href="#Understanding-Master-Replica-Configuration-in-Redis" class="headerlink" title="Understanding Master-Replica Configuration in Redis"></a>Understanding Master-Replica Configuration in Redis</h2><p>When replication is set up in Redis, it follows a master-replica configuration. The master server contains the original copy of the data, and this data is duplicated to the replica servers.</p>
+<p>Setting up replication in Redis is straightforward. Basically, this involves setting up a master server and then connecting one or more replicas with the&nbsp;<code>SLAVEOF</code>&nbsp;command, specifying the master server’s IP and port.</p>
+<p>Let’s understand how changes in the master are propagated to the replicas:</p>
+<ol>
+<li>When a change occurs in the master’s data set (for instance, a write operation), the master server will send the command to the connected replicas.</li>
+<li>Each replica will receive the command and execute it, thereby making its data set up-to-date with the master’s.</li>
+</ol>
+<p>It’s important to understand that data operations are&nbsp;<strong>asynchronous</strong>&nbsp;— the master will not wait for replicas to acknowledge receipt and execution of commands. However, the master does keep track of which commands were acknowledged by each replica.</p>
+<p>This replication scheme provides a robust mechanism for data redundancy and performance scaling. However, it’s not without challenges, as what if the master node goes down? How do you ensure high availability and data consistency? How does Redis handle these scenarios? We will discuss these topics in more detail in the subsequent lessons.</p>
+<h1 id="Topic-In-depth-into-Redis-Persistence"><a href="#Topic-In-depth-into-Redis-Persistence" class="headerlink" title="Topic: In-depth into Redis Persistence"></a><strong>Topic</strong>: In-depth into Redis Persistence</h1><p>As we discussed earlier, Redis operates largely in the memory space, providing rapid access and modification of data. However, persisting the data becomes crucial to prevent data loss in case of a server crash or shutdown. Redis incorporates methods to save data in memory to disk, which are&nbsp;<strong>RDB</strong>&nbsp;and&nbsp;<strong>AOF</strong>.</p>
+<h2 id="RDB-Redis-Database-Backup"><a href="#RDB-Redis-Database-Backup" class="headerlink" title="RDB (Redis Database Backup)"></a>RDB (Redis Database Backup)</h2><p>RDB persistence performs point-in-time snapshots of your dataset at specified intervals. Here’s how it works:</p>
+<ul>
+<li>Redis will fork a child process.</li>
+<li>The child process will then write the entire data set to disk (to an RDB file), thereby capturing a snapshot of the data at that moment.</li>
+</ul>
+<p>The frequency at which these snapshots are taken can be configured. For example, you could configure Redis to save to disk if at least one change was made in the past 15 minutes.</p>
+<p>RDB’s are perfect for backups. If you ever need to rebuild your database, having point-in-time snapshots is very handy.</p>
+<h2 id="AOF-Append-Only-File"><a href="#AOF-Append-Only-File" class="headerlink" title="AOF (Append Only File)"></a>AOF (Append Only File)</h2><p>AOF persistence, on the other hand, logs every write operation received by the server, which can then be played back when the server starts. The way it works is pretty straightforward:</p>
+<ul>
+<li>When a command that modifies the dataset in some way is received, it gets appended to the AOF buffer.</li>
+<li>Redis frequently writes this AOF buffer data to disk.</li>
+</ul>
+<p>You can configure the frequency at which data in the AOF buffer is written to disk.</p>
+<p>Compared with RDB, AOF files are more durable as they’re append-only. This means that even if a power outage or crash happens during a write, you’ll likely have a full history of commands up until shortly before the outage. Whereas with RDB, you might lose more data since it snapshots less frequently (depending on your save conditions).</p>
+<h2 id="Choosing-Between-RDB-and-AOF"><a href="#Choosing-Between-RDB-and-AOF" class="headerlink" title="Choosing Between RDB and AOF"></a>Choosing Between RDB and AOF</h2><p>There’s not a one-size-fits-all answer to this. It depends on the nature of your application and how critical your data is. Some prefer RDB for faster backups that can be easily moved around. Others prefer AOF for a higher level of durability.</p>
+<p>Redis actually allows you to use both RDB and AOF at the same time! If you enable both, Redis will write to the RDB file while iterating the dataset for AOF rewriting, thus generating a “snapshot” of the database at the start of the AOF rewriting process.</p>
+<p>You can consider this as a hybrid approach, enjoying the benefits of both the methods.</p>
+<h1 id="Topic-Redis-Backups"><a href="#Topic-Redis-Backups" class="headerlink" title="Topic: Redis Backups"></a><strong>Topic</strong>: Redis Backups</h1><p>Without reliable and regular backups, your data is at risk of loss, especially in the event of hardware or software failure. For Redis, the snapshotting feature, or Redis Database Backup (RDB), provides a robust way to backup your data. It provides a consistent and compact point-in-time snapshot of your Redis data.</p>
+<p>The RDB persistence model operates by saving the dataset to disk at different time intervals that you can specify. These intervals could be, for instance, every fifteen minutes if at least five keys changed, or, every hour if at least one key changed, and so forth.</p>
+<h2 id="Creating-Backups"><a href="#Creating-Backups" class="headerlink" title="Creating Backups"></a>Creating Backups</h2><p>Redis allows you to manually produce an RDB file at any time by using the&nbsp;<code>SAVE</code>&nbsp;or&nbsp;<code>BGSAVE</code>&nbsp;commands.</p>
+<p>The&nbsp;<code>SAVE</code>&nbsp;command operates synchronously and will block all other clients, so for production environments, it’s better to use the&nbsp;<code>BGSAVE</code>&nbsp;command, which will fork a new process to save the data while your Redis server continues to serve client requests.</p>
+<p>It is worth noting that this process can consume a lot of I/O and CPU depending upon the size of your data.</p>
+<h2 id="Restoring-from-Backups"><a href="#Restoring-from-Backups" class="headerlink" title="Restoring from Backups"></a>Restoring from Backups</h2><p>Restoring an RDB file is as simple as stopping your Redis server, replacing the RDB file with your backup, and restarting the server again.</p>
+<p>Upon startup, Redis will load the data from the RDB file into memory and continue normal operation. Actions like writing new data to the Redis store or reading from the store cannot be done until the data is loaded into memory.</p>
+<p>Understanding backups is a critical aspect of Redis as it forms the foundation of any disaster recovery plan. It’s essential to have regular and reliable backups to safeguard your data and ensure the smooth operation of your applications.</p>
+<h1 id="Topic-Redis-Sentinel"><a href="#Topic-Redis-Sentinel" class="headerlink" title="Topic: Redis Sentinel"></a><strong>Topic</strong>: Redis Sentinel</h1><p>Now, let’s discuss an important aspect of Redis, the Redis Sentinel system. It helps fulfill two main functions —&nbsp;<strong>monitoring</strong>&nbsp;and&nbsp;<strong>automated failover</strong>. Let’s take a closer look at both.</p>
+<p><strong>Monitoring</strong>: Redis Sentinel continuously checks if your master and replica instances are working as expected. It not only confirms the availability of instances (up and running) but also validates that they are functioning correctly (able to accept connections and respond to queries).</p>
+<p><strong>Automated Failover</strong>: If your master node fails, the Sentinel system will automatically detect this and begin the failover process. This process involves choosing a replica, promoting it to be the new master, and reconfiguring the other replicas to use the new master.</p>
+<p>These features provide high availability and resilience to Redis environments. Now, utilizing the Sentinel system involves a series of steps:</p>
+<ol>
+<li><strong>Setting up the Sentinel Nodes</strong>: First, we need to create Sentinel nodes, which are separate instances of Redis running in Sentinel mode. A minimum of three Sentinel nodes is recommended for a robust setup.</li>
+<li><strong>Configuring Sentinel Nodes</strong>: The Sentinel nodes need to be configured to monitor a master. You do this by specifying your master’s IP and port.</li>
+<li><strong>Validate Setup</strong>: After configuring, you should validate your setup by checking whether your Sentinel nodes are correctly monitoring your master and its replicas.</li>
+</ol>
+<p>With this setup complete, the Sentinel system will perform its monitoring and automatic failover duties as described above.</p>
+<p>Worth noting is the concept of&nbsp;<strong>Quorum</strong>, which represents the minimum number of Sentinel nodes that need to agree for failover to take place. For instance, if you have five Sentinel nodes, a quorum could be three. Meaning at least three Sentinel nodes need to agree that the master is indeed not functioning and a failover should be initiated.</p>
+<p>Redis Sentinel provides great value for endeavours requiring high availability for Redis. In the next lesson, we will handle the scenario of Master Node failures, common reasons behind it, and how Redis mitigates such incidents.</p>
+<h1 id="Topic-Redis-Master-Node-Failure-—-An-Overview"><a href="#Topic-Redis-Master-Node-Failure-—-An-Overview" class="headerlink" title="Topic: Redis Master Node Failure — An Overview"></a><strong>Topic</strong>: Redis Master Node Failure — An Overview</h1><p>Master Node failures, while infrequent, may pose a challenge for a Redis infrastructure that’s not configured for such events. It is pivotal to understand the potential reasons behind such failures and devise strategies to handle them.</p>
+<p>There can be several causes for master node failure, including:</p>
+<ol>
+<li><strong>Hardware Failures</strong>: This can be a physical damage, or wear and tear on the hard disk. Sometimes, the memory components might fail leading to server crashes.</li>
+<li><strong>Network Disruptions</strong>: Disturbances in the network connection could cause the Master Node (or any node for that matter) to lose connection with the other nodes. This can be a temporary glitch or a permanent problem depending on the underlying infrastructure.</li>
+<li><strong>Disk Full Errors</strong>: Redis may shut down if the disk gets full to prevent data inconsistency.</li>
+<li><strong>Software Errors / Server Overload</strong>: Bugs in software or an overload on the server could potentially cause a crash, leading to master node failure.</li>
+</ol>
+<p>When a master node fails, the key concern becomes how to ensure uninterrupted service. This is where the Redis Sentinel system and Redis replication come to play.</p>
+<p>If a failure is detected, the Sentinel system will start an automatic failover process. The failover process involves promoting a replica to be the new master that other replicas will be automatically reconfigured to use as their new master.</p>
+<p>Understanding the potential reasons behind master node failure and the subsequent recovery mechanisms is important to maintain high availability in Redis.</p>
+<p>In the next lesson, we will delve deeper into the Redis Master Node Data Recovery process following a Redis Master node failure.</p>
+<h1 id="Topic-Redis-Master-Node-Data-Recovery"><a href="#Topic-Redis-Master-Node-Data-Recovery" class="headerlink" title="Topic: Redis Master Node Data Recovery"></a><strong>Topic</strong>: Redis Master Node Data Recovery</h1><p>In a scenario where a master node in Redis goes down due to certain unforeseen events, the process of data recovery from backups becomes crucial in ensuring smooth operation.</p>
+<p>As we learned earlier, the first response to a master node failure is the Redis Sentinel system initializing an automatic failover procedure. One of the replicas will be promoted to the role of the master, and the other replicas will be reconfigured to now connect to this new master.</p>
+<p>However, we also need to consider the process of restoring the original master node and adding it back to the system once it is operational again. After the issue with the failed master is resolved, and the original master node is restored, it will connect back to the system as a replica, perform a synchronization and then can be reconfigured back.</p>
+<p>Now, what happens to the data that was written on the replica (now master) during the downtime? This depends on your persistence configuration:</p>
+<ol>
+<li><strong>AOF (Append Only File) Persistence Configuration</strong>: In case of AOF, all write operations are logged, and if a master node goes down, the AOF file continues to log these operations on the replica. Once the master is restored and synchronized with this replica, it will also receive these write operations, ensuring that no data is lost.</li>
+<li><strong>RDB (Redis Database Backup) Persistence Configuration</strong>: In the case of RDB, snapshots are taken at configurable intervals. So, any data written between two snapshots could potentially be lost if a failure occurs.</li>
+</ol>
+<p>In a nutshell, the mechanism to handle master node failure effectively in Redis largely depends on the configurations, Sentinel system, and persistence settings. You can choose the strategy that best applies to your use-case and aligns more closely with your data safety requirements.</p>
+<h1 id="Topic-Review-and-Assessments"><a href="#Topic-Review-and-Assessments" class="headerlink" title="Topic: Review and Assessments"></a><strong>Topic</strong>: Review and Assessments</h1><p>We have navigated a thorough exploration of various aspects of Redis. Let’s recap the core concepts we’ve covered:</p>
+<ol>
+<li><strong>Redis Architecture</strong>: We began by understanding the underlying architecture of Redis.</li>
+<li><strong>Replication in Redis</strong>: Studied the concept of data replication in Redis and how it’s achieved.</li>
+<li><strong>Redis Persistence</strong>: Went in-depth into the process of data persistence in Redis and why it’s significant.</li>
+<li><strong>Redis Backups</strong>: Learned how to establish backups in Redis and understood their role in data recovery.</li>
+<li><strong>Redis Sentinel</strong>: Comprehended the principle of the Redis Sentinel and its function in maintaining high availability.</li>
+<li><strong>Master Node Failure</strong>: Discussed probable reasons for Master Node failure in Redis.</li>
+<li><strong>Master Node Data Recovery</strong>: Understood the detailed process when a master node in Redis experiences downtime.</li>
+</ol>
+<p>Now, it’s essential to review and reassess our understanding of these topics. This is where interactive assessments come into play. They present an opportunity to check your comprehension, apply learned knowledge, and rectify if any gaps remain.</p>
+<p>Example Problem: Assume you’re setting up a data storage system for your application. You decided to use Redis and need to configure it. You’ve two servers available to use. How would you assure data safety and high availability?</p>
+<p>Now let’s test your knowledge.</p>
+<h2 id="Problem-1"><a href="#Problem-1" class="headerlink" title="Problem 1:"></a>Problem 1:</h2><p>Given what you’ve learned about the internals of Redis, describe the building blocks of Redis architecture.</p>
+<h2 id="Problem-2"><a href="#Problem-2" class="headerlink" title="Problem 2:"></a>Problem 2:</h2><p>Explain the role of Redis Sentinel and how it helps maintain high availability in Redis infrastructure.</p>
+<h2 id="Problem-3"><a href="#Problem-3" class="headerlink" title="Problem 3:"></a>Problem 3:</h2><p>What steps would Redis take in the event of a master node failure?</p>
+<p>For each question, please share your answers.</p>
+<hr>
+<p>The&nbsp;<strong>Example Problem</strong>&nbsp;was: Assume you’re setting up a data storage system for your application. You decided to use Redis and need to configure it. You’ve two servers available to use. How would you assure data safety and high availability?</p>
+<p>To ensure data safety and high availability, you could set up a Redis environment as per these steps:</p>
+<ol>
+<li><strong>Use both servers</strong>: Install Redis on both servers. One will act as the master, and the other will be a replica (slave).</li>
+<li><strong>Data Persistence</strong>: Configure data persistence mechanisms on both servers. This will ensure that changes in data are stored and not lost, providing data safety. For instance, you may choose RDB for less granular but less resource-intensive backups, or AOF for highly granular backups at cost of more resource use.</li>
+<li><strong>Master-Replica Replication</strong>: Set the second server as a replica of the first one. It means that all data written to the master will also be written to the replica. This is important in the case of server 1 (designated as master) goes down.</li>
+<li><strong>Redis Sentinel</strong>: To maintain high availability, use Redis Sentinel. Sentinel will monitor both servers, and if the master goes down, Sentinel will promote the replica to be the master.</li>
+<li><strong>Configure Your Application</strong>: Configure your application to send write operations to the master, and read operations can be balanced between the two servers.</li>
+</ol>
+<p>These steps will provide a balance between high availability (through replication and Redis Sentinel) and data safety (through data persistence mechanisms).</p>
+<p><strong>Problem 1</strong>: The building blocks of Redis architecture include:</p>
+<ul>
+<li><strong>Redis Clients</strong>: These are applications or users that send commands to Redis to perform operations with the data stored in it.</li>
+<li><strong>Redis Server</strong>: This is where Redis is installed and running. It’s responsible for storing data in memory and performing operations with it.</li>
+<li><strong>Data Structures</strong>: Redis supports several types of data structures, including strings, lists, sets, sorted sets, and others. Each structure has specific commands associated with it.</li>
+<li><strong>Database Persistence</strong>: Redis provides two mechanisms for database persistence — RDB and AOF. RDB takes snapshots of your dataset at specified intervals. AOF logs every write operation received by the server.</li>
+<li><strong>Replication</strong>: This is the process of setting up master-slave nodes to ensure data redundancy. If the master node fails, one of the slaves is promoted to be the new master.</li>
+</ul>
+<p><strong>Problem 2</strong>: Redis Sentinel is renowned for its primary functionality of monitoring Redis instances. It can identify when a master node fails and will begin a failover process. The Sentinel system will promote a replica to be the new master and reconfigure all other replicas to use the new master. Applications are also notified about the new master to redirect their queries.</p>
+<p><strong>Problem 3</strong>: When a Redis Master Node fails:</p>
+<ol>
+<li>The Redis Sentinel (if configured) detects the failure of the Master node.</li>
+<li>One of the Sentinels initiates a failover and other Sentinels acknowledge this.</li>
+<li>Redis Sentinel will elect a replica to be promoted as the new master.</li>
+<li>Other replicas will be reconfigured to use the new master.</li>
+<li>After resolving the issue, the failed master will join back as a replica to the current master. It will require a full synchronization with the new master.</li>
+</ol>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/redis-interview3/">https://programmerscareer.com/zh-cn/redis-interview3/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/redis-interview2/">Redis interviews: how to implement Distributed Locks with Redis</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/redis-interview4/">Redis interviews: how to prevent cache avalanche and cache penetration with Redis</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/redis-interview3/';
+        this.page.identifier = 'redis-interview3/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

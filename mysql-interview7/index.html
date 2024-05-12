@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL interviews: What is an SQL injection attack? How can such attacks be prevented? - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/mysql-interview7/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Here’s a proposed curriculum to study SQL injection attacks in MySQL and how to prevent them">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL interviews: What is an SQL injection attack? How can such attacks be prevented?">
+<meta property="og:url" content="https://programmerscareer.com/mysql-interview7/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Here’s a proposed curriculum to study SQL injection attacks in MySQL and how to prevent them">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Introduction-to-SQL-Injection-Attacks">1&nbsp;&nbsp;<b>Topic: Introduction to SQL Injection Attacks</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Examples-of-SQL-Injection-Attacks">2&nbsp;&nbsp;<b>Topic: Examples of SQL Injection Attacks</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Understanding-the-Impact-of-SQL-Injection">3&nbsp;&nbsp;<b>Topic: Understanding the Impact of SQL Injection</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Preventing-SQL-Injection-Attacks">4&nbsp;&nbsp;<b>Topic: Preventing SQL Injection Attacks</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Best-Practices-for-Preventing-SQL-Injection">5&nbsp;&nbsp;<b>Topic: Best Practices for Preventing SQL Injection</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Testing-for-SQL-Injection-vulnerabilities">6&nbsp;&nbsp;<b>Topic: Testing for SQL Injection vulnerabilities</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Review-and-Assessments-on-SQL-Injection">7&nbsp;&nbsp;<b>Topic: Review and Assessments on SQL Injection</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Review">7.1&nbsp;&nbsp;Review:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Assessment">7.2&nbsp;&nbsp;Assessment:</a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview7/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview7/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL interviews: What is an SQL injection attack? How can such attacks be prevented?
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            15 minutes read (About 2260 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Here’s a proposed curriculum to study SQL injection attacks in MySQL and how to prevent them</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-Introduction-to-SQL-Injection-Attacks"><a href="#Topic-Introduction-to-SQL-Injection-Attacks" class="headerlink" title="Topic: Introduction to SQL Injection Attacks"></a>Topic: Introduction to SQL Injection Attacks</h1><p>SQL Injection, commonly referred to as SQLi, is one of the most notorious types of web application security vulnerabilities. It occurs when an attacker can insert malicious SQL statements into an entry field for execution or manipulation. Essentially, an SQLi attack takes advantage of a site’s vulnerable user inputs where SQL commands are parsed.</p>
+<p>This attack can lead to unauthorized viewing of user lists, deletion of entire tables, and, in some cases, the attacker could gain administrative rights to a database, all through running malicious SQL statements on your database. SQLi is relatively easy to prevent but still happens quite frequently, with devastating effects.</p>
+<p>An attacker can manipulate your SQL queries by inserting their own commands into a field that is incorporated into SQL statement. These attacks are successful when a web application doesn’t correctly validate input before it’s included in an SQL query.</p>
+<p>For example, imagine a simple login function where a user must input their username and password. The SQL query related to this function might look something like this:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM users WHERE username = '[username]' AND password = '[password]';</span><br></pre></td></tr></tbody></table></figure>
+
+<p>In this scenario, the attacker could submit “<code>admin'; --</code>“ as their username. Your query would then look like this:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM users WHERE username = 'admin'; --' AND password = '[password]';</span><br></pre></td></tr></tbody></table></figure>
+
+<p>In SQL, anything after&nbsp;<code>--</code>&nbsp;is considered a comment and is ignored. So essentially, the attacker has successfully bypassed the password check and can log in as the&nbsp;<code>admin</code>.</p>
+<p>Remember, this is just the simplest form of an SQLi — there exist much more complex SQLi methods that can have much more devastating impacts.</p>
+<h1 id="Topic-Examples-of-SQL-Injection-Attacks"><a href="#Topic-Examples-of-SQL-Injection-Attacks" class="headerlink" title="Topic: Examples of SQL Injection Attacks"></a>Topic: Examples of SQL Injection Attacks</h1><p>SQL injection attacks come in all shapes and sizes. Here are some common examples:</p>
+<p><strong>1. Retrieving hidden data:</strong><br>You can manipulate an SQL query to return additional results. Let’s assume we have a page displaying products filtered by category:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://example.com/products?category=Books</span><br></pre></td></tr></tbody></table></figure>
+
+<p>which might be using this SQL query:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM products WHERE category = 'Books'</span><br></pre></td></tr></tbody></table></figure>
+
+<p>An attacker could change the URL to:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://example.com/products?category=Books' OR '1'='1</span><br></pre></td></tr></tbody></table></figure>
+
+<p>which might manipulate the SQL query to:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM products WHERE category = 'Books' OR '1'='1'</span><br></pre></td></tr></tbody></table></figure>
+
+<p>Since ‘1’=’1’ is always true, it results in displaying all products, not just books.</p>
+<p><strong>2. Subverting application logic:</strong></p>
+<p>Let’s consider another scenario where an application checks a user’s login credentials using the following code:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM users WHERE username = '$username' AND password = '$password'</span><br></pre></td></tr></tbody></table></figure>
+
+<p>A hacker can use SQLi to bypass the password check with the following inputs:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">' OR '1'='1' -- for username  </span><br><span class="line">randompassword for password</span><br></pre></td></tr></tbody></table></figure>
+
+<p>This would look like:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM users WHERE username = '' OR '1'='1' --' AND password = 'randompassword'</span><br></pre></td></tr></tbody></table></figure>
+
+<p>The ‘ — ‘ comments out the password checking portion of the SQL query, leading to an unauthorized login.</p>
+<p><strong>3. UNION attacks:</strong></p>
+<p>UNION operator can be used to retrieve data from other tables within the database. Let’s take an example of this URL:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://example.com/products?category=Books</span><br></pre></td></tr></tbody></table></figure>
+
+<p>If the suspecting query is:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT price, name, description FROM products WHERE category = 'Books'</span><br></pre></td></tr></tbody></table></figure>
+
+<p>The attacker might try:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://example.com/products?category=Books' UNION SELECT username, password FROM users --</span><br></pre></td></tr></tbody></table></figure>
+
+<p>That could result in leaked user credentials.</p>
+<p>Remember, these attacks heavily depend on the backend query structure and protection mechanisms in place. Not all websites or databases will be susceptible to these exact attacks. However, these examples should give you an idea of how SQLi exploits incorrect handling of user-supplied data to manipulate SQL queries.</p>
+<h1 id="Topic-Understanding-the-Impact-of-SQL-Injection"><a href="#Topic-Understanding-the-Impact-of-SQL-Injection" class="headerlink" title="Topic: Understanding the Impact of SQL Injection"></a>Topic: Understanding the Impact of SQL Injection</h1><p>SQL injection can lead to various harmful outcomes, and the severity of damage largely depends on the privileges of the user account that the attacker has abused and what the database is used for. Here are some potential impacts of SQL injection attacks:</p>
+<p><strong>1. Data Breach:</strong></p>
+<p>One of the most direct and dangerous outcomes of an SQL injection attack is a data breach. If an attacker successfully exploits an SQL injection vulnerability, they might gain access to sensitive data stored in your database. This could include personally identifiable information (PII), financial data, proprietary business information, passwords, or more.</p>
+<p><strong>2. Data Manipulation:</strong></p>
+<p>SQL injection isn’t just about viewing data. An attacker could use it to modify or delete data in your database — this could range from altering prices or balances to deleting entire tables.</p>
+<p><strong>3. Loss of Accountability and Non-Repudiation:</strong></p>
+<p>Since SQL injection can allow an attacker to execute actions on your database under the guise of another user (or even an admin), it could lead to a loss of accountability. It would be difficult to trace actions back to the attacker, creating a non-repudiation issue.</p>
+<p><strong>4. Damage to Reputation:</strong></p>
+<p>Beyond the direct technical outcomes, a successful SQL injection attack could significantly damage your business’s reputation. Customers trust businesses with their data, and a breach could lead to a loss of that trust.</p>
+<p><strong>5. Legal Consequences:</strong></p>
+<p>Depending on the nature of the breached data and the jurisdiction, an SQL injection attack could also lead to legal consequences for the business. This could include fines, lawsuits, or both.</p>
+<p>As you can see, the potential consequences of an SQL injection attack highlight the paramount importance of protecting against them. In the upcoming lessons, we’ll dive into how to do exactly that.</p>
+<h1 id="Topic-Preventing-SQL-Injection-Attacks"><a href="#Topic-Preventing-SQL-Injection-Attacks" class="headerlink" title="Topic: Preventing SQL Injection Attacks"></a>Topic: Preventing SQL Injection Attacks</h1><p>Preventing SQL injection attacks is all about ensuring that the data flow between your application and your database is safe and secure. Here are some techniques that can be employed to help prevent SQL Injection attacks:</p>
+<p><strong>1. Use Prepared Statements (Parameterized Queries):</strong></p>
+<p>The most effective way to prevent SQL injection is to use prepared statements. A prepared statement defined with parameters ensures that the parameters are bound to the query and are not part of the query, which means an attacker can’t affect the query structure. This effectively eliminates all SQL injection attacks. Most web language nowadays has support for prepared statements.</p>
+<p><strong>2. Use Stored Procedures:</strong></p>
+<p>Much like a prepared statement, stored procedures also separate data from commands and queries. However, stored procedures have added benefits like improved performance and reusable code.</p>
+<p><strong>3. Input Validation:</strong></p>
+<p>While this approach alone is not enough to prevent SQL injection attacks, it’s still an essential step. By validating user input, we ensure it meets length, type, syntax, and business rules specifications.</p>
+<p><strong>4. Least Privilege Principle:</strong></p>
+<p>Don’t give a user account more privileges than it needs. If an account is only used to perform select statements within an application, don’t give it the ability to drop tables. If an attacker compromises a limited account, the potential damage is contained.</p>
+<p><strong>5. Regular Updates and Patching:</strong></p>
+<p>Keep your database management system (DBMS) and all your software updated and patched with the latest security fixes.</p>
+<p>These are a few prevention mechanisms that can be put in place to ensure your database’s safety against SQL Injection attacks.</p>
+<h1 id="Topic-Best-Practices-for-Preventing-SQL-Injection"><a href="#Topic-Best-Practices-for-Preventing-SQL-Injection" class="headerlink" title="Topic: Best Practices for Preventing SQL Injection"></a>Topic: Best Practices for Preventing SQL Injection</h1><p>In addition to those prevention mechanisms, here are more best practices that you can implement to avoid SQL injection vulnerabilities:</p>
+<p><strong>1. Escaping User Input:</strong></p>
+<p>Escaping data simply means treating it in such a way that it’s interpreted as plain data, not as part of the SQL query. This can be manually done with certain functions to escape special characters like quotes, or it might be implicitly taken care of by using prepared statements.</p>
+<p><strong>2. Comprehensive Error Handling:</strong></p>
+<p>Hackers often rely on error messages from the database to get clues about its structure. It’s best practice to avoid exposing these errors directly to the end user, instead, use a generic error message and log the specific error details in a secured file which developers can reference when needed.</p>
+<p><strong>3. Employ Web Application Firewalls (WAFs):</strong></p>
+<p>Web application firewalls can inspect the incoming data and identify malicious SQL code. They don’t substitute good coding practices but serve as an additional line of defense.</p>
+<p><strong>4. Regular Code Reviews:</strong></p>
+<p>Perform regular code reviews where security is one of the topics under scrutiny. This can help ensure secure coding practices are being followed and catch potential issues early in the development process.</p>
+<p><strong>5. Conduct Testing and Use Security Tools:</strong></p>
+<p>Regularly test your application, database, and infrastructure for security vulnerabilities. There are many automated tools available which can scan for SQL injection and other vulnerabilities.</p>
+<p>Remember, security is a process, not a state. Regularly updating your skills and knowledge, keeping abreast of new vulnerabilities and attack techniques, and continually reviewing and improving your applications are all part of maintaining a robust security posture.</p>
+<h1 id="Topic-Testing-for-SQL-Injection-vulnerabilities"><a href="#Topic-Testing-for-SQL-Injection-vulnerabilities" class="headerlink" title="Topic: Testing for SQL Injection vulnerabilities"></a>Topic: Testing for SQL Injection vulnerabilities</h1><p>Testing for SQL injection vulnerabilities forms a critical part of securing your applications and databases. It can be done both manually and by using automated tools. Here’s how:</p>
+<p><strong>1. Manual Testing:</strong></p>
+<p>Manual tests involve using techniques like injecting special characters into your application’s inputs and observing the application’s reaction.</p>
+<p>For example, inputting a single quote mark&nbsp;<code>'</code>&nbsp;into a text field. If your application throws an SQL error, that’s a sign it might be vulnerable to SQL injection. On the other hand, if the application runs smoothly and the character appears in the output as it was entered, that’s an indication your application is properly handling input.</p>
+<p>Remember that SQL injection can come in many different forms, and thorough manual testing might involve trying a wide range of inputs.</p>
+<p><strong>2. Automated Testing with Security Tools:</strong></p>
+<p>There are also various automated tools designed to assist with SQL injection detection. These tools can crawl your application and test various inputs for SQL injection vulnerabilities, saving time and providing a thorough assessment of your application. They can test known SQL injection techniques and generate reports of potential vulnerabilities.</p>
+<p>Examples of such tools include SQLMap, Havij, and Netsparker.</p>
+<p>While tests and automated tools can be extremely useful, they aren’t infallible. Even if a tool doesn’t find any vulnerabilities, that doesn’t necessarily mean your application is secure. It’s recommended to couple these methods with the prevention techniques and best practices we discussed in the previous lessons.</p>
+<h1 id="Topic-Review-and-Assessments-on-SQL-Injection"><a href="#Topic-Review-and-Assessments-on-SQL-Injection" class="headerlink" title="Topic: Review and Assessments on SQL Injection"></a>Topic: Review and Assessments on SQL Injection</h1><h2 id="Review"><a href="#Review" class="headerlink" title="Review:"></a>Review:</h2><ol>
+<li><strong>SQL Injection Attack:</strong>&nbsp;This is an attack method where an attacker tries to manipulate an SQL query by injecting malicious SQL code through user input.</li>
+<li><strong>Preventive Measures:</strong>&nbsp;The primary mechanisms include prepared statements, stored procedures, input validation, enforcing least privilege, and regularly updating systems.</li>
+<li><strong>Best Practices:</strong>&nbsp;These include escaping user input, comprehensive error handling, employing Web Application Firewalls (WAFs), regular code reviews, and using security tools.</li>
+<li><strong>Testing for Vulnerabilities:</strong>&nbsp;Manual testing might involve trying a wide range of inputs. Automated tools like SQLMap also assist in detecting potential vulnerabilities.</li>
+</ol>
+<p>Now, let’s move on to the assessment.</p>
+<h2 id="Assessment"><a href="#Assessment" class="headerlink" title="Assessment:"></a>Assessment:</h2><p>Below, I will provide a few short questions. These questions are designed to test your understanding and application of the concepts we’ve discussed.</p>
+<ol>
+<li><strong>What are the distinguishing signs that indicate a system may be vulnerable to an SQL Injection attack?</strong></li>
+<li><strong>How can prepared statements be used to prevent SQL Injection attacks?</strong></li>
+<li><strong>Why are comprehensive error handling and not exposing database errors to end-users important?</strong></li>
+<li><strong>Describe at least two best practices that should be followed to protect against SQL Injection attacks.</strong></li>
+</ol>
+<hr>
+<ol>
+<li><strong>What are the distinguishing signs that indicate a system may be vulnerable to an SQL Injection attack?</strong><br> Answer: Systems may be prone to SQL Injection if they directly use input in SQL queries without proper cleansing or validation, expose database errors to end-users, or do not use parameterized queries or prepared statements. Signs might include unexpected behavior from user inputs such as a single quote causing errors, or certain inputs providing access or data retrieval that shouldn’t be possible.</li>
+<li><strong>How can prepared statements be used to prevent SQL Injection attacks?</strong><br> Answer: Prepared statements separate SQL query structure from the data provided by the user. This stops attackers from manipulating the query structure because user input is not treated as part of the SQL command, making SQL injection attempts ineffective.</li>
+<li><strong>Why are comprehensive error handling and not exposing database errors to end-users important?</strong><br> Answer: Exposing database errors to end users can provide attackers with useful information about your database structure or application design, which can be exploited for an attack. Besides, comprehensive error handling is important in preventing SQL Injection attacks as it allows systems to gracefully deal with issues that arise and can provide logging or other mechanisms to alert about possible attacks.</li>
+<li><strong>Describe at least two best practices that should be followed to protect against SQL Injection attacks.</strong><br> Answer: Some best practices include:</li>
+</ol>
+<ul>
+<li>Use of Prepared Statements or Parameterized Queries: These ensure user-provided input can’t alter the SQL query structure undesirably.</li>
+<li>Input Validation: Inputs should be validated as being of the correct form before they are used. For example, if the system expects an integer, it should confirm the input is indeed an integer.</li>
+<li>Other best practices can include proper error handling, regular system updates, adoption of least privilege principles, and more.</li>
+</ul>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/mysql-interview7/">https://programmerscareer.com/zh-cn/mysql-interview7/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/mysql-interview6/">Database interviews:What are the necessary conditions for a deadlock to occur? How do I resolve deadlocks?</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/mysql-interview8/">MySQL interviews: When doesn’t MySQL use the index?</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/mysql-interview7/';
+        this.page.identifier = 'mysql-interview7/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL 面试：聚簇索引和非聚簇索引有什么区别？ - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/mysql-interview13/" rel="alternate" hreflang="en" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="你曾被提过类似问题在面试中问过吗？或者将来会遇到，让我们一起探索和掌握它！">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL 面试：聚簇索引和非聚簇索引有什么区别？">
+<meta property="og:url" content="https://programmerscareer.com/zh-cn/mysql-interview13/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="你曾被提过类似问题在面试中问过吗？或者将来会遇到，让我们一起探索和掌握它！">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/zh-cn">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/zh-cn/archives">归档</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/categories">分类</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/tags">标签</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/about">关于</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="搜索" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="目录">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-1-聚集索引和非聚集索引的介绍">1&nbsp;&nbsp;<b>主题：1.1 聚集索引和非聚集索引的介绍</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-2-聚集索引详解">2&nbsp;&nbsp;<b>主题：1.2 聚集索引详解</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-3-非聚集索引的介绍">3&nbsp;&nbsp;<b>主题：1.3 非聚集索引的介绍</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-4-聚集和非聚集索引的差异">4&nbsp;&nbsp;<b>主题：1.4 聚集和非聚集索引的差异</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-5-选择正确的索引">5&nbsp;&nbsp;<b>主题：1.5 选择正确的索引</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-6-示例和用例">6&nbsp;&nbsp;<b>主题：1.6 示例和用例</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-7-回顾和评估">7&nbsp;&nbsp;<b>主题：1.7 回顾和评估</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>简体中文</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview13/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview13/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL 面试：聚簇索引和非聚簇索引有什么区别？
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">1月 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/zh-cn/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            24 分钟 读完 (约 3562 字)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>你曾被提过类似问题在面试中问过吗？或者将来会遇到，让我们一起探索和掌握它！</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>感谢您阅读这篇文章。更多面试问题:<br><a href="https://programmerscareer.com/zh-cn/software-interview-set/">https://programmerscareer.com/zh-cn/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="主题：1-1-聚集索引和非聚集索引的介绍"><a href="#主题：1-1-聚集索引和非聚集索引的介绍" class="headerlink" title="主题：1.1 聚集索引和非聚集索引的介绍"></a><strong>主题</strong>：1.1 聚集索引和非聚集索引的介绍</h1><p>了解数据存储和检索的方式对数据库的性能有着重要的影响。特别是了解 MySQL 是如何使用索引的非常重要。这就是聚集索引和非聚集索引的概念发挥作用的地方。</p>
+<p>索引是数据库的一个重要组成部分。它们是查找表，数据库引擎使用它们来加速数据检索，就像书的索引一样，它可以帮助你快速定位信息，而不必阅读每一页。</p>
+<p>现在，让我们详细地讨论聚集和非聚集索引：</p>
+<p><strong>聚集索引</strong>：</p>
+<p>就像名字所表明的那样，聚集索引决定了表中数据的物理排列顺序。为了更好地理解这一点，请考虑聚集索引是字典。在字典中，单词不是随机排列的，而是按字母顺序排列，这样你就可以快速跳到特定的字母部分并找到单词。在数据库的上下文中，这个“单词”是数据行。MySQL 就是按聚集索引的顺序组织数据行，以加快检索。请注意，表中只能有一个聚集索引。</p>
+<p><strong>非聚集索引</strong>：</p>
+<p>非聚集索引不决定表中数据的物理排列顺序。然而，它们保存了数据的“指针”。为了更好地理解，如果聚集索引是字典，那么非聚集索引就是书的索引。书的索引指向包含信息的页面，但它们本身不包含信息。这意味着数据库引擎必须执行额外的工作，以“去”数据行，与聚集索引相比，非聚集索引的数据检索可能会慢一些。然而，你可以有多个非聚集索引，这可能对数据检索的多种场景有所帮助。</p>
+<h1 id="主题：1-2-聚集索引详解"><a href="#主题：1-2-聚集索引详解" class="headerlink" title="主题：1.2 聚集索引详解"></a><strong>主题</strong>：1.2 聚集索引详解</h1><p>聚集索引与数据的物理存储有关。当你为表创建一个聚集索引时，表中的行按索引键的顺序存储在磁盘上。表中只能有一个聚集索引，并且如果你没有显式定义一个聚集索引，SQL Server 将自动为你创建一个。这被称为堆。</p>
+<p>聚集索引的结构也被称为 B+ 树结构。堆栈树的根节点位于树的顶部，然后分支出多个叶节点位于底部。这些叶节点包含数据行在索引的顺序中。</p>
+<p>主键约束自动创建一个聚集索引，但在某些情况下，你可能希望手动创建一个聚集索引，这取决于你的要求。例如，如果你有一个员工数据表并经常按员工聘用日期进行查询，则可能会为聘用日期列创建一个聚集索引，以加快这些查询。</p>
+<p>此外，在表中具有聚集索引的记录更新时，数据库可能会更慢，这是因为当记录更新在表中具有聚集索引时，数据库可能需要物理移动整行，以维护排序顺序。</p>
+<h1 id="主题：1-3-非聚集索引的介绍"><a href="#主题：1-3-非聚集索引的介绍" class="headerlink" title="主题：1.3 非聚集索引的介绍"></a><strong>主题</strong>：1.3 非聚集索引的介绍</h1><p>现在我们已经对聚集索引有了深入的理解，了解它是如何排列和存储数据的。但是，并不总是想要根据单个聚集索引来检索数据。这就是非聚集索引的作用所在。</p>
+<p>非聚集索引与聚集索引有着明显的区别。首先，创建非聚集索引不会重新排列表中数据的物理顺序。相反，它会创建一个独立的数据库对象，其中包含一个排序的列表，指向表中的数据。</p>
+<p>为了说明这一点，请考虑一本书——相对于浏览整本书以找到特定主题，你通常会转到书的索引，是不是？它会直接将你导向包含指定主题的页面。这种快速导航就是非聚集索引所执行的功能！</p>
+<p>非聚集索引的架构与聚集索引相似——B-树数据结构中的根节点、中间级节点和叶节点。然而，非聚集索引的叶节点仅包含索引列和指向数据表中相应行的指针。你可以为单个表创建多个非聚集索引，每个索引都为特定查询提供了加速。</p>
+<p>在 MySQL 中，非聚集索引就是所有的辅助索引，其中每个索引都包含主键列的副本，用于指向搜索键匹配的行。</p>
+<h1 id="主题：1-4-聚集和非聚集索引的差异"><a href="#主题：1-4-聚集和非聚集索引的差异" class="headerlink" title="主题：1.4 聚集和非聚集索引的差异"></a><strong>主题</strong>：1.4 聚集和非聚集索引的差异</h1><p>现在我们已经对聚集和非聚集索引有了深入的理解，让我们来明确它们之间的主要差异：</p>
+<ol>
+<li><strong>数据的排列顺序</strong>：聚集索引决定了表中数据的物理排列顺序。另一方面，非聚集索引不会改变数据记录的存储方式，但会创建一个数据库对象，该对象指向原始记录。</li>
+<li><strong>索引数量</strong>：表中只能有一个聚集索引，但是可以有多个非聚集索引。请记，越多的索引，就需要越多的磁盘空间。</li>
+<li><strong>数据检索速度</strong>：聚集索引可能会比非聚集索引更快地检索数据，但这并不总是如此。如果非聚集索引覆盖了查询（即，查询的数据可以从索引的叶节点中服务），它可能会更快地检索数据，尽管它需要一些额外的跳转。</li>
+<li><strong>更新性能</strong>：聚集索引可能会降低更新的性能，而非聚集索引通常不会影响性能。</li>
+<li><strong>存储空间</strong>：由于非聚集索引是与表数据分开存储的，因此它需要额外的存储空间。每个非聚集索引是一个独立的磁盘结构，其中包含一个排序的列表，其中包含列值，而聚集索引是表数据本身并形成了索引的最低级别。</li>
+</ol>
+<p>在数据库的大图景中——数据检索速度、存储效率、更新速度等等——所有这些因素都依赖于良好的索引。清楚地了解何时和为什么使用聚集和非聚集索引可以帮助您优化数据库性能。</p>
+<h1 id="主题：1-5-选择正确的索引"><a href="#主题：1-5-选择正确的索引" class="headerlink" title="主题：1.5 选择正确的索引"></a><strong>主题</strong>：1.5 选择正确的索引</h1><p>恭喜！现在我们知道什么是聚集索引和非聚集索引，并了解了它们之间的主要差异，让我们深入探讨选择正确的索引进行性能优化。</p>
+<p>在 MySQL 中选择正确的索引来进行性能优化，主要取决于了解将要执行的查询。它不仅仅是选择聚集或非聚集索引，还包括了列和其卡inality 的理解。</p>
+<p>下面是一些关键点来帮助你决定：</p>
+<ol>
+<li><strong>使用聚集索引来处理宽列查询</strong>：由于聚集索引本身就是表数据，因此对宽列查询来说非常有用，因为它可以减少读取的数量。</li>
+<li><strong>使用非聚集索引来处理特定列查询</strong>：非聚集索引在需要检索较小的列集时非常有用。在这种情况下，为这些列创建非聚集索引可能会有好处。</li>
+<li><strong>高卡inality列</strong>：当列具有高卡inality（每行都是唯一的）时，使用它作为聚集索引可能会导致更快的查找。</li>
+<li><strong>低卡inality列</strong>：对于具有低卡inality（许多行共享相同值）的列，使用非聚集索引通常更有效。</li>
+<li><strong>数据修改操作</strong>：如果应用程序包含频繁的插入、更新和删除操作，非聚集索引可能是更好的选择，因为它们不会影响磁盘上的数据排序。</li>
+<li><strong>空间考虑</strong>：由于非聚集索引是独立的磁盘结构，它们会消耗额外的存储空间。如果存储空间是一个限制，聚集索引可能是更好的选择，虽然在某些情况下，它可能会影响速度。</li>
+</ol>
+<p>记住，最佳策略总是取决于特定的工作负载。它是必要的进行持续的监控和分析，并根据性能进行索引策略的调整。</p>
+<h1 id="主题：1-6-示例和用例"><a href="#主题：1-6-示例和用例" class="headerlink" title="主题：1.6 示例和用例"></a><strong>主题</strong>：1.6 示例和用例</h1><p>好的！你已经做得很好了。为了巩固理解，让我们来看看一些实际的例子和用例。</p>
+<p>开始时，让我们考虑一个基本的例子，假设你直接管理一个在线书店。你有一个名为 <code>Books</code> 的表，其中包含以下列：<code>BookID</code>、<code>Title</code>、<code>Author</code>、<code>Genre</code>、<code>Price</code> 和 <code>PublicationDate</code>。</p>
+<ol>
+<li><strong>使用聚集索引</strong>：假设客户经常根据 <code>BookID</code> 在您的商店中搜索书籍。为了提高这些常见的拉取请求的速度，您可以使用 <code>BookID</code> 列上的聚集索引。由于聚集索引确定数据在表中的物理排序，行查找可能会显著加快。</li>
+<li><strong>使用非聚集索引</strong>：如果客户经常根据 <code>Genre</code> 或 <code>Author</code> 搜索书籍，则可能有利于创建非聚集索引在这些列上。正如我们所了解的，非聚集索引特别有用当你需要检索较小的列集时。</li>
+</ol>
+<p><strong>用例</strong>：假设您的数据库具有名为 <code>Customers</code> 的表，其中包含数百万条记录，并经常需要检索客户信息根据 <code>CustomerID</code>。在这种情况下，使用 <code>CustomerID</code> 列上的聚集索引可以显著加快这些查找。然而，如果业务需求要求您根据 <code>LastName</code> 和 <code>ZipCode</code> 检索记录，则非聚集索引在 <code>LastName</code> 和 <code>ZipCode</code> 列上可能更有效。</p>
+<p>请记住，这些只是例子，并且实际的实现可能会大大地变化，取决于因素如数据大小、查询复杂性和硬件能力。了解何时使用聚集和非聚集索引——基于智能数据库设计——是管理 SQL 数据库的重要方面。</p>
+<h1 id="主题：1-7-回顾和评估"><a href="#主题：1-7-回顾和评估" class="headerlink" title="主题：1.7 回顾和评估"></a><strong>主题</strong>：1.7 回顾和评估</h1><p>恭喜！让我们回顾主要的概念并进行评估。</p>
+<ol>
+<li><strong>聚集索引</strong>：这种类型的索引确定了表数据的物理排序。表只能有一个聚集索引。</li>
+<li><strong>非聚集索引</strong>：这种类型的索引是独立的磁盘结构，引用表数据，帮助加速不在聚集索引范围内的查询。表可以有多个非聚集索引。</li>
+<li><strong>高 vs. 低卡inality</strong>：高卡inality指的是具有独特值的列，在大多数，如果不是所有，行上。对高卡inality列使用聚集索引可能会导致更快的查找。低卡inality指的是具有多个行共享相同值的列。对于这些列，非聚集索引通常更有效。</li>
+<li><strong>选择正确的索引</strong>：这取决于各种因素，包括查询类型、卡inality、数据修改需求和空间约束。</li>
+</ol>
+<p>现在，让我们通过几个问题来评估我们的理解：</p>
+<ol>
+<li><strong>聚集索引和非聚集索引之间的主要区别是什么？</strong></li>
+<li><strong>在哪种情况下，非聚集索引比聚集索引更适合？</strong></li>
+<li><strong>高卡inality和低卡inality是什么意思，并且如何影响索引类型的选择？</strong></li>
+</ol>
+<p><strong>问题</strong>：聚集索引和非聚集索引之间的主要区别是什么？<br><strong>答案</strong>：聚集索引和非聚集索引之间的主要区别在于存储和引用数据的方式。聚集索引确定了表数据的物理排序，本身就是表数据，而非聚集索引是独立的结构，指向数据位于数据库的其他地方。</p>
+<p><strong>问题</strong>：在哪种情况下，非聚集索引比聚集索引更适合？<br><strong>答案</strong>：非聚集索引更适合在数据库需要支持大量搜索查询的列上，这些列不在聚集索引范围内。此外，非聚集索引还更适合在表经常更新时，因为更新不会导致整个表需要重新组织，与聚集索引相比。</p>
+<p><strong>问题</strong>：高卡inality和低卡inality是什么意思，并且如何影响索引类型的选择？<br><strong>答案</strong>：卡inality是数据值在列中的独特性。高卡inality意味着列中具有大量独特值，低卡inality意味着列中具有多个重复值。对高卡inality列使用聚集索引可能会导致更快的查找，而对低卡inality列使用非聚集索引通常更有效，因为在这些列上，值是非常重复的。</p>
+<blockquote class="colorquote danger"><p>English post: <a href="https://programmerscareer.com/mysql-interview13/">https://programmerscareer.com/mysql-interview13/</a><br>作者：<a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>注意：本文为作者原创，转载请注明出处。  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/zh-cn/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/zh-cn/mysql-interview12/">MySQL 面试：简述脏读和幻读的发生场景，InnoDB 是如何解决幻读的？</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/zh-cn/mysql-interview14/">MySQL 面试：什么是数据库事务，MySQL 为什么会使用 InnoDB 作为默认选项？</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">评论</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/zh-cn/mysql-interview13/';
+        this.page.identifier = 'zh-cn/mysql-interview13/';
+        
+        this.language = 'zh';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("zh-CN");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="站内搜索" />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: '文章',
+                PAGES: '页面',
+                CATEGORIES: '分类',
+                TAGS: '标签',
+                UNTITLED: '(无标题)',
+            },
+            CONTENT_URL: '/content.zh-cn.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

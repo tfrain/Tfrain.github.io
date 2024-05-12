@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>Redis interviews: how to prevent cache avalanche and cache penetration with Redis - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/redis-interview4/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Focusing on cache prevention aspects, let’s explore and master it together">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis interviews: how to prevent cache avalanche and cache penetration with Redis">
+<meta property="og:url" content="https://programmerscareer.com/redis-interview4/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Focusing on cache prevention aspects, let’s explore and master it together">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-1-Detailed-Study-of-Cache-Penetration">1&nbsp;&nbsp;<b>Topic 1.1: Detailed Study of Cache Penetration</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-2-Strategies-to-prevent-Cache-Penetration-using-Redis">2&nbsp;&nbsp;<b>Topic 1.2: Strategies to prevent Cache Penetration using Redis</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-3-Deep-Dive-into-Cache-Avalanche">3&nbsp;&nbsp;<b>Topic 1.3: Deep Dive into Cache Avalanche</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-4-Preventing-Cache-Avalanche-using-Redis">4&nbsp;&nbsp;<b>Topic 1.4: Preventing Cache Avalanche using Redis</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-5-Redis-Transactions-with-Cache-prevention">5&nbsp;&nbsp;<b>Topic 1.5: Redis Transactions with Cache prevention</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-6-Real-world-applications-of-Redis-Cache-Prevention">6&nbsp;&nbsp;<b>Topic 1.6: Real-world applications of Redis Cache Prevention</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-7-Review-and-Assessments">7&nbsp;&nbsp;<b>Topic 1.7: Review and Assessments</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/redis-interview4/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/redis-interview4/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            Redis interviews: how to prevent cache avalanche and cache penetration with Redis
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/redis/">redis</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            12 minutes read (About 1821 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Focusing on cache prevention aspects, let’s explore and master it together</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-1-1-Detailed-Study-of-Cache-Penetration"><a href="#Topic-1-1-Detailed-Study-of-Cache-Penetration" class="headerlink" title="Topic&nbsp;1.1: Detailed Study of Cache Penetration"></a><strong>Topic</strong>&nbsp;1.1: Detailed Study of Cache Penetration</h1><p>Cache Penetration, also known as cache miss or cache busting, is a scenario where requests bypass the cache and directly hit the database. It typically occurs when the request queries data that is not stored in our cache.</p>
+<p>Imagine a shopping website where people can search for products. The cache may contain popular searched items for faster retrieval. However, fur users searching for a rare product not in the cache, the system has to query from the database. This is a case of cache penetration.</p>
+<p>This might not sound like a serious issue, but imagine a scenario where a high volume of traffic queries for items that are not in the cache. It would lead to a substantial amount of database hits and might eventually lead to the database crashing due to the amount of load.</p>
+<p>An even severe case of cache penetration is when attackers can precisely predict that certain requests won’t be cached and bombard our system with those requests, causing our database to be the primary hit point and, eventually, it might crash the system.</p>
+<p>Cache penetration is something that should be avoided for smooth and efficient system functioning. Luckily, Redis provides powerful strategies to mitigate cache penetration, and we will explore them in the upcoming topic.</p>
+<h1 id="Topic-1-2-Strategies-to-prevent-Cache-Penetration-using-Redis"><a href="#Topic-1-2-Strategies-to-prevent-Cache-Penetration-using-Redis" class="headerlink" title="Topic 1.2: Strategies to prevent Cache Penetration using Redis"></a><strong>Topic 1.2</strong>: Strategies to prevent Cache Penetration using Redis</h1><p>Redis offers powerful strategies to prevent cache penetration, ensuring efficient system performance even under high load. These strategies primarily focus on reducing direct hits to the database, hence mitigating cache penetration.</p>
+<p>One common strategy is implementing a&nbsp;<strong>Default Cache Value</strong>. When a query for non-existent data occurs, instead of letting the request go straight to the database, it can be handled at the cache level by returning a default value. This means the database won’t take a hit when data is not in the cache, thus preventing cache penetration.</p>
+<p>Another powerful strategy is the use of&nbsp;<strong>Bloom Filters</strong>. A Bloom filter is a probabilistic data structure that can be used to test whether an element is a member of a set. This implies it can quickly identify whether the data requested exists in our database or not. If the Bloom filter says that the item doesn’t exist, we can immediately return a default value without having to query our database or even our cache.</p>
+<p>When setting up these strategies, it’s important to keep the trade-offs in mind. The use of a Bloom filter introduces a small chance of a false positive. However, the benefits often greatly outweigh the minimal error probability.</p>
+<h1 id="Topic-1-3-Deep-Dive-into-Cache-Avalanche"><a href="#Topic-1-3-Deep-Dive-into-Cache-Avalanche" class="headerlink" title="Topic 1.3: Deep Dive into Cache Avalanche"></a><strong>Topic 1.3: Deep Dive into Cache Avalanche</strong></h1><p>Cache Avalanche is a type of system failure that occurs when a large number of cache items expire simultaneously, and multiple requests for these data items hit the database, potentially causing it to crash due to the high load.</p>
+<p>Think about a scenario where a website caches its daily deals, and all the cache items are set to expire at midnight. As the clock hits 12:00 AM, all the cache items become invalid. The first set of users who try to access these deals post-midnight cause the system to fetch the new deals from the database and populate the cache.</p>
+<p>However, imagine a scenario where millions of users try to access these deals simultaneously soon as the cache becomes invalid. This could potentially flood the database with requests, leading it to become unresponsive or even crash — that’s a Cache Avalanche effect.</p>
+<p>While Cache Avalanche might sound catastrophic, there are strategies which we can employ to prevent it from happening. Understanding these techniques will make the systems we design more robust and reliable.</p>
+<h1 id="Topic-1-4-Preventing-Cache-Avalanche-using-Redis"><a href="#Topic-1-4-Preventing-Cache-Avalanche-using-Redis" class="headerlink" title="Topic 1.4: Preventing Cache Avalanche using Redis"></a><strong>Topic 1.4</strong>: Preventing Cache Avalanche using Redis</h1><p>Preventing a Cache Avalanche effectively means preventing a horde of requests from reaching our database simultaneously. Redis offers many practical strategies for this.</p>
+<p>The first technique is to use&nbsp;<strong>TTL (Time To Live) staggering</strong>. Instead of setting the same TTL for all cache items, we can slightly stagger or randomize their TTL values. This introduces differences in the expiry times, thereby reducing the risk of many items expiring simultaneously.</p>
+<p>Another major strategy is to use&nbsp;<strong>Cache Warming</strong>. Cache warming is the practice of loading data into the cache before it’s needed. For instance, if we know certain cache items are likely to expire soon, we can preemptively refresh them during periods of low demand to avoid an avalanche during peak times.</p>
+<p>Finally, it might be beneficial to consider using&nbsp;<strong>Fallback Caching</strong>. In this approach, even when a cache item is known to have expired, the old (expired) value is returned while the cache is updated in the background. This prevents sudden database loads due to simultaneous cache misses.</p>
+<p>It’s key to understand that no single strategy is a silver bullet in every scenario. The actual implementation might require a combination of these strategies depending upon the specifics of the use-case.</p>
+<h1 id="Topic-1-5-Redis-Transactions-with-Cache-prevention"><a href="#Topic-1-5-Redis-Transactions-with-Cache-prevention" class="headerlink" title="Topic 1.5: Redis Transactions with Cache prevention"></a><strong>Topic 1.5</strong>: Redis Transactions with Cache prevention</h1><p>Redis is not just an in-memory database, but it can also support transactions — a series of commands that are executed sequentially, stopping only if an error is encountered in one of the commands.</p>
+<p>Redis transactions use a two-step process :</p>
+<ol>
+<li><strong>QUEUING commands</strong>: Commands are queued up using the&nbsp;<code>MULTI</code>&nbsp;command. Nothing is executed at this stage; Redis merely keeps track of all the commands that are within this transaction.</li>
+<li><strong>EXECUTING commands</strong>: When the&nbsp;<code>EXEC</code>&nbsp;command is issued, Redis then executes all the commands queued up in the exact order.</li>
+</ol>
+<p>Redis transactions are employed to ensure that all cache operations (like reads, writes, or updates) are atomic — which means they get executed fully or not at all. This is crucial to maintain the cache consistency and prevent dirty reads, which can also help mitigate the effects of cache penetration.</p>
+<p>Let’s take an example. Suppose you are implementing a leaderboard system and want to update the score of a player atomically. Here’s how a transaction could be used to achieve that:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">MULTI  </span><br><span class="line">    GET player_score  </span><br><span class="line">    INCR player_score  </span><br><span class="line">EXEC</span><br></pre></td></tr></tbody></table></figure>
+
+<p>By wrapping both GET and INCR commands within a transaction, we ensure that if any other client reads the score, they will always get a consistent value.</p>
+<p>Using transactions in Redis alongside cache prevention techniques, be it for penetration or avalanche, can significantly improve the consistency and reliability of our caching layer.</p>
+<h1 id="Topic-1-6-Real-world-applications-of-Redis-Cache-Prevention"><a href="#Topic-1-6-Real-world-applications-of-Redis-Cache-Prevention" class="headerlink" title="Topic 1.6: Real-world applications of Redis Cache Prevention"></a><strong>Topic 1.6</strong>: Real-world applications of Redis Cache Prevention</h1><p>Redis and its cache prevention mechanisms are frequently used in a variety of real-world applications to handle sizable loads without bringing down the backend database. Here are a few examples:</p>
+<ul>
+<li><strong>E-commerce websites</strong>: Websites like Amazon use Redis for caching product details and recommendations for faster retrieval. Measures to prevent cache penetration and cache avalanches are crucial to handle the simultaneous user load, especially during festive sales.</li>
+<li><strong>Social media platforms</strong>: Platforms like Twitter and Instagram use Redis to cache user data and feed information. The high volume of simultaneous reads and writes makes Redis an excellent choice for these platforms.</li>
+<li><strong>Leaderboard systems</strong>: On gaming platforms, user scores and rankings are updated in real-time and need to be accessed by many clients simultaneously. Redis’s ability to handle atomic transactions ensures score consistency across clients, even under high load.</li>
+<li><strong>Online ticketing services</strong>: During high-demand events, ticketing services can experience a massive surge in traffic, which can lead to database failure if not handled correctly. Redis’s cache management capabilities can effectively prevent these scenarios.</li>
+</ul>
+<p>In all these examples, cache optimization measures like staggering the TTL, warming the cache, and using fallback values are employed to protect the system from potential cache penetration and cache avalanches.</p>
+<h1 id="Topic-1-7-Review-and-Assessments"><a href="#Topic-1-7-Review-and-Assessments" class="headerlink" title="Topic 1.7: Review and Assessments"></a><strong>Topic 1.7</strong>: Review and Assessments</h1><p><strong>Cache Penetration</strong>&nbsp;occurs when frequent requests are made for non-existent data, causing each request to reach the database since it’s not available in the cache. It can lead to excessive and unnecessary database load. Redis provides various mechanisms to prevent it, such as NULL caching and Bloom filters.</p>
+<p><strong>Cache Avalanche</strong>&nbsp;happens when multiple cached data expires simultaneously, leading to a barrage of hits to the database. Redis provides strategies like TTL staggering, cache warming, and fallback caching to handle Cache Avalanches.</p>
+<p><strong>Redis Transactions</strong>&nbsp;play an important role in maintaining data integrity and consistency during multiple read or write operations. By queuing multiple commands and executing them atomically, redis transactions prevent dirty reads and provide higher reliability.</p>
+<p>Redis and its techniques for preventing cache penetration and avalanches are frequently used in high-traffic, real-world applications like e-commerce websites, social media platforms, real-time leaderboard systems, and online ticketing services.</p>
+<p>Let’s begin with the assessments.</p>
+<p><strong>Question 1</strong></p>
+<p>Explain, in your own words, what Cache Penetration is. Why is it a problem, and how does Redis help prevent it?</p>
+<p><strong>Question 2</strong></p>
+<p>Describe a real-world scenario where Redis Transactions might be useful. How would utilizing transactions in that scenario promote data consistency?</p>
+<p><strong>Question 3</strong></p>
+<p>Consider a high-traffic e-commerce website, and describe how the Cache Avalanche can be dealt with effectively using Redis.</p>
+<hr>
+<p><strong>Answer to Question 1</strong></p>
+<p>Cache Penetration refers to the scenario where frequent requests for non-existing data are passed to the database since the cache does not hold these values. It can lead to unnecessary database load and degrade performance. Redis helps prevent Cache Penetration primarily by using NULL caching, where you store the “NULL” keyword for a certain duration when the value queried in the database returns NULL.</p>
+<p><strong>Answer to Question 2</strong></p>
+<p>In a social media platform like Twitter, when a user ‘likes’ a tweet, the total number of likes for the tweet and the user’s liked tweets both need to be updated. This scenario requires multiple write operations and if not handled atomically, can lead to inconsistent data. Redis Transactions can queue these multiple write commands and execute them atomically to maintain data integrity and consistency.</p>
+<p><strong>Answer to Question 3</strong></p>
+<p>In a high-traffic e-commerce website like Amazon, a Cache Avalanche can occur when many cached products details or user recommendations expire simultaneously, leading to a sudden increase in database load. Redis effectively handles this by TTL staggering where each key-value pair in the cache has slightly different expiration times, or by warming the cache where you refresh the cache with the most frequently accessed data before the old cache expires. This prevents a sudden surge in database queries.</p>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/redis-interview4/">https://programmerscareer.com/zh-cn/redis-interview4/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/redis-interview3/">Redis interviews: If the Redis master node is down, how do you recover the data?</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/redis-interview5/">Redis interviews: Briefly describe the advantages and disadvantages of RDB and AOF schemes in Redis persistence</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/redis-interview4/';
+        this.page.identifier = 'redis-interview4/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

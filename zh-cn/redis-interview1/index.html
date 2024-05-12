@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>Redis 面试: 简述 Redis 中跳表的应用以及优缺点 - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/redis-interview1/" rel="alternate" hreflang="en" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="解释跳跃表是什么以及它们通常在哪里被使用。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis 面试: 简述 Redis 中跳表的应用以及优缺点">
+<meta property="og:url" content="https://programmerscareer.com/zh-cn/redis-interview1/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="解释跳跃表是什么以及它们通常在哪里被使用。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/zh-cn">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/zh-cn/archives">归档</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/categories">分类</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/tags">标签</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/about">关于</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="搜索" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="目录">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-1-跳跃表简介">1&nbsp;&nbsp;<b>主题：1.1 跳跃表简介</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-2-Redis中的跳跃表">2&nbsp;&nbsp;<b>主题：1.2 Redis中的跳跃表</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-3-在Redis中跳跃表的应用">3&nbsp;&nbsp;<b>主题：1.3 在Redis中跳跃表的应用</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-4-跳跃表在Redis中的优势">4&nbsp;&nbsp;<b>主题：1.4 跳跃表在Redis中的优势</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-5-跳跃表在Redis中的缺点">5&nbsp;&nbsp;<b>主题：1.5 跳跃表在Redis中的缺点</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-6-在Redis中跳跃表的回顾和评估">6&nbsp;&nbsp;<b>主题：1.6 在Redis中跳跃表的回顾和评估</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>简体中文</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/redis-interview1/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/redis-interview1/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            Redis 面试: 简述 Redis 中跳表的应用以及优缺点
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">1月 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/zh-cn/categories/redis/">redis</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            18 分钟 读完 (约 2762 字)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p> 解释跳跃表是什么以及它们通常在哪里被使用。</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>感谢您阅读这篇文章。更多面试问题:<br><a href="https://programmerscareer.com/zh-cn/software-interview-set/">https://programmerscareer.com/zh-cn/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="主题：1-1-跳跃表简介"><a href="#主题：1-1-跳跃表简介" class="headerlink" title="主题：1.1 跳跃表简介"></a><strong>主题</strong>：1.1 跳跃表简介</h1><p>跳跃表是一种令人惊叹的数据结构。它们是为简单性和速度而设计的。</p>
+<p>一个<strong>跳跃表</strong>是一种概率性数据结构，允许有效的搜索、插入和删除操作。它与有序链表非常相似，但跳跃表的魅力在于它们如何提高操作的速度。</p>
+<p>跳跃表的主要思想是“跳过”大量元素，而不是遍历链表来找到一个元素。它使用连接以渐进方式的元素分数的链表层次结构。这个分数逐渐减少，这使得我们可以实现有效的搜索操作。</p>
+<p>跳跃表在大数据场景中尤为出色。它的平均情况和最坏情况搜索和插入时间复杂度为O(log n)，这使它非常高效！</p>
+<p>尽管它们可能没有与更常见的数据结构相同的受欢迎程度，但跳跃表具有重要的应用，其中一个应用是在Redis等数据库中使用。下一节课将帮助我们更深入地了解Redis如何利用跳跃表。</p>
+<h1 id="主题：1-2-Redis中的跳跃表"><a href="#主题：1-2-Redis中的跳跃表" class="headerlink" title="主题：1.2 Redis中的跳跃表"></a><strong>主题</strong>：1.2 Redis中的跳跃表</h1><p>Redis，一款著名的开源内存数据结构项目，在其代码库中实现了跳跃表以解决某些用例。其中最令人印象深刻的是有序集合数据类型。</p>
+<p>在Redis中，有序集合是一个元素与“分数”相关联的集合。尽管如何在传统哈希表中实现这一点，但有序集合的强大之处在于它们始终根据这个分数排序。这就是跳跃表发挥作用的地方。</p>
+<p>Redis选择使用哈希表和跳跃表的组合来实现这个有序集合。哈希表允许Redis快速查找集合中的元素，而跳跃表维护元素根据它们的分数排序，从而实现快速检索元素范围、找到元素排名等操作。</p>
+<p>有序集合之间的并集、交集和差集操作也使用跳跃表实现。此外，当Redis需要遍历大型有序集合时，它会使用跳跃表而不是哈希表进行遍历，因为这种方法更有效率。</p>
+<p>跳跃表提供了有效的搜索和插入操作，对Redis的性能要求至关重要。</p>
+<h1 id="主题：1-3-在Redis中跳跃表的应用"><a href="#主题：1-3-在Redis中跳跃表的应用" class="headerlink" title="主题：1.3 在Redis中跳跃表的应用"></a><strong>主题</strong>：1.3 在Redis中跳跃表的应用</h1><p>Redis广泛使用跳跃表，尤其是在有序集合方面。但为什么Redis会选择使用跳跃表，而不是选择其他可以使用的数据结构，例如二叉搜索树或AVL树？有几个原因。</p>
+<p>首先，这与简单性有关。跳跃表更容易实现，并且与平衡树相比，有更少的边界情况。它们不需要在插入和删除操作后重新结构化/重新分配（例如树旋转），使它们成为对性能要求高的数据库Redis非常吸引人的选择。</p>
+<p>由于其设计，跳跃表提供了接近平衡树的性能，而不需要平衡操作。虽然AVL树提供了很好的性能，但平衡操作在大量读写情况下可能成为瓶颈，这种情况在Redis等数据库中非常常见。</p>
+<p>此外，跳跃表支持快速插入、删除和查找操作，只需要几个层次变化，使它们成为有序数据结构的理想选择。</p>
+<p>跳跃表在Redis中的应用不仅仅是有序集合，还涉及到Redis集群特性的内部。在Redis集群中，跳跃表用于处理不同节点上哈希槽的分布。</p>
+<p>这使Redis集群能够快速定位要分布给特定节点的给定数据，从而提高集群中数据操作的效率。</p>
+<p>请记住，每种技术都根据性能、功能、简单性等因素做出决策。Redis使用跳跃表的决策是一个有趣的例子，适合用正确的工具。</p>
+<h1 id="主题：1-4-跳跃表在Redis中的优势"><a href="#主题：1-4-跳跃表在Redis中的优势" class="headerlink" title="主题：1.4 跳跃表在Redis中的优势"></a><strong>主题</strong>：1.4 跳跃表在Redis中的优势</h1><p>在Redis中使用跳跃表带来了几个优势，特别是在处理项目列表时。使用跳跃表在Redis中的关键优势包括：</p>
+<p><strong>1. 高效的搜索操作：</strong>跳跃表具有对数时间复杂度的搜索时间，使其非常有效以搜索元素。而不是按顺序搜索列表中的一个项目，我们可以有效地跳过节点，从而获得更快的搜索时间。这使跳跃表在有序集合中具有显著优势。</p>
+<p><strong>2. 简单的实现：</strong>跳跃表比平衡搜索树更容易实现。例如，一个二叉搜索树需要在每次插入和删除后执行复杂的平衡操作。相比之下，跳跃表以概率维持平衡，因此不需要在每次变异后执行复杂的重新平衡操作。</p>
+<p><strong>3. 快速插入和删除操作：</strong>跳跃表支持快速插入、删除和搜索操作。特别是在Redis中，数据操作非常频繁，这些操作的效率对性能至关重要。</p>
+<p><strong>4. 高效的范围查询：</strong>跳跃表在范围查询方面非常有效，这对有序集合来说是关键的要求。例如，获取范围、找到元素的排名、最近的较低和较高排名项等操作要快得多并更简单。</p>
+<p><strong>5. 动态重新分配：</strong>跳跃表具有一个非常好的特性，即可以动态重新组织自身。当元素添加或删除时，跳跃表可以动态重建它们的层次。</p>
+<p>这些优势对Redis性能的提升至关重要，使其能够有效地处理大量数据集。</p>
+<h1 id="主题：1-5-跳跃表在Redis中的缺点"><a href="#主题：1-5-跳跃表在Redis中的缺点" class="headerlink" title="主题：1.5 跳跃表在Redis中的缺点"></a><strong>主题</strong>：1.5 跳跃表在Redis中的缺点</h1><p>尽管跳跃表为Redis带来了许多好处，但可能出现的一些挑战：</p>
+<p><strong>1. 空间使用：</strong>跳跃表倾向于使用更多空间，因为每个跳跃表节点都维护多个指针，这增加了内存占用。然而，Redis通过限制跳跃表节点可以具有的最大层次数来解决这个问题。</p>
+<p><strong>2. 随机性：</strong>跳跃表的一个特点是其概率性。跳跃表的节点层次在插入时随机选择。虽然这种随机化有好处，但它导致跳跃表结构的不可预测性。</p>
+<p><strong>3. 不适合小数据集：</strong>跳跃表在管理大型、有序数据集时表现出色，因为它们的操作时间复杂度是对数。但对于小数据集，维护跳跃表指针的开销以及增加的空间使用可能不被认可。</p>
+<p><strong>4. 理解难度：</strong>虽然不是直接缺点，但跳跃表的概念可能对不熟悉它的人来说有些吓人。这可能使理解和诊断Redis性能变得复杂。</p>
+<p><strong>5. 缺乏广泛使用：</strong>跳跃表不像哈希表、AVL树或B-树那样广泛使用或研究。这可能导致理解和修改数据结构变得略显困难。</p>
+<p>尽管存在这些挑战，Redis以优雅的方式实现了跳跃表，获得了这些好处而不受重大负面影响。</p>
+<h1 id="主题：1-6-在Redis中跳跃表的回顾和评估"><a href="#主题：1-6-在Redis中跳跃表的回顾和评估" class="headerlink" title="主题：1.6 在Redis中跳跃表的回顾和评估"></a><strong>主题</strong>：1.6 在Redis中跳跃表的回顾和评估</h1><p>让我们对每个部分进行回顾：</p>
+<p><strong>1.1 跳跃表简介：</strong>我们讨论了跳跃表的基本结构和概念，包括它们通常使用的地方以及为什么。</p>
+<p><strong>1.2 跳跃表在Redis中的应用：</strong>我们关注了Redis如何利用跳跃表，尤其是在处理有序集合时。</p>
+<p><strong>1.3 在Redis中跳跃表的应用：</strong>我们深入探讨了在Redis环境中跳跃表的常见用例，从简单的有序集合到Redis集群内部。</p>
+<p><strong>1.4 跳跃表在Redis中的优势：</strong>我们检查了使用跳跃表的主要优势，例如在搜索、插入和删除操作中的效率、实现简单性以及动态重新分配功能。</p>
+<p><strong>1.5 跳跃表在Redis中的缺点：</strong>我们还讨论了它们的缺点，包括额外的空间使用、随机性、复杂性以及这些方面在理解、维护和使用跳跃表在Redis中所带来的挑战。</p>
+<p>为了进一步巩固您的理解，我将为您提供一些简短的评估问题：</p>
+<ol>
+<li>你能解释为什么在Redis中使用跳跃表吗？</li>
+<li>跳跃表如何在Redis中处理有序集合？</li>
+<li>在Redis中实现跳跃表时可能出现的挑战是什么？</li>
+</ol>
+<p><strong>问题：</strong>为什么在Redis中使用跳跃表？<br><strong>答案：</strong> 跳跃表在Redis中使用是因为它们可以维护元素以有效的顺序进行操作，如搜索、插入和删除。这对于操作如获取范围、确定元素的排名、获取较低或较高排名项等操作非常重要。</p>
+<p><strong>问题：</strong>跳跃表如何在Redis中处理有序集合？<br><strong>答案：</strong> 在Redis中，跳跃表处理有序集合的优势在于它们能够有效地执行范围查询，并且能够快速检索元素的排名、最近的较低和较高排名项。这些能够快速插入、删除和搜索元素的能力也在处理有序集合时发挥作用。</p>
+<p><strong>问题：</strong>在Redis中实现跳跃表时可能出现的挑战是什么？<br><strong>答案：</strong> 在实现跳跃表时，可能会遇到以下挑战：每个节点可以维护多个指针，因此空间使用可能会增加。它们的概率性质可能导致跳跃表结构的不可预测性。对于不熟悉它的人来说，它们可能会复杂，而且它们的优势可能在处理小数据集时不被充分利用。</p>
+<blockquote class="colorquote danger"><p>English post: <a href="https://programmerscareer.com/redis-interview1/">https://programmerscareer.com/redis-interview1/</a><br>作者：<a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>注意：本文为作者原创，转载请注明出处。  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/zh-cn/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/zh-cn/mysql-interview9/">MySQL 面试：MySQL 有什么调优的方式？</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/zh-cn/redis-interview2/">Redis 面试：如何用Redis实现分布式锁</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">评论</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/zh-cn/redis-interview1/';
+        this.page.identifier = 'zh-cn/redis-interview1/';
+        
+        this.language = 'zh';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("zh-CN");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="站内搜索" />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: '文章',
+                PAGES: '页面',
+                CATEGORIES: '分类',
+                TAGS: '标签',
+                UNTITLED: '(无标题)',
+            },
+            CONTENT_URL: '/content.zh-cn.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

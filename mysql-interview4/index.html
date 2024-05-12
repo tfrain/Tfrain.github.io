@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL Interviews: Why does MySQL use B+ trees for indexing - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/mysql-interview4/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s get started together">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL Interviews: Why does MySQL use B+ trees for indexing">
+<meta property="og:url" content="https://programmerscareer.com/mysql-interview4/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s get started together">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.283Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-1-Why-Indexing">1&nbsp;&nbsp;<b>Topic 1.1: Why Indexing?</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-2-Types-of-Indexes-in-MySQL">2&nbsp;&nbsp;<b>Topic 1.2: Types of Indexes in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-3-B-Trees-Explained">3&nbsp;&nbsp;<b>Topic 1.3: B+ Trees Explained</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-4-Advantages-of-B-Trees">4&nbsp;&nbsp;<b>Topic 1.4: Advantages of B+ Trees</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-5-B-Trees-in-MySQL-Indexing">5&nbsp;&nbsp;<b>Topic 1.5: B+ Trees in MySQL Indexing</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-6-MySQL-Indexing-Best-Practices">6&nbsp;&nbsp;<b>Topic 1.6: MySQL Indexing Best Practices</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-7-Real-World-Case-Studies">7&nbsp;&nbsp;<b>Topic 1.7: Real World Case Studies</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-8-Potential-Interview-Questions-and-Answers">8&nbsp;&nbsp;<b>Topic 1.8: Potential Interview Questions and Answers</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-9-Review-and-Assessments">9&nbsp;&nbsp;<b>Topic 1.9: Review and Assessments</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview4/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview4/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL Interviews: Why does MySQL use B+ trees for indexing
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            16 minutes read (About 2468 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s get started together</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-1-1-Why-Indexing"><a href="#Topic-1-1-Why-Indexing" class="headerlink" title="Topic 1.1: Why Indexing?"></a><strong>Topic 1.1: Why Indexing?</strong></h1><p>Just like an index in a book helps us find information quickly without having to read the entire book, an index in a database helps the database application find data quickly without having to search every row in a database table every time a database table is accessed. Indexes significantly speed up data retrieval process, which leads to better application performance.</p>
+<p>Indexes are crucial in large tables for optimizing ‘SELECT’ queries and where clauses, as they minimize the number of pages the system must go through to find pertinent data.</p>
+<p>However, they do come with their fair share of cautions. Indexes, while improving read performance, can slow down write (insert, update, delete) performance. This is because every time data changes, indices need to be updated. This is also why having too many indices can actually harm database performance.</p>
+<p>In a nutshell, a good index is all about creating the right balance. We want to keep queries fast and productive, but without overloading the system with performance hampering index maintenance.</p>
+<h1 id="Topic-1-2-Types-of-Indexes-in-MySQL"><a href="#Topic-1-2-Types-of-Indexes-in-MySQL" class="headerlink" title="Topic 1.2: Types of Indexes in MySQL"></a><strong>Topic 1.2: Types of Indexes in MySQL</strong></h1><p>MySQL utilizes various types of indexes to boost the query performance. Here are the common ones:</p>
+<ul>
+<li><strong>Primary Index:</strong>&nbsp;This index mandates that the column contains only unique, non-null values. Each table can only possess one primary index.</li>
+<li><strong>Unique Index:</strong>&nbsp;This type of index prevents the field from having duplicate values if the column does not contain null values. Except for permit null values, the unique index is almost the same as the primary index.</li>
+<li><strong>Index (or Normal Index):</strong>&nbsp;It allows duplicate and null values in the column. It’s the basic type of index in MySQL.</li>
+<li><strong>Full-text Index:</strong>&nbsp;If you’re dealing with text data and often use full-text search, then this index comes in handy.</li>
+<li><strong>Composite Index (or Multiple-column index):</strong>&nbsp;If you use multiple columns in WHERE clauses, creating a composite index on those fields can speed up the query performance.</li>
+</ul>
+<p>These index types serve different purposes, and understanding them helps us utilize them properly to make sure that the database we are creating or managing performs in the most optimal way.</p>
+<h1 id="Topic-1-3-B-Trees-Explained"><a href="#Topic-1-3-B-Trees-Explained" class="headerlink" title="Topic 1.3: B+ Trees Explained"></a><strong>Topic 1.3: B+ Trees Explained</strong></h1><p>At its core, a B+ Tree is a type of self-balancing search tree that maintains sorted data and allows for efficient insertion, deletion, and search operations.</p>
+<p>In contrast to binary search trees (BST), where each node has at most two children (left and right), a B+ Tree is a multileveled tree where each node can have multiple children, typically more than two. The important features of a B+ Tree are:</p>
+<ol>
+<li>All data is stored at the leaf level.</li>
+<li>All leaf nodes are at the same depth, ensuring balance.</li>
+<li>All leaf nodes are linked, allowing for efficient range queries.</li>
+<li>Non-leaf nodes store copies of the keys to guide the search.</li>
+</ol>
+<p>The combination of these characteristics makes B+ Trees particularly well-suited for systems with large amounts of data and a significant number of read operations, such as databases or filesystems.</p>
+<p>Each node in a B+ Tree contains a number of keys and pointers. The keys act as separation values which divide its subtrees. For example, if a node contains the values [10, 20, 30] it has four child nodes (subtrees).</p>
+<p>One fundamental property in a B+ tree is that if a node has&nbsp;<code>n</code>&nbsp;keys, it will have&nbsp;<code>n+1</code>&nbsp;pointers (children). Another property is that all keys of a B+ tree are sorted.</p>
+<p>As B+Trees rise in popularity due to their high efficiency in accessing, storing, and retrieving data, they’ve become closely linked with the database world, including MySQL.</p>
+<h1 id="Topic-1-4-Advantages-of-B-Trees"><a href="#Topic-1-4-Advantages-of-B-Trees" class="headerlink" title="Topic 1.4: Advantages of B+ Trees"></a><strong>Topic 1.4: Advantages of B+ Trees</strong></h1><p>let’s delve deeper into the advantages B+ Trees bring about to Databases, especially MySQL:</p>
+<ol>
+<li><strong>Efficient Disk Read/Write Operations:</strong>&nbsp;Each node in a B+ Tree contains multiple keys and pointers packed together on a single disk block, this significantly reduces the I/O operations for reading or writing large ranges of data. So, you can scan large portions of data using minimum disk reads.</li>
+<li><strong>Faster Search Time:</strong>&nbsp;As B+ Trees are height-balanced, an equal number of comparisons leads to all leaf nodes, making data retrieval quicker. The time complexity of search in a B+ Tree is logarithmic, making search operations efficient.</li>
+<li><strong>Effective Insertions and Deletions:</strong>&nbsp;The data structure of B+ Trees enables them to remain balanced and ordered during both data insertions and deletions. This result in minimum disk space wastage and maximum performance efficiency.</li>
+<li><strong>Ascending/Descending Sort Order Retrieval:</strong>&nbsp;The leaf nodes of B+ Tree are linked together. This feature significantly helps in quicker sequential reading of data in either ascending or descending sort order, which is a common operation in databases.</li>
+<li><strong>Great for both Equality and Range Retrieval:</strong>&nbsp;With its self-balancing property and minimum and maximum keys in each page, B+ Trees are phenomenal when it comes to equality and range queries.</li>
+<li><strong>Multilevel Indexing:</strong>&nbsp;B+ Trees can be adapted to perform multi-level indexing, further boosting search performance and reducing disk I/O operations.</li>
+</ol>
+<h1 id="Topic-1-5-B-Trees-in-MySQL-Indexing"><a href="#Topic-1-5-B-Trees-in-MySQL-Indexing" class="headerlink" title="Topic 1.5: B+ Trees in MySQL Indexing"></a><strong>Topic 1.5: B+ Trees in MySQL Indexing</strong></h1><p>Let’s now understand why and how MySQL uses B+ Trees for indexing in depth.</p>
+<p>In MySQL, particularly when using the InnoDB storage engine, B+ Trees are used for primary and secondary indexing which enhances the database’s performance by significantly reducing the data access time.</p>
+<p>Here’s how it works:</p>
+<ol>
+<li><strong>Primary Indexing</strong>: MySQL uses B+ Trees as a primary index to uniquely identify each row, which is ordered by the primary key. The leaf nodes of the B+ Tree store the actual data, and the values of primary key act as a pointer to the data. So, whenever a direct search is performed on the primary key, MySQL quickly navigates through the B+ Tree to find and retrieve the actual data from the disk.</li>
+<li><strong>Secondary Indexing</strong>: The secondary index in a MySQL table is also a B+ Tree. The only difference compared to the primary index is that its leaf nodes don’t store actual data but rather they store pointers to the primary key. So, when there is a search performed using a secondary index, MySQL uses the B+ Tree of the secondary Index to find the primary key first, then uses this primary key to navigate the primary B+ Tree to fetch the actual data. Although this involves navigating two B+ Trees, it is still pretty fast and efficient.</li>
+</ol>
+<p>The advantage of using B+ trees in MySQL indexing is that it reduces the number of disk accesses required to find an item, which greatly improves performance because disk accesses are time-consuming compared to in-memory operations.</p>
+<h1 id="Topic-1-6-MySQL-Indexing-Best-Practices"><a href="#Topic-1-6-MySQL-Indexing-Best-Practices" class="headerlink" title="Topic 1.6: MySQL Indexing Best Practices"></a><strong>Topic 1.6: MySQL Indexing Best Practices</strong></h1><p>Building on our understanding of B+ Trees, let’s now go through some best practices when it comes to MySQL indexing. Effective indexing is absolutely crucial in order to keep your database queries running smoothly and promptly.</p>
+<ol>
+<li><strong>Understand Your Data:</strong>&nbsp;Before you even start indexing, it’s crucial to understand thoroughly the data you’re working with. What columns are often queried together? Which columns appear commonly in your WHERE clauses? This understanding helps guide your indexing strategy.</li>
+<li><strong>Use the EXPLAIN Keyword:</strong>&nbsp;When optimizing your indexes, use the EXPLAIN keyword in SQL to understand how the database is interpreting your query. This can give you insights into how the SQL optimizer will use your indexes and where improvements can be made.</li>
+<li><strong>Be Mindful of Index Overhead:</strong>&nbsp;While indexes speed up search queries they also involve cost. They take up space, and also, each time you modify the data in your tables (INSERT, UPDATE, DELETE), indexes need to be updated. This might slow down these operations.</li>
+<li><strong>Index Columns Used in WHERE Clauses:</strong>&nbsp;Columns that are frequently used in WHERE clauses in the queries are usually good candidates for indexing.</li>
+<li><strong>Use Multi-Column Indexes Effectively:</strong>&nbsp;MySQL allows you to create an index on multiple columns together. When you create such an index, MySQL can use it when queries involve the first column, or the first and the second column, or all the columns in the index.</li>
+<li><strong>Use Appropriate Index for Different Storage Engines</strong>: If you are using InnoDB, note that it stores its rows on the disk based on the primary key. Thus, the choice of the primary key can have a big impact on the performance of InnoDB tables.</li>
+</ol>
+<p>Remember, these are just guidelines and the best practices can vary based on your exact use case.</p>
+<h1 id="Topic-1-7-Real-World-Case-Studies"><a href="#Topic-1-7-Real-World-Case-Studies" class="headerlink" title="Topic 1.7: Real World Case Studies"></a><strong>Topic 1.7: Real World Case Studies</strong></h1><p>Great! We’re progressing nicely through our structured course. It’s always helpful to bolster our learning with practical examples. So, let’s delve into a few case studies highlighting the use of MySQL indexing and B+ Trees.</p>
+<ol>
+<li><strong>E-commerce Systems</strong>: Consider the case of an online retail system like Amazon. These platforms manage a tremendous volume of data, pertaining to goods, user details, transaction details, etc. Given the enormous number of products and the frequency of transactions, the speed of data retrieval is paramount. Here, MySQL indexing plays a major role. Effective usage of primary, unique, and full-text indexes significantly speeds up the querying process, providing an efficient, seamless user experience. The use of B+ Trees for indexing allows the system to handle millions of items without a significant drop in performance.</li>
+<li><strong>Social Media Platforms</strong>: Social media platforms like Facebook or Twitter also make extensive use of indexing. Every time we open our feed, the system queries a vast database to fetch relevant posts. Imagine finding a needle in a haystack — that’s what it would be like for the system to retrieve our personalized feed without indexing. Proper indexing allows these services to rapidly deliver the data we need each time we log in or refresh our feed.</li>
+<li><strong>Search Engines</strong>: Google, Yahoo, Bing, and many other search engines also use extensive indexing to provide fast and accurate search results. Without the use of proficient indexing strategies, it would be impossible to get instant search results from the vast world of the internet.</li>
+</ol>
+<p>These are just a snapshot of the real-world applications where indexing and B+ Trees play a major role. Whether you are developing a website, an app, or any platform dealing with large amounts of data, understanding and using these structures effectively can make a significant difference in performance and efficiency.</p>
+<h1 id="Topic-1-8-Potential-Interview-Questions-and-Answers"><a href="#Topic-1-8-Potential-Interview-Questions-and-Answers" class="headerlink" title="Topic 1.8: Potential Interview Questions and Answers"></a><strong>Topic 1.8: Potential Interview Questions and Answers</strong></h1><p>Alright, moving forward. Let’s prepare for some potential interview questions about MySQL indexing and B+ Trees. Having a good grip on these concepts can help you perform well in your job applications, and it’s always better to be ready!</p>
+<p>Here are some questions with answers</p>
+<ol>
+<li><strong>Why is indexing important in databases?</strong><br> Indexing enhances database efficiency by providing swift data retrieval methods. An index in a database works similarly to an index in a book, enabling faster access to data. Without indexing, to find data, the database would need to dig through every record in a table — termed a full table scan — which can be time and resource-intensive.</li>
+<li><strong>What is a B+ Tree?</strong><br> A B+ Tree is a type of data structure used in databases for storing data in a sorted and efficient manner. It is a balanced tree structure where all leaf nodes are at the same level, making searches, insertions, and deletions efficient, even for large sets of data.</li>
+<li><strong>How does MySQL use B+ Trees for indexing?</strong><br> MySQL uses B+ Trees as the default indexing scheme in its InnoDB storage engine. Both primary and secondary indexes in InnoDB are stored as B+ Trees. The leaf nodes of a primary index’s B+ Tree contain the row data for the table, while the leaf nodes of a secondary index’s B+ Tree contain the primary key values for the respective rows.</li>
+<li><strong>What are some best practices for MySQL indexing?</strong><br> Important best practices include understanding your data before indexing, using the EXPLAIN keyword to understand query execution, indexing columns used in WHERE clauses, making effective use of multi-column indexes, considering index overhead, and using appropriate indexes depending on the storage engine.</li>
+<li><strong>Can you give an example where indexing significantly improves performance?</strong><br> E-commerce platforms can be a good example here. They have to manage loads of data — user details, product details, transactions, etc. Indexing can help sort and retrieve this data quickly, improving the search and transaction efficiency and enhancing the user experience.</li>
+</ol>
+<h1 id="Topic-1-9-Review-and-Assessments"><a href="#Topic-1-9-Review-and-Assessments" class="headerlink" title="Topic 1.9: Review and Assessments"></a><strong>Topic 1.9: Review and Assessments</strong></h1><p>Perfect, reaching the last part of the course, we’ll now review the key concepts we covered and engage in some self-assessments.</p>
+<p>Let’s recap what we’ve learned:</p>
+<ul>
+<li><strong>Why Indexing</strong>: We’ve understood the key role played by indexing in improving the efficiency and speed of data retrieval in databases.</li>
+<li><strong>Types of Indexes in MySQL</strong>: We’ve explored the various types of indexes in MySQL, including primary, unique, full-text, simple, and composite indexes and where they are used.</li>
+<li><strong>B+ Trees</strong>: We’ve deep-dived into the structure of B+ Trees, how they function and the efficiency they offer in storing and retrieving data.</li>
+<li><strong>B+ Trees in MySQL Indexing</strong>: We’ve seen how MySQL uses B+ Trees as an indexing structure, focusing on the InnoDB storage engine.</li>
+<li><strong>MySQL Indexing Best Practices</strong>: We’ve probed into how to use indexing effectively for the best performance tips.</li>
+<li><strong>Real-world applications</strong>: We’ve looked at how indexing and B+ Trees are applied in real-world examples, including in social media platforms, search engines, and E-commerce systems.</li>
+</ul>
+<p>Now, for assessments, here are a few quiz questions and small projects:</p>
+<p>Quiz Questions:</p>
+<ol>
+<li>What is the role of indexing in databases?</li>
+<li>Briefly describe the structure of a B+ Tree and how it works.</li>
+<li>What is the difference between a primary and secondary index in MySQL?</li>
+<li>What are three best practices when using indexing in MySQL?</li>
+</ol>
+<p>Small Projects:</p>
+<ol>
+<li>Take a small dataset (you can create or download one). Implement MySQL indexing and observe the performance difference when retrieving data.</li>
+<li>Consider an E-commerce database with tables storing user information, product details, and transaction history. Design a basic schema with indexing and illustrate how different types of MySQL indexes are used.</li>
+</ol>
+<p>Happy learning!</p>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/mysql-interview4/">https://programmerscareer.com/zh-cn/mysql-interview4/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote></body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/mysql-interview3/">MySQL interviews: How does MySQL design indexes and optimize queries?</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/mysql-interview5/">DataBase interviews: Briefly describe the difference between optimistic locks and pessimistic locks and the usage scenarios</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/mysql-interview4/';
+        this.page.identifier = 'mysql-interview4/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

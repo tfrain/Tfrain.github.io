@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL interviews: What are ACID in a database? - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/mysql-interview2/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="I will prepare an outline of the topics for learning MySQL, particularly focusing on the ACID properties in a database.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL interviews: What are ACID in a database?">
+<meta property="og:url" content="https://programmerscareer.com/mysql-interview2/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="I will prepare an outline of the topics for learning MySQL, particularly focusing on the ACID properties in a database.">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.283Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-1-ACID-in-theory">1&nbsp;&nbsp;<b>Topic: 1.1 ACID in theory</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-2-ACID-in-practice">2&nbsp;&nbsp;<b>Topic: 1.2 ACID in practice</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-3-Atomicity-in-MySQL">3&nbsp;&nbsp;<b>Topic: 1.3 Atomicity in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-4-Consistency-in-MySQL">4&nbsp;&nbsp;<b>Topic: 1.4 Consistency in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-5-Isolation-in-MySQL">5&nbsp;&nbsp;<b>Topic: 1.5 Isolation in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-6-Durability-in-MySQL">6&nbsp;&nbsp;<b>Topic: 1.6 Durability in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-7-Transactional-Control-in-MySQL">7&nbsp;&nbsp;<b>Topic: 1.7 Transactional Control in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-8-Advanced-Topics-in-MySQL">8&nbsp;&nbsp;<b>Topic: 1.8 Advanced Topics in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-9-Review-and-Assessments">9&nbsp;&nbsp;<b>Topic: 1.9 Review and Assessments</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Answer-1">9.1&nbsp;&nbsp;Answer 1:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Answer-2">9.2&nbsp;&nbsp;Answer 2:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Answer-3">9.3&nbsp;&nbsp;Answer 3:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Answer-4">9.4&nbsp;&nbsp;Answer 4:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Answer-5">9.5&nbsp;&nbsp;Answer 5:</a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview2/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview2/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL interviews: What are ACID in a database?
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            18 minutes read (About 2637 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>I will prepare an outline of the topics for learning MySQL, particularly focusing on the ACID properties in a database.</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-1-1-ACID-in-theory"><a href="#Topic-1-1-ACID-in-theory" class="headerlink" title="Topic: 1.1 ACID in theory"></a>Topic: 1.1 ACID in theory</h1><p>ACID is an acronym used to define a set of properties that guarantee reliable processing of database operations, particularly within a transaction model.</p>
+<p>The elements of ACID stand for:</p>
+<ul>
+<li><strong>Atomicity</strong>: This means that a transaction must be treated as a single unit, which either succeeds completely or fails entirely. If any part of a transaction fails, the entire transaction fails, and any changes made during the transaction are rolled back (returned back to their previous state).</li>
+<li><strong>Consistency</strong>: Consistency ensures that a transaction brings a database from one valid state to another valid state. It doesn’t allow the transaction to leave the database in an inconsistent state.</li>
+<li><strong>Isolation</strong>: Isolation assures that transactions are securely and independently processed at the same time without any interaction.</li>
+<li><strong>Durability</strong>: As the name implies, durability makes sure that the result or effect of a committed transaction survives future system failures.</li>
+</ul>
+<p>It is through these core properties that databases maintain the integrity and consistency of data across all transactions.</p>
+<h1 id="Topic-1-2-ACID-in-practice"><a href="#Topic-1-2-ACID-in-practice" class="headerlink" title="Topic: 1.2 ACID in practice"></a>Topic: 1.2 ACID in practice</h1><p>The ACID properties play a crucial role in maintaining the reliability and integrity of data in a MySQL database. Now, let’s see how they work in practice.</p>
+<ul>
+<li><strong>Atomicity</strong>: MySQL ensures atomicity with the help of transactions. In a MySQL database, a transaction is a set of SQL statements that are executed as a single unit. This means that either all the SQL statements within a transaction are executed, or none of them are. If a failure occurs at any point during a transaction, any changes that were made during that transaction are rolled back, and the database is returned to its previous state.</li>
+<li><strong>Consistency</strong>: The consistency property in MySQL ensures that only valid data following all rules and constraints is written into the database. If a transaction results in invalid data, the entire transaction is rolled back and the database remains unchanged. This ensures that the database transitions from one consistent state to another.</li>
+<li><strong>Isolation</strong>: In MySQL, concurrent transactions are isolated from each other. This means that the execution of one transaction doesn’t affect the execution of others. MySQL uses locks and different isolation levels to achieve isolation. This prevents problems like dirty reads, non-repeatable reads, and phantom reads.</li>
+<li><strong>Durability</strong>: MySQL ensures durability by writing changes permanently to disk storage before a transaction is marked as successful. This means once a user has been notified of a successful transaction, they can be confident that the transaction has been permanently recorded and will survive any subsequent server failures or restarts.</li>
+</ul>
+<p>In understanding these, it’s important to note that MySQL gives you the flexibility to define transaction boundaries that fit your application’s requirements by providing different configurations.</p>
+<h1 id="Topic-1-3-Atomicity-in-MySQL"><a href="#Topic-1-3-Atomicity-in-MySQL" class="headerlink" title="Topic: 1.3 Atomicity in MySQL"></a>Topic: 1.3 Atomicity in MySQL</h1><p>Atomicity is one of the key properties of ACID in database systems. It ensures that a transaction is treated as a single unit of work that either completely succeeds or fails. There is no state where a transaction is left partially complete.</p>
+<p>In MySQL, transactions often encompass several SQL commands. Atomicity guarantees that if a problem such as a power outage, system crash, or network issue takes place after a few commands of a transaction have been executed, then those commands are undone. It’s like the transaction never happened. On the other hand, if all the commands in a transaction are executed successfully, the transaction is considered successfully committed to the database.</p>
+<p>Here is an example of how atomicity works in a MySQL transaction:</p>
+<p>Let’s say we are running a book store and we’re updating the quantity of books in our inventory and sales records. The transaction could look something like this:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">START TRANSACTION;  </span><br><span class="line">UPDATE Inventory SET Quantity = Quantity - 1 WHERE BookID = 100;  </span><br><span class="line">UPDATE Sales SET TotalSold = TotalSold + 1 WHERE BookID = 100;  </span><br><span class="line">COMMIT</span><br></pre></td></tr></tbody></table></figure>
+
+<p>In this transaction, we have two UPDATE statements. Both these statements should succeed for the transaction to commit successfully. If either one fails, for instance due to a system crash or a network error, the entire transaction is rolled back due to the principle of atomicity, ensuring our inventory and sales records stay consistent.</p>
+<p>Atomicity is a powerful property that ensures our database operations are safe and reliable.</p>
+<h1 id="Topic-1-4-Consistency-in-MySQL"><a href="#Topic-1-4-Consistency-in-MySQL" class="headerlink" title="Topic: 1.4 Consistency in MySQL"></a>Topic: 1.4 Consistency in MySQL</h1><p>Consistency in database systems ensures that database transactions bring the system from one consistent state to another. This means that if a transaction is executed that violates the database’s consistency rules, the entire transaction will be rolled back and the database will remain unchanged.</p>
+<p>In MySQL, consistency is preserved by using constraint systems. Constraints are rules enforced on columns in a table that prevent invalid data from being entered into them. There are several types of constraints, including:</p>
+<ul>
+<li><strong>Unique constraints</strong>: These ensure that all the values in a column are unique.</li>
+<li><strong>Primary key constraints</strong>: These uniquely identify each record in the table.</li>
+<li><strong>Foreign key constraints</strong>: These maintain referential integrity by ensuring the link between two tables is valid.</li>
+<li><strong>Not null constraints</strong>: These ensure a column cannot have a NULL value.</li>
+<li><strong>Check constraints</strong>: These ensure that all values in a column meet specific conditions.</li>
+</ul>
+<p>Here’s an example showing how a unique constraint ensures consistency:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE Employees (  </span><br><span class="line">    ID int NOT NULL,  </span><br><span class="line">    Name varchar(255) NOT NULL,  </span><br><span class="line">    Age int,  </span><br><span class="line">    PRIMARY KEY (ID),  </span><br><span class="line">    UNIQUE (Name)  </span><br><span class="line">);</span><br></pre></td></tr></tbody></table></figure>
+
+<p>In the above example, the&nbsp;<code>UNIQUE (Name)</code>&nbsp;constraint ensures that no two employees can have the same name, promoting consistency. If we try to insert two employees with the same name, MySQL will not allow it and the consistency of the database will be preserved.</p>
+<h1 id="Topic-1-5-Isolation-in-MySQL"><a href="#Topic-1-5-Isolation-in-MySQL" class="headerlink" title="Topic: 1.5 Isolation in MySQL"></a>Topic: 1.5 Isolation in MySQL</h1><p>Isolation is the “I” in ACID and it means that each transaction should occur in isolation from each other. This means that the execution of one transaction does not impact the execution of others. Isolation is vital in databases to prevent a number of issues that can arise when transactions are executed concurrently.</p>
+<p>Concurrent transactions in MySQL are managed by a specific mechanism known as locking. MySQL provides different types of locks, including shared locks (read locks) and exclusive locks (write locks). The type of lock used depends on whether the transaction is read or write.</p>
+<p>MySQL also supports multiple isolation levels which are:</p>
+<ul>
+<li>READ UNCOMMITTED: The lowest level of isolation. Transactions can see uncommitted changes from other transactions, often leading to issues like dirty reads.</li>
+<li>READ COMMITTED: A somewhat higher level of isolation. Transactions can only see changes from other transactions that have been committed.</li>
+<li>REPEATABLE READ: The default isolation in MySQL. Guarantees that all reads within a single transaction will return the same data, even if changes are made during the transaction.</li>
+<li>SERIALIZABLE: The highest level of isolation. Transactions are executed serially, in other words, one after the other.</li>
+</ul>
+<p>Here is an example to illustrate isolation in MySQL:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">-- Starting a transaction  </span><br><span class="line">START TRANSACTION;  </span><br><span class="line">-- Reading data  </span><br><span class="line">SELECT * FROM table_name WHERE condition;  </span><br><span class="line">-- Attempting to read the same data will yield the same result,  </span><br><span class="line">-- irrespective of changes to the data by other transactions  </span><br><span class="line">SELECT * FROM table_name WHERE condition;  </span><br><span class="line">-- Committing the transaction  </span><br><span class="line">COMMIT;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>In the example above, under the repeatable-read isolation level, the two SELECT statements will give the same result even if there are changes made by other transactions because the changes made by the other transactions will not be visible to this transaction until it is committed.</p>
+<h1 id="Topic-1-6-Durability-in-MySQL"><a href="#Topic-1-6-Durability-in-MySQL" class="headerlink" title="Topic: 1.6 Durability in MySQL"></a>Topic: 1.6 Durability in MySQL</h1><p>The term ‘Durability’ in the context of database systems (the ‘D’ in ACID) concerns the permanence of data once a transaction has been committed. If a transaction has been successfully committed, durability guarantees that the changes made by that transaction will survive any subsequent failures, such as power loss, system crash, or other unexpected shutdowns.</p>
+<p>MySQL ensures durability by writing all transactional changes to a binary log before the changes are actually made. This binary log serves as a historical record of all data modifications, which can be used to recreate the state of the data from any point in time.</p>
+<p>Whenever a transaction is committed in MySQL, all the changes made by that transaction are first written to the binary log, and then MySQL proceeds with actually carrying out the changes. If a system failure occurs, MySQL can replay the binary log up to the point of the last committed transaction, ensuring that all committed transactions are durable.</p>
+<p>Let’s consider an example where a record is being updated in a table:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">START TRANSACTION;  </span><br><span class="line">UPDATE Employees SET Salary = Salary + 5000 WHERE ID = 100;  </span><br><span class="line">COMMIT;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>In the above transaction, an employee’s salary is being updated. Once the&nbsp;<code>COMMIT</code>&nbsp;statement is executed, the update is immediately written to the binary log before the actual update takes place. This ensures that even if a system crash occurs after the update, the transaction will not be lost.</p>
+<h1 id="Topic-1-7-Transactional-Control-in-MySQL"><a href="#Topic-1-7-Transactional-Control-in-MySQL" class="headerlink" title="Topic: 1.7 Transactional Control in MySQL"></a><strong>Topic</strong>: 1.7 Transactional Control in MySQL</h1><p>Transactional control is a way to manage ACID properties and refers to the operations and commands used to control transactions. In MySQL, the transactional control commands include START TRANSACTION, COMMIT, and ROLLBACK.</p>
+<ul>
+<li><code>START TRANSACTION</code>: Marks the start of a transaction.</li>
+<li><code>COMMIT</code>: Marks the end of a transaction, and permanently saves any changes made since the last COMMIT or START TRANSACTION.</li>
+<li><code>ROLLBACK</code>: Reverses any changes made since the last COMMIT or START TRANSACTION.</li>
+</ul>
+<p>Here’s an example of transactional control in action in MySQL:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">-- Starting a transaction  </span><br><span class="line">START TRANSACTION;  </span><br><span class="line">-- Inserting data into the table  </span><br><span class="line">INSERT INTO Customers (Name, Email) VALUES ('John Doe', 'johndoe@example.com');  </span><br><span class="line">-- If something went wrong with the previous statement, we can roll back (reverse) the transaction  </span><br><span class="line">ROLLBACK;  </span><br><span class="line">-- Now let's try again, this time without any mistakes  </span><br><span class="line">START TRANSACTION;  </span><br><span class="line">INSERT INTO Customers (Name, Email) VALUES ('John Doe', 'johndoe@example.com');  </span><br><span class="line">-- Since everything went well, we can now commit the transaction (finalise and save our changes)  </span><br><span class="line">COMMIT;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>In this example, the&nbsp;<code>ROLLBACK</code>&nbsp;statement was used to reverse a transaction that had some errors. Once the issues were resolved, the transaction was tried again, and once successful, the&nbsp;<code>COMMIT</code>&nbsp;statement was used to finalise and save the changes.</p>
+<p>Transactional control helps maintain the ACID properties by providing the capability to group one or more statements together into a single transaction, giving greater control over how data is managed and ensuring data integrity.</p>
+<h1 id="Topic-1-8-Advanced-Topics-in-MySQL"><a href="#Topic-1-8-Advanced-Topics-in-MySQL" class="headerlink" title="Topic: 1.8 Advanced Topics in MySQL"></a><strong>Topic</strong>: 1.8 Advanced Topics in MySQL</h1><p>Once you have a solid understanding of ACID principles and how they are implemented in MySQL, there are several more advanced topics you might also consider exploring further to enhance your MySQL expertise. Some notable areas include but not limited to:</p>
+<ul>
+<li><strong>Indexing:</strong>&nbsp;Indexes are used in MySQL to speed up the retrieval of data from databases. An index in a database is similar to an index at the end of a book — it helps you find information more quickly.</li>
+<li><strong>Stored procedures:</strong>&nbsp;These are pre-written SQL statements stored under a name and executed as a unit. They help to avoid repetitive writing of SQL code that is often required.</li>
+<li><strong>Data types:</strong>&nbsp;MySQL has several datatypes to accommodate a wide variety of data. From alphanumeric strings, date and time, numerical values, and more complex data types like JSON and spatial data types are available in MySQL.</li>
+<li><strong>Handling NULL values:</strong>&nbsp;NULL values in a database can be quite tricky to handle. They represent missing or unknown data. MySQL provides several functions like IS NULL, IS NOT NULL, IFNULL(), and COALESCE() to handle NULL values.</li>
+<li><strong>Joins and Unions:</strong>&nbsp;Joins are used to combine rows from two or more tables based on a related column. They are frequently used in databases as it’s rarely the case that all data needed is in one table. Unions are used to combine the result set of two or more SELECT statements.</li>
+<li><strong>Security:</strong>&nbsp;Dealing with user permissions and secure connections to MySQL database are an integral part of any database management.</li>
+</ul>
+<h1 id="Topic-1-9-Review-and-Assessments"><a href="#Topic-1-9-Review-and-Assessments" class="headerlink" title="Topic: 1.9 Review and Assessments"></a><strong>Topic</strong>: 1.9 Review and Assessments</h1><p>Here’s a summary of what we’ve learned throughout these lessons:</p>
+<ol>
+<li><strong>ACID in Theory:</strong>&nbsp;We learned about the ACID properties (Atomicity, Consistency, Isolation, Durability) and their importance in database systems.</li>
+<li><strong>ACID in Practice:</strong>&nbsp;We went beyond theory to understand how these properties are implemented in MySQL and how they help ensure data integrity and consistency.</li>
+<li><strong>Atomicity in MySQL:</strong>&nbsp;We explored Atomicity in MySQL with practical examples and saw how it ensures that a database operation either completes in its entirety or does not occur at all.</li>
+<li><strong>Consistency in MySQL:</strong>&nbsp;We learned how MySQL ensures data remains consistent before and after any SQL operation.</li>
+<li><strong>Isolation in MySQL:</strong>&nbsp;We discussed the concept of Isolation and its importance in concurrent database processing.</li>
+<li><strong>Durability in MySQL:</strong>&nbsp;We learned what Durability means in terms of a MySQL database, and observed how MySQL ensures that changes to data survive any subsequent failures.</li>
+<li><strong>Transactional Control in MySQL:</strong>&nbsp;We understood how to manage ACID properties using transactional control in MySQL. We, majorly, understood the usage of START TRANSACTION, COMMIT, and ROLLBACK.</li>
+<li><strong>Advanced Topics in MySQL:</strong>&nbsp;We dived into more advanced topics like indexing, stored procedures, data types, and more to expand our understanding of MySQL.</li>
+</ol>
+<p>I would recommend revisiting each of these topics and ensuring you have a solid understanding.</p>
+<p>here are some assessment questions to test your understanding of ACID properties and Transactional Control in MySQL:</p>
+<p><strong>Question 1: What is Atomicity in MySQL? How is it implemented in practice?</strong></p>
+<p><strong>Question 2: What does Consistency in MySQL mean and how does MySQL ensure data remains consistent before and after any SQL operation?</strong></p>
+<p><strong>Question 3: How is Isolation achieved in MySQL especially during concurrent database processing?</strong></p>
+<p><strong>Question 4: What does the Durability property entail in MySQL?</strong></p>
+<p><strong>Question 5: In terms of transactional control in MySQL, discuss the importance of the commands START TRANSACTION, COMMIT, and ROLLBACK.</strong></p>
+<hr>
+<h2 id="Answer-1"><a href="#Answer-1" class="headerlink" title="Answer 1:"></a>Answer 1:</h2><p>Atomicity in MySQL signifies that a transaction must be treated as a single, indivisible unit, which means either it is fully completed or not executed at all. In practice, MySQL implements atomicity using the START TRANSACTION, COMMIT, and ROLLBACK commands. If a transaction is committed, all changes made are permanent. If a transaction is rolled back, no changes are made.</p>
+<h2 id="Answer-2"><a href="#Answer-2" class="headerlink" title="Answer 2:"></a>Answer 2:</h2><p>Consistency in MySQL ensures that all changes to data bring the database from one valid state to another, maintaining database rules and integrity. MySQL employs several mechanisms to ensure consistency. These include defined table schemas, predefined rules, triggers, and constraints like primary key, foreign key, unique, not null, and check constraints.</p>
+<h2 id="Answer-3"><a href="#Answer-3" class="headerlink" title="Answer 3:"></a>Answer 3:</h2><p>Isolation in MySQL ensures that concurrently executing transactions result in a system state that would be obtained if transactions were executed sequentially i.e., one after the other. MySQL achieves this using various isolation levels and locking mechanisms.</p>
+<h2 id="Answer-4"><a href="#Answer-4" class="headerlink" title="Answer 4:"></a>Answer 4:</h2><p>The Durability property in MySQL ensures that once a transaction is committed, it will remain so, even in cases of system failure, power loss, crash or error. This is typically achieved through the use of database backups and transaction logs that can be used to restore the database to its state right before the failure occurred.</p>
+<h2 id="Answer-5"><a href="#Answer-5" class="headerlink" title="Answer 5:"></a>Answer 5:</h2><p>In MySQL, START TRANSACTION signifies the operation’s starting point. COMMIT means the changes made in the current transaction are made permanent. ROLLBACK signifies that if any error occurs during the processing of any SQL command, then the already executed SQL commands are reverted to maintain the database integrity. Together, these commands help in managing ACID properties during a transaction in a MySQL setting.</p>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/mysql-interview2/">https://programmerscareer.com/zh-cn/mysql-interview2/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote></body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/mysql-interview15/">MySQL interviews: What are the transaction isolation levels? What are the tradeoffs?</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/mysql-interview3/">MySQL interviews: How does MySQL design indexes and optimize queries?</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/mysql-interview2/';
+        this.page.identifier = 'mysql-interview2/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

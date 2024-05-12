@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL面试: 简述数据库中的 ACID 分别是什么？ - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/mysql-interview2/" rel="alternate" hreflang="en" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="我将为学习MySQL准备一个主题概述，特别关注数据库中的ACID属性。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL面试: 简述数据库中的 ACID 分别是什么？">
+<meta property="og:url" content="https://programmerscareer.com/zh-cn/mysql-interview2/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="我将为学习MySQL准备一个主题概述，特别关注数据库中的ACID属性。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/zh-cn">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/zh-cn/archives">归档</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/categories">分类</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/tags">标签</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/about">关于</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="搜索" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="目录">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-1-ACID-理论">1&nbsp;&nbsp;<b>主题：1.1 ACID 理论</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-2-ACID-实践">2&nbsp;&nbsp;<b>主题：1.2 ACID 实践</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-3-MySQL中的原子性">3&nbsp;&nbsp;<b>主题：1.3 MySQL中的原子性</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-4-数据库中的一致性">4&nbsp;&nbsp;<b>主题：1.4 数据库中的一致性</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-5-数据库中的隔离">5&nbsp;&nbsp;<b>主题：1.5 数据库中的隔离</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-6-数据库中的持久性">6&nbsp;&nbsp;<b>主题：1.6 数据库中的持久性</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-7-在MySQL中的事务控制">7&nbsp;&nbsp;<b>主题：1.7 在MySQL中的事务控制</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-8-在MySQL中的高级主题">8&nbsp;&nbsp;<b>主题：1.8 在MySQL中的高级主题</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题-1-9-回顾和评估">9&nbsp;&nbsp;<b>**主题:**1.9 回顾和评估</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#答案1">9.1&nbsp;&nbsp;答案1:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#答案2">9.2&nbsp;&nbsp;答案2:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#答案3">9.3&nbsp;&nbsp;答案3:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#答案4">9.4&nbsp;&nbsp;答案4:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#答案5">9.5&nbsp;&nbsp;答案5:</a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>简体中文</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview2/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview2/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL面试: 简述数据库中的 ACID 分别是什么？
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">1月 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/zh-cn/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            28 分钟 读完 (约 4241 字)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p> 我将为学习MySQL准备一个主题概述，特别关注数据库中的ACID属性。</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>感谢您阅读这篇文章。更多面试问题:<br><a href="https://programmerscareer.com/zh-cn/software-interview-set/">https://programmerscareer.com/zh-cn/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="主题：1-1-ACID-理论"><a href="#主题：1-1-ACID-理论" class="headerlink" title="主题：1.1 ACID 理论"></a>主题：1.1 ACID 理论</h1><p>ACID（原子性、一致性、隔离性和持久性）是一个缩写词，用于定义一组属性，确保数据库操作的可靠处理，尤其是在事务模型中。</p>
+<p>ACID的元素代表：</p>
+<ul>
+<li><strong>原子性</strong>：这意味着事务必须被视为一个单位，它要么完全成功，要么完全失败。如果事务中的任何部分失败，则整个事务失败，并且在事务期间所做的更改被回滚（返回到其前一个状态）。</li>
+<li><strong>一致性</strong>：一致性确保事务将数据库从一个有效状态带到另一个有效状态。它不允许事务将数据库留在一个不一致的状态。</li>
+<li><strong>隔离性</strong>：隔离性确保事务安全地和独立地在同一时间内处理，而不会相互影响。</li>
+<li><strong>持久性</strong>：名字所暗示的，持久性确保提交事务的结果或效果在未来的系统故障后仍然有效。</li>
+</ul>
+<p>这些基本属性使数据库在所有事务中维持数据完整性和一致性。</p>
+<h1 id="主题：1-2-ACID-实践"><a href="#主题：1-2-ACID-实践" class="headerlink" title="主题：1.2 ACID 实践"></a>主题：1.2 ACID 实践</h1><p>ACID属性在MySQL数据库中极其重要，确保数据的可靠性和完整性。现在，让我们看看它们在实践中是如何工作的。</p>
+<ul>
+<li><strong>原子性</strong>：MySQL 通过事务来确保原子性。在MySQL数据库中，事务是一组SQL语句，以单一的单位执行。这意味着事务中的所有SQL语句都要么全部执行，要么全部不执行。如果在事务过程中发生任何故障，则在事务期间所做的更改被回滚，并将数据库返回到其前一个状态。</li>
+<li><strong>一致性</strong>：MySQL中的一致性属性确保只有遵循所有规则和约束的有效数据被写入数据库。如果事务导致无效数据，则整个事务被回滚，数据库保持不变。这确保了数据库从一个有效状态到另一个有效状态的过渡。</li>
+<li><strong>隔离</strong>：在MySQL中，并发事务与其他事务隔离。这意味着事务的执行不会影响其他事务的执行。MySQL使用锁和不同的隔离级别来实现隔离。这防止了脏读、不可重复读和幻影读等问题。</li>
+<li><strong>持久性</strong>：MySQL通过在事务成功之前将更改永久写入磁盘存储来确保持久性。这意味着一旦用户收到事务成功的通知，他们就可以确信事务已经永久记录并且在任何后续服务器故障或重启之后都会存在。</li>
+</ul>
+<p>了解这些时，重要的是要注意MySQL允许您根据应用程序的需求定义事务边界，提供不同的配置选项。</p>
+<h1 id="主题：1-3-MySQL中的原子性"><a href="#主题：1-3-MySQL中的原子性" class="headerlink" title="主题：1.3 MySQL中的原子性"></a>主题：1.3 MySQL中的原子性</h1><p>原子性是ACID数据库系统中的关键属性。它确保事务被视为一个单位的工作单元，要么完全成功，要么完全失败。没有一个事务被留在部分完成的状态。</p>
+<p>在MySQL中，事务通常包含多个SQL命令。原子性保证，如果发生电源故障、系统崩溃或网络问题，那么事务执行后的命令被撤销。这就好像事务从未发生过一样。另一方面，如果所有事务中的命令都成功执行，则认为事务成功提交到数据库。</p>
+<p>以下是MySQL事务中原子性的示例：</p>
+<p>假设我们运营一家书店，我们正在更新库存和销售记录中的书籍数量。事务可能类似于以下内容：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">START TRANSACTION;  </span><br><span class="line">UPDATE Inventory SET Quantity = Quantity - 1 WHERE BookID = 100;  </span><br><span class="line">UPDATE Sales SET TotalSold = TotalSold + 1 WHERE BookID = 100;  </span><br><span class="line">COMMIT</span><br></pre></td></tr></tbody></table></figure>
+
+<p>在这个事务中，我们有两个UPDATE语句。这两个语句都要成功，以便事务成功提交。如果例如由于系统崩溃或网络错误，则整个事务由于原子性原则被回滚，确保我们的库存和销售记录保持一致。</p>
+<p>原子性是一个强大的属性，确保我们的数据库操作是安全可靠的。</p>
+<h1 id="主题：1-4-数据库中的一致性"><a href="#主题：1-4-数据库中的一致性" class="headerlink" title="主题：1.4 数据库中的一致性"></a>主题：1.4 数据库中的一致性</h1><p>数据库系统中的一致性确保数据库事务将系统从一个一致状态带到另一个一致状态。这意味着如果执行一个违反数据库一致性规则的事务，整个事务将被回滚，并且数据库将保持不变。</p>
+<p>在MySQL中，一致性由约束系统保留。约束是对表中列的规则，防止无效数据被输入到它们。有几种约束类型，包括：</p>
+<ul>
+<li><strong>唯一约束</strong>：这确保所有列中的值都是唯一的。</li>
+<li><strong>主键约束</strong>：这唯一地标识表中的每一条记录。</li>
+<li><strong>外键约束</strong>：这维护引用完整性，确保两个表之间的链接是有效的。</li>
+<li><strong>不为空约束</strong>：这确保列不能有NULL值。</li>
+<li><strong>检查约束</strong>：这确保所有列中的值满足特定条件。</li>
+</ul>
+<p>以下是一个示例，展示了唯一约束如何确保一致性：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE Employees (  </span><br><span class="line">    ID int NOT NULL,  </span><br><span class="line">    Name varchar(255) NOT NULL,  </span><br><span class="line">    Age int,  </span><br><span class="line">    PRIMARY KEY (ID),  </span><br><span class="line">    UNIQUE (Name)  </span><br><span class="line">);</span><br></pre></td></tr></tbody></table></figure>
+
+<p>在上述示例中，<code>UNIQUE (Name)</code>约束确保了两个员工不能有相同的名字，从而促进了一致性。如果我们尝试插入两个具有相同名字的员工，MySQL将不允许这样做，并且数据库的一致性将得到保留。</p>
+<h1 id="主题：1-5-数据库中的隔离"><a href="#主题：1-5-数据库中的隔离" class="headerlink" title="主题：1.5 数据库中的隔离"></a>主题：1.5 数据库中的隔离</h1><p>隔离是ACID中的“I”，意味着每个事务都应该以与其他事务相隔离的方式进行。这意味着一个事务的执行不会影响其他事务的执行。在数据库中，隔离对于防止在事务同时执行时可能出现的一些问题非常重要。</p>
+<p>在MySQL中，并发事务由一个特定的机制称为锁定管理。MySQL提供了多种锁类型，包括共享锁（读锁）和独占锁（写锁）。锁的类型取决于事务是读还是写。</p>
+<p>MySQL还支持多个隔离级别，包括：</p>
+<ul>
+<li><strong>未提交读</strong>：最低级别的隔离。事务可以看到其他事务中未提交的更改，通常导致问题如脏读。</li>
+<li><strong>已提交读</strong>：与其他事务相比，隔离级别较高。事务只能看到其他事务已提交的更改。</li>
+<li><strong>可重复读</strong>：MySQL中的默认隔离级别。保证单个事务内的所有读取都会返回相同的数据，即使在事务期间发生更改。</li>
+<li><strong>可序列化</strong>：最高级别的隔离。事务以串行方式执行，即一次只执行一个事务。</li>
+</ul>
+<p>以下是隔离在MySQL中的一个示例：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">-- 开始一个事务  </span><br><span class="line">START TRANSACTION;  </span><br><span class="line">-- 读取数据  </span><br><span class="line">SELECT * FROM table_name WHERE condition;  </span><br><span class="line">-- 尝试再次读取相同数据将返回相同的结果，  </span><br><span class="line">-- 无论其他事务是否对数据进行更改  </span><br><span class="line">SELECT * FROM table_name WHERE condition;  </span><br><span class="line">-- 提交事务  </span><br><span class="line">COMMIT;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>在上述示例中，在可重复读隔离级别下，两个SELECT语句将返回相同的结果，即使其他事务对数据进行更改，因为其他事务对数据的更改在事务提交之前不会对这个事务可见。</p>
+<h1 id="主题：1-6-数据库中的持久性"><a href="#主题：1-6-数据库中的持久性" class="headerlink" title="主题：1.6 数据库中的持久性"></a>主题：1.6 数据库中的持久性</h1><p>在数据库系统中，“持久性”（ACID中的“D”）关注一次事务成功提交后数据的持久性。如果事务已成功提交，持久性保证该事务所做的更改将在任何后续故障（如电源失败、系统崩溃或其他未预期的关机）后仍然存在。</p>
+<p>MySQL 确保持久性，在事务更改被实际更改之前，先将所有事务更改写入二进制日志中。这个二进制日志作为历史记录，可以用来从任何时间点重建数据状态。</p>
+<p>每次提交事务时，MySQL首先将该事务所做的更改写入二进制日志，然后MySQL开始实际执行更改。如果系统故障发生，MySQL可以回放二进制日志，直到上一个已提交事务，确保所有已提交事务的持久性。</p>
+<p>让我们考虑一个更新表中的记录的例子：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">START TRANSACTION;  </span><br><span class="line">UPDATE Employees SET Salary = Salary + 5000 WHERE ID = 100;  </span><br><span class="line">COMMIT;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>在上述事务中，员工薪资被更新。一旦<code>COMMIT</code>语句执行，更新将在二进制日志中立即写入，在实际更改之前。这确保了，即使在更新后的系统崩溃，该事务也不会丢失。  </p>
+<h1 id="主题：1-7-在MySQL中的事务控制"><a href="#主题：1-7-在MySQL中的事务控制" class="headerlink" title="主题：1.7 在MySQL中的事务控制"></a><strong>主题：</strong>1.7 在MySQL中的事务控制</h1><p>事务控制是管理ACID属性的方法，并引用用于控制事务的操作和命令。在MySQL中，事务控制命令包括START TRANSACTION，COMMIT和ROLLBACK。</p>
+<ul>
+<li><code>START TRANSACTION</code>：标记事务的开始。</li>
+<li><code>COMMIT</code>：标记事务的结束，并永久保存自上次COMMIT或START TRANSACTION以来所做的任何更改。</li>
+<li><code>ROLLBACK</code>：撤销自上次COMMIT或START TRANSACTION以来所做的任何更改。</li>
+</ul>
+<p>以下是在MySQL中的事务控制实际操作的示例：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">-- 开始一个事务  </span><br><span class="line">START TRANSACTION;  </span><br><span class="line">-- 将数据插入表中  </span><br><span class="line">INSERT INTO Customers (Name, Email) VALUES ('John Doe', 'johndoe@example.com');  </span><br><span class="line">-- 如果上述语句出现问题，我们可以撤销（反转）事务  </span><br><span class="line">ROLLBACK;  </span><br><span class="line">-- 现在让我们再试一次，这次没有错误  </span><br><span class="line">START TRANSACTION;  </span><br><span class="line">INSERT INTO Customers (Name, Email) VALUES ('John Doe', 'johndoe@example.com');  </span><br><span class="line">-- 由于一切顺利，我们现在可以提交事务（完成并保存我们的更改）  </span><br><span class="line">COMMIT;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>在这个示例中，<code>ROLLBACK</code>语句用于反转一个包含错误的事务。一旦问题得到解决，事务再次尝试，并在成功时，<code>COMMIT</code>语句用于完成并保存更改。</p>
+<p>事务控制帮助维护ACID属性，因为它为将一个或多个语句组合成一个事务提供了能力，从而提供了更大的控制权，确保数据完整性。</p>
+<h1 id="主题：1-8-在MySQL中的高级主题"><a href="#主题：1-8-在MySQL中的高级主题" class="headerlink" title="主题：1.8 在MySQL中的高级主题"></a><strong>主题：</strong>1.8 在MySQL中的高级主题</h1><p>了解ACID原则及其如何在MySQL中实现后，您可能还想探索更多高级主题，以提高您的MySQL专业知识。一些值得注意的领域包括但不限于：</p>
+<ul>
+<li><strong>索引</strong>：MySQL中的索引用于加速从数据库中检索数据的速度。数据库中的索引与书中末尾的索引类似，它们帮助您更快地找到信息。</li>
+<li><strong>存储过程</strong>：这些是预先编写的SQL语句，以名称存储并以单元形式执行。它们有助于避免重复编写经常需要的SQL代码。</li>
+<li><strong>数据类型</strong>：MySQL具有多种数据类型，以适应各种数据。从字母数字字符串、日期和时间、数值到更复杂的数据类型，如JSON和空间数据类型都有在MySQL中的可用性。</li>
+<li><strong>处理NULL值</strong>：MySQL数据库中的NULL值可能很困难。它们表示缺失或未知的数据。MySQL提供了多种函数，如IS NULL、IS NOT NULL、IFNULL()和COALESCE()，以处理NULL值。</li>
+<li><strong>连接和联合</strong>：连接用于将两个或多个表的行组合在一起，基于相关列。它们在数据库中经常使用，因为很少有一个表中包含所有需要的数据。联合用于将两个或多个SELECT语句的结果集组合在一起。</li>
+<li><strong>安全</strong>：处理用户权限和安全连接到MySQL数据库是任何数据库管理的重要部分。</li>
+</ul>
+<h1 id="主题-1-9-回顾和评估"><a href="#主题-1-9-回顾和评估" class="headerlink" title="**主题:**1.9 回顾和评估"></a>**主题:**1.9 回顾和评估</h1><p>这是我们在这些课程中学到的概述:</p>
+<ol>
+<li><strong>理论中的ACID:</strong> 我们学习了ACID属性(原子性、一致性、隔离性、持久性)及其在数据库系统中的重要性。</li>
+<li><strong>实践中的ACID:</strong> 我们超出了理论,了解如何在MySQL中实现这些属性,以及它们如何确保数据完整性和一致性。</li>
+<li><strong>MySQL中的原子性:</strong> 我们探索了原子性,并通过实际示例了解了它如何确保数据库操作要么完全完成,要么不发生。</li>
+<li><strong>MySQL中的一致性:</strong> 我们学习了MySQL如何确保数据在任何SQL操作之前和之后保持一致。</li>
+<li><strong>MySQL中的隔离:</strong> 我们讨论了隔离的概念及其在并发数据库处理中的重要性。</li>
+<li><strong>MySQL中的持久性:</strong> 我们学习了持久性在MySQL数据库中的含义,并观察了MySQL如何确保数据更改在任何后续故障后仍然存在。</li>
+<li><strong>MySQL中的事务控制:</strong> 我们了解了如何使用事务控制在MySQL中管理ACID属性。我们主要了解了START TRANSACTION、COMMIT和ROLLBACK命令的使用。</li>
+<li><strong>MySQL的高级主题:</strong> 我们深入了解更高级的主题,如索引、存储过程、数据类型等,以扩展我们对MySQL的理解。</li>
+</ol>
+<p>我建议重新查看这些主题,并确保对它们有坚定的理解。</p>
+<p>以下是测试您关于ACID属性和MySQL事务控制理解的一些评估问题:</p>
+<p><strong>问题1:</strong> 在MySQL中,什么是原子性?它在实践中如何实现?</p>
+<p><strong>问题2:</strong> 在MySQL中,一致性的含义是什么,以及MySQL如何确保数据在任何SQL操作之前和之后保持一致?</p>
+<p><strong>问题3:</strong> 如何在MySQL中,特别是在并发数据库处理期间,实现隔离?</p>
+<p><strong>问题4:</strong> 在MySQL中,持久性属性的含义是什么?</p>
+<p><strong>问题5:</strong> 在MySQL中,关于事务控制,讨论START TRANSACTION、COMMIT和ROLLBACK命令的重要性。</p>
+<h2 id="答案1"><a href="#答案1" class="headerlink" title="答案1:"></a>答案1:</h2><p>在MySQL中,原子性表示一个事务必须被视为一个不可分割的单位,这意味着要么它完全完成,要么不执行。在实践中,MySQL通过START TRANSACTION、COMMIT和ROLLBACK命令实现原子性。如果事务被提交,则所做的更改都是永久的。如果事务被回滚,则没有任何更改。</p>
+<h2 id="答案2"><a href="#答案2" class="headerlink" title="答案2:"></a>答案2:</h2><p>在MySQL中,一致性确保所有数据更改都将将数据库从一个有效状态带到另一个,维持数据库规则和完整性。MySQL使用多种机制来确保一致性。这些包括定义的表架构,预定义规则,触发器和约束,如主键,外键,唯一,不为空和检查约束。</p>
+<h2 id="答案3"><a href="#答案3" class="headerlink" title="答案3:"></a>答案3:</h2><p>在MySQL中,隔离确保并发执行事务的结果使系统状态变为如果事务以顺序执行,即一次执行一个。MySQL通过多种隔离级别和锁定机制实现隔离。</p>
+<h2 id="答案4"><a href="#答案4" class="headerlink" title="答案4:"></a>答案4:</h2><p> 在MySQL中,持久性属性的含义是一旦事务被提交,它将保持不变,即使在系统故障,电源损失,崩溃或错误等情况下。这通常通过使用数据库备份和事务日志来实现,这些日志可以用于恢复数据库在故障发生前的状态。</p>
+<h2 id="答案5"><a href="#答案5" class="headerlink" title="答案5:"></a><strong>答案5:</strong></h2><p>在MySQL中,START TRANSACTION表示操作的开始点。COMMIT表示当前事务中所做的更改被永久化。ROLLBACK表示如果在处理任何SQL命令时发生错误,则已执行的SQL命令将被撤销以维护数据库完整性。这些命令共同帮助在MySQL设置中管理ACID属性期间的事务。</p>
+<blockquote class="colorquote danger"><p>English post: <a href="https://programmerscareer.com/mysql-interview2/">https://programmerscareer.com/mysql-interview2/</a><br>作者：<a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>注意：本文为作者原创，转载请注明出处。  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/zh-cn/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/zh-cn/mysql-interview15/">MySQL 面试：数据库的事务隔离级别有哪些？各有哪些优缺点</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/zh-cn/mysql-interview3/">MySQL 面试：MySQL 如何设计索引，如何优化查询？</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">评论</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/zh-cn/mysql-interview2/';
+        this.page.identifier = 'zh-cn/mysql-interview2/';
+        
+        this.language = 'zh';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("zh-CN");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="站内搜索" />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: '文章',
+                PAGES: '页面',
+                CATEGORIES: '分类',
+                TAGS: '标签',
+                UNTITLED: '(无标题)',
+            },
+            CONTENT_URL: '/content.zh-cn.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

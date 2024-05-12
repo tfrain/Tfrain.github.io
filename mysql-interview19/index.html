@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL Interview Question: Suppose to create a composite index (a, b, c) If you query fields A and c, will this composite index be used? - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/mysql-interview19/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Let’s create a lesson plan focused on MySQL, specifically on understanding the application of composite index">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL Interview Question: Suppose to create a composite index (a, b, c) If you query fields A and c, will this composite index be used?">
+<meta property="og:url" content="https://programmerscareer.com/mysql-interview19/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Let’s create a lesson plan focused on MySQL, specifically on understanding the application of composite index">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?crop=entropy&amp;cs=srgb&amp;fm=jpg&amp;ixid=M3wzNjM5Nzd8MHwxfHJhbmRvbXx8fHx8fHx8fDE3MTU1MDg5Mzd8&amp;ixlib=rb-4.0.3&amp;q=85&amp;w=500&amp;h=500">
+<meta property="article:published_time" content="2024-05-12T18:15:00.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.283Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?crop=entropy&amp;cs=srgb&amp;fm=jpg&amp;ixid=M3wzNjM5Nzd8MHwxfHJhbmRvbXx8fHx8fHx8fDE3MTU1MDg5Mzd8&amp;ixlib=rb-4.0.3&amp;q=85&amp;w=500&amp;h=500">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-1-Introduction-to-Composite-Indexes-in-MySQL">1&nbsp;&nbsp;<b>Topic: 1.1 Introduction to Composite Indexes in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-2-Creating-a-Composite-Index">2&nbsp;&nbsp;<b>Topic: 1.2 Creating a Composite Index</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-3-Querying-A-and-C-Fields">3&nbsp;&nbsp;<b>Topic: 1.3 Querying A and C Fields</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-4-Composite-Index-Optimization">4&nbsp;&nbsp;<b>Topic: 1.4 Composite Index Optimization</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-5-Review-and-Assessments">5&nbsp;&nbsp;<b>Topic: 1.5 Review and Assessments</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview19/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview19/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL Interview Question: Suppose to create a composite index (a, b, c) If you query fields A and c, will this composite index be used?
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-05-12T18:15:00.000Z" itemprop="datePublished">May 12 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            11 minutes read (About 1678 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Let’s create a lesson plan focused on MySQL, specifically on understanding the application of composite index</p>
+<p><img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?crop=entropy&amp;cs=srgb&amp;fm=jpg&amp;ixid=M3wzNjM5Nzd8MHwxfHJhbmRvbXx8fHx8fHx8fDE3MTU1MDg5Mzd8&amp;ixlib=rb-4.0.3&amp;q=85&amp;w=500&amp;h=500" alt="photo by v2osk on Unsplash"></p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-1-1-Introduction-to-Composite-Indexes-in-MySQL"><a href="#Topic-1-1-Introduction-to-Composite-Indexes-in-MySQL" class="headerlink" title="Topic: 1.1 Introduction to Composite Indexes in MySQL"></a><strong>Topic: 1.1 Introduction to Composite Indexes in MySQL</strong></h1><p>Composite indexes, also known as concatenated or multi-column indexes, are a form of database index that spans two or more columns in a database table. These columns are arranged in a specific order, and the composite index is directed by this column order.</p>
+<p>In a simple analogy, consider a library. Single-field indexing is like sorting the books solely based on authors’ names. However, a composite index is more like sorting the books based on both authors’ names and book titles.</p>
+<p>In MySQL, composite indexes play a fundamental role in increasing the efficiency of database operations. It’s important to understand that MySQL can use a composite index for queries that involve any of the columns in the index, but the index would be most efficient when you use the leftmost prefix of the index column list.</p>
+<p>One key feature of MySQL composite indexes is “leftmost prefixing”. In a composite index, the column order matters. In a composite index (a, b, c), MySQL can use this index to speed up queries involving ‘a’ or ‘a and b’, but not ‘b and c’, because ‘b and c’ is not a leftmost prefix of the index column list.</p>
+<p>So, composite indexes can improve query performance to a great extent, but their efficient use depends on how we are querying the data.</p>
+<h1 id="Topic-1-2-Creating-a-Composite-Index"><a href="#Topic-1-2-Creating-a-Composite-Index" class="headerlink" title="Topic: 1.2 Creating a Composite Index"></a><strong>Topic: 1.2 Creating a Composite Index</strong></h1><p>Creating a composite index in MySQL is similar to creating a single-column index, with a slight change in syntax.</p>
+<p>Here’s the basic syntax for creating a composite index:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">CREATE INDEX index_name  </span><br><span class="line">ON table_name(col1, col2, …);</span><br></pre></td></tr></tbody></table></figure>
+
+<ul>
+<li><code>index_name</code>&nbsp;is the name you want to give to the index.</li>
+<li><code>table_name</code>&nbsp;is the name of the table you want to create the index on.</li>
+<li><code>(col1, col2, …)</code>&nbsp;are the names of the columns you want to include in the index, in the order you want them to appear.</li>
+</ul>
+<p>Let’s consider a practical example. Suppose there’s a&nbsp;<code>sales</code>&nbsp;table with&nbsp;<code>ProductID</code>,&nbsp;<code>OrderDate</code>, and&nbsp;<code>Region</code>&nbsp;columns. If you often perform queries that filter or sort by&nbsp;<code>ProductID</code>&nbsp;and&nbsp;<code>OrderDate</code>, a composite index will be beneficial. Here’s how you’d create it:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">CREATE INDEX idx_sales  </span><br><span class="line">ON sales(ProductID, OrderDate);</span><br></pre></td></tr></tbody></table></figure>
+
+<p>In the above example,&nbsp;<code>idx_sales</code>&nbsp;is a composite index on the&nbsp;<code>sales</code>&nbsp;table including&nbsp;<code>ProductID</code>&nbsp;and&nbsp;<code>OrderDate</code>. The order of columns matters because MySQL will use the index for queries that involve&nbsp;<code>ProductID</code>&nbsp;alone or both&nbsp;<code>ProductID</code>&nbsp;and&nbsp;<code>OrderDate</code>, but not&nbsp;<code>OrderDate</code>&nbsp;alone.</p>
+<p>Remember that using composite indexes comes with trade-offs. While they can significantly speed up querying, they can also slow down write operations (like INSERT, UPDATE, DELETE), because MySQL must also update the indexes. It’s important to find the right balance to optimize your database performance.</p>
+<h1 id="Topic-1-3-Querying-A-and-C-Fields"><a href="#Topic-1-3-Querying-A-and-C-Fields" class="headerlink" title="Topic: 1.3 Querying A and C Fields"></a><strong>Topic: 1.3 Querying A and C Fields</strong></h1><p>This topic tackles an important question: Will MySQL use a composite index&nbsp;<code>(a, b, c)</code>&nbsp;if you’re querying only fields A and C?</p>
+<p>The answer largely depends on your SQL query and how you structured your index. If the columns being used in the WHERE clause are the first N consecutive columns of the index, then the index can be used. So if you’re querying on a composite&nbsp;<code>(a, b, c)</code>&nbsp;index with fields A and C but without field B, the index may not be as effective.</p>
+<p>For example, consider this composite index:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">CREATE INDEX comp_index  </span><br><span class="line">ON table(a, b, c);</span><br></pre></td></tr></tbody></table></figure>
+
+<p>And suppose we have this query:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SELECT *  </span><br><span class="line">FROM table  </span><br><span class="line">WHERE a = 1 AND c = 3;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>In this case, MySQL would only use the index on field&nbsp;<code>a</code>&nbsp;and would ignore the index on&nbsp;<code>c</code>, because&nbsp;<code>c</code>&nbsp;is not contiguous with&nbsp;<code>a</code>&nbsp;in the index leftmost prefix.</p>
+<p>Alternatively, to make sure the index on fields&nbsp;<code>a</code>&nbsp;and&nbsp;<code>c</code>&nbsp;gets used, you could restructure your composite index as&nbsp;<code>(a, c, b)</code>&nbsp;or&nbsp;<code>(c, a, b)</code>&nbsp;and adjust your queries accordingly. The point here is that the fields in&nbsp;<code>WHERE</code>&nbsp;clause should align with the leftmost prefix of the index columns.</p>
+<p>Keep in mind that it’s always a good idea to regularly analyze the performance of your queries and adjust indexes as necessary. MySQL’s EXPLAIN statement is a useful tool to understand how your queries interact with indexes.</p>
+<p>In the next section, we will learn how to optimize the use of composite indexes in MySQL for better results.</p>
+<h1 id="Topic-1-4-Composite-Index-Optimization"><a href="#Topic-1-4-Composite-Index-Optimization" class="headerlink" title="Topic: 1.4 Composite Index Optimization"></a><strong>Topic: 1.4 Composite Index Optimization</strong></h1><p>Optimizing composite indexes in MySQL can significantly improve your database queries’ efficiency and speed. Remember, an efficiently implemented index saves time, resources, and improves overall application performance.</p>
+<p>Here are several key points to remember for the effective use of composite indexes:</p>
+<ol>
+<li><strong>Order of Columns:</strong>&nbsp;The order of columns in the composite index can make a significant difference. MySQL can efficiently use the index if the columns in your query align with the leftmost prefix of the index. If your WHERE clause uses several columns, you might obtain multiple indexes or a composite index — the choice between these options would rely on specific application requirements.</li>
+<li><strong>Index Cardinality:</strong>&nbsp;Index cardinality refers to the diversity of indexed values. Index columns with higher cardinality lead to fewer row scans and increased query performance. Hence, in a composite index, the column with the highest cardinality should ideally be placed first.</li>
+<li><strong>Equality vs. Range Conditions:</strong>&nbsp;In a composite index, MySQL can perform equality checks for all columns and a range check for the last column. If there’s a range condition in the middle of your WHERE clause, MySQL can’t use the index parts to the right of that range.</li>
+<li><strong>Over-Indexing:</strong>&nbsp;While indexes accelerate data retrieval, they slow down data modifications such as INSERT, UPDATE, and DELETE queries because each modification in indexed column data requires an update in the index structure. Ensure you’re not over-indexing your tables — every index should serve a purpose.</li>
+<li><strong>Use EXPLAIN:</strong>&nbsp;The EXPLAIN keyword in MySQL shows how the optimizer chooses indexes to execute the query. Regularly check your queries using EXPLAIN to understand how the optimizer interacts with your indexes.</li>
+</ol>
+<h1 id="Topic-1-5-Review-and-Assessments"><a href="#Topic-1-5-Review-and-Assessments" class="headerlink" title="Topic: 1.5 Review and Assessments"></a><strong>Topic: 1.5 Review and Assessments</strong></h1><p>Over the course of our sessions, we’ve learned about Composite Indexes in MySQL, their structure, and their distinction from single field indexes. We studied the syntax and examples of creating a composite index. We then explored querying specific fields like A and C with a composite index. We then progressed to achieve a deeper understanding of optimizing our use of composite indexes in MySQL.</p>
+<p>Key concepts we covered include:</p>
+<ol>
+<li><strong>Composite Indexes</strong>: They’re indexes that span multiple columns. This multi-column categorization can dramatically speed up query execution.</li>
+<li><strong>Creating Composite Indexes</strong>: We studied the syntax and walked through an example of creating a composite index.</li>
+<li><strong>Querying A and C Fields</strong>: We observed that MySQL can only utilize the portions of an index where the columns are referenced in the WHERE clause from left to right without skipping any columns.</li>
+<li><strong>Composite Index Optimization</strong>: We went through some essential tips and tricks for optimizing the use of composite indexes, including the order of columns, index cardinality, distinguishing between equality and range conditions, avoiding over-indexing and making use of the EXPLAIN keyword in MySQL.</li>
+</ol>
+<p>It’s now time to assess your understanding of Composite Indexes.</p>
+<p>Example Problem:</p>
+<p>Let’s say you are running an online book store that has thousands of books. Your main&nbsp;<code>books</code>&nbsp;table in your MySQL database has the following columns:&nbsp;<code>id, title, author, genre, publication_year and price</code>. You realize that you frequently execute the following query:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SELECT *  </span><br><span class="line">FROM books  </span><br><span class="line">WHERE genre = 'Science Fiction' AND publication_year = 2018;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>To optimize this query, you create the following composite index:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">CREATE INDEX genre_year_index  </span><br><span class="line">ON books (genre, publication_year);</span><br></pre></td></tr></tbody></table></figure>
+
+<p>This composite index should make your common query faster.</p>
+<p>Now, it’s your turn!</p>
+<p>Question: It’s the holiday season and your store is offering discounts on many books. You plan to send an email to all users who bought ‘Science Fiction’ books published after 2010. Write a SQL query to extract a list of user_ids from an orders table, which has the columns:&nbsp;<code>order_id, user_id, book_id, order_date</code>. Assume there is also a junction table named ‘orders_books’ with&nbsp;<code>order_id, book_id</code>.</p>
+<hr>
+<p>to get the list of&nbsp;<code>user_id</code>&nbsp;from the orders table who bought ‘Science Fiction’ books published after 2010, we will use JOIN to combine information from the&nbsp;<code>orders</code>,&nbsp;<code>orders_books</code>&nbsp;and&nbsp;<code>books</code>&nbsp;tables.</p>
+<p>Your SQL query would look something like this:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">SELECT DISTINCT o.user_id  </span><br><span class="line">FROM orders AS o  </span><br><span class="line">JOIN orders_books AS ob ON o.order_id = ob.order_id  </span><br><span class="line">JOIN books AS b ON ob.book_id = b.id  </span><br><span class="line">WHERE b.genre = 'Science Fiction' AND b.publication_year &gt; 2010;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>This query checks the&nbsp;<code>genre</code>&nbsp;and&nbsp;<code>publication_year</code>&nbsp;of the books in each order and returns the&nbsp;<code>user_id</code>&nbsp;for those matching the criteria. The&nbsp;<code>DISTINCT</code>&nbsp;keyword is used to eliminate any duplicate&nbsp;<code>user_id</code>&nbsp;from the result.</p>
+<p>Remember, understanding the structure of your data and how it is related is crucial when working with SQL and databases. Also, always assure you have the right indexes set for your queries.</p>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/mysql-interview19/">https://programmerscareer.com/zh-cn/mysql-interview19/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop is-hidden-mobile article-nav-prev">
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/mysql-interview18/">MySQL Interview Question: What are the common storage engines for MySQL? What’s the difference?</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/mysql-interview19/';
+        this.page.identifier = 'mysql-interview19/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 Wesley Wei&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

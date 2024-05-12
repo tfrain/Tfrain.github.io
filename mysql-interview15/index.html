@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL interviews: What are the transaction isolation levels? What are the tradeoffs? - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/mysql-interview15/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL interviews: What are the transaction isolation levels? What are the tradeoffs?">
+<meta property="og:url" content="https://programmerscareer.com/mysql-interview15/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.283Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-1-Introduction-to-Transaction-Isolation-Levels">1&nbsp;&nbsp;<b>Topic 1.1: Introduction to Transaction Isolation Levels</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-2-Read-Uncommitted-Level">2&nbsp;&nbsp;<b>Topic 1.2: Read Uncommitted Level</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-3-Read-Committed-Level">3&nbsp;&nbsp;<b>Topic 1.3: Read Committed Level</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-4-Repeatable-Read-Level">4&nbsp;&nbsp;<b>Topic 1.4: Repeatable Read Level</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-5-Serializable-Level">5&nbsp;&nbsp;<b>Topic 1.5: Serializable Level</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-6-MySQL-Transaction-Isolation-Levels-Explanation">6&nbsp;&nbsp;<b>Topic 1.6: MySQL Transaction Isolation Levels Explanation.</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-7-Case-Studies">7&nbsp;&nbsp;<b>Topic 1.7: Case Studies</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-8-Interview-ready">8&nbsp;&nbsp;<b>Topic 1.8: Interview-ready</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-9-Review-and-Assessments">9&nbsp;&nbsp;<b>Topic 1.9: Review and Assessments</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview15/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview15/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL interviews: What are the transaction isolation levels? What are the tradeoffs?
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            17 minutes read (About 2574 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-1-1-Introduction-to-Transaction-Isolation-Levels"><a href="#Topic-1-1-Introduction-to-Transaction-Isolation-Levels" class="headerlink" title="Topic 1.1: Introduction to Transaction Isolation Levels"></a><strong>Topic 1.1: Introduction to Transaction Isolation Levels</strong></h1><p>Alright, let’s embark on our journey of understanding Transaction Isolation Levels in MySQL!</p>
+<p>So, let’s start with the basics.</p>
+<p>In any database system that allows concurrent transactions, Transaction Isolation Levels determine the extent to which one transaction must be isolated from another. They are vital as they help manage concurrent transactions, prevent data inconsistencies, and ensure the integrity of data in any transaction-based system.</p>
+<p>The ANSI/ISO SQL standard defines four levels of transaction isolation with respective phenomena prevention:</p>
+<ol>
+<li><strong>Read Uncommitted</strong>: This is the lowest level of isolation, in which one transaction might see not-yet-committed changes made by another transaction.</li>
+<li><strong>Read Committed</strong>: It guarantees that any data read is committed at the moment it is read. It doesn’t prevent other transactions from modifying the data.</li>
+<li><strong>Repeatable Read</strong>: This level ensures that if a transaction reads data that is then modified by another transaction, the first transaction will retrieve the same data regardless of any subsequent reads.</li>
+<li><strong>Serializable</strong>- This level offers the highest data protection, it achieves this by performing transactions serially, or one after another. But this might lead to performance issues.</li>
+</ol>
+<p>It’s also important to know that MySQL, with InnoDB storage engine, only supports&nbsp;<strong>Repeatable Read (the default isolation level)</strong>, Read Committed, and Serializable.</p>
+<p>Each isolation level comes with its pros and cons, solving some problems while potentially introducing others. This is a necessary trade-off to balance performance and accuracy in managing concurrent transactions.</p>
+<h1 id="Topic-1-2-Read-Uncommitted-Level"><a href="#Topic-1-2-Read-Uncommitted-Level" class="headerlink" title="Topic 1.2: Read Uncommitted Level"></a><strong>Topic 1.2: Read Uncommitted Level</strong></h1><p>In “Read Uncommitted,” the transaction may read data that’s still in a state of being modified by another running transaction and not yet committed to the database. That’s where this isolation level inherits its name — the data it reads is not committed yet.</p>
+<p>Consider the scenario: Let’s imagine a transaction is modifying some rows of a table:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">UPDATE Inventory   </span><br><span class="line">SET Quantity = Quantity - 10   </span><br><span class="line">WHERE ItemName = 'Apples';</span><br></pre></td></tr></tbody></table></figure>
+<p>While this transaction is still ongoing, another transaction reads data from the same table. According to the Read Uncommitted level, it will see the uncommitted changes containing mutated data that the first transaction was processing, leading to what is called a “Dirty Read.”</p>
+<p>There might be an instance where the first transaction fails (and a rollback is initiated), making those changes null and void. But the second transaction that already read the uncommitted data proceeds with the flawed, inaccurate data. This can cause serious data inconsistencies.</p>
+<p>In terms of performance, however, “Read Uncommitted” is typically faster than the other, higher isolation levels because it doesn’t have to issue locks on the read data to prevent it from being modified or read.</p>
+<p>Now the downside of “Read Uncommitted” comes into view. It cannot guarantee accuracy and consistency of data because, as we said earlier, it allows “Dirty Reads.”</p>
+<p>In real-world applications, this isolation level is generally avoided unless performance is the most important factor and data accuracy is not a major concern.</p>
+<h1 id="Topic-1-3-Read-Committed-Level"><a href="#Topic-1-3-Read-Committed-Level" class="headerlink" title="Topic 1.3: Read Committed Level"></a><strong>Topic 1.3: Read Committed Level</strong></h1><p>As the name suggests, the “Read Committed” level allows a transaction to see only those changes that have been committed by other transactions before it begins to read. As a result, it solves the “Dirty Read” problem we talked about in the “Read Uncommitted” isolation level.</p>
+<p>Let’s illustrate this with a simple example:</p>
+<p>Consider two accounts, ‘A’ and ‘B’, with current balances of $500 and $200, respectively. Suppose a transaction is initiated to transfer $100 from account ‘A’ to account ‘B’. During this process, account ‘A’’s balance reduces to $400 even before the transaction is completed.</p>
+<p>In the “Read Uncommitted” isolation level, if another transaction tries to calculate the total balance of both accounts simultaneously, it might end up adding the intermediate state of account ‘A’ (i.e., $400) and the original state of account ‘B’ (i.e., $200), leading to an incorrect total balance of $600.</p>
+<p>However, with the “Read Committed” isolation level, the second transaction waits until the first transaction is completely finished. Therefore, it correctly calculates the total balance as $700 ($400 in account ‘A’ + $300 in account ‘B’).</p>
+<p>So, under the “Read Committed” isolation level, one transaction won’t see uncommitted changes of other transactions, which is a great step towards maintaining data consistency.</p>
+<p>However, now we have another problem, called “Non-Repeatable Read.” This occurs when, during the lifespan of a single transaction, it tries to read the same row twice but gets different data each time. This scenario is possible if, between the first and second read, another transaction modifies that row and commits the change.</p>
+<h1 id="Topic-1-4-Repeatable-Read-Level"><a href="#Topic-1-4-Repeatable-Read-Level" class="headerlink" title="Topic 1.4: Repeatable Read Level"></a><strong>Topic 1.4: Repeatable Read Level</strong></h1><p>In a “Repeatable Read” isolation level, not only are the changes made by other transactions invisible until they’re committed (as we saw in “Read Committed”) but also, once a transaction reads some data, that data cannot change for the duration of that transaction.</p>
+<p>In other words, the same SELECT query, when run multiple times within the same transaction, will return the exact same result, regardless of any other concurrent transactions. This constraint solves the “Non-repeatable Read” issue.</p>
+<p>Let’s take an example:</p>
+<p>Consider a situation where a transaction reads some rows from a table. Then, an independent transaction modifies some of those rows and commits the change. If the first transaction tries to read the same rows again, according to the “Read Committed” isolation level, it notices these changes.</p>
+<p>But, in the “Repeatable Read” isolation level, the first transaction is unaware of any changes committed by the second transaction during its lifetime. Therefore, reading the same rows yields the same result.</p>
+<p>Although it solves the “Dirty Read” and “Non-repeatable Read” problems, it’s prone to a different problem: the “Phantom Read” issue, which we will discuss in our next section.</p>
+<h1 id="Topic-1-5-Serializable-Level"><a href="#Topic-1-5-Serializable-Level" class="headerlink" title="Topic 1.5: Serializable Level"></a><strong>Topic 1.5: Serializable Level</strong></h1><p>The “Serializable” level is the most stringent of all, providing the highest data consistency. It handles not only “Dirty Reads” and “Non-Repeatable Reads,” like the “Repeatable Read” level but also takes care of the “Phantom Reads” issue.</p>
+<p>First, let’s understand what “Phantom Reads” are. It’s a phenomenon that occurs when, in the middle of a transaction, new rows are added or existing ones are removed by another transaction. It’s named as such because these records appear or disappear as if they were “phantoms.”</p>
+<p>For example, consider a transaction that reads some rows from a table. An independent transaction, in the meantime, adds some new rows to that table and commits the change. If the first transaction reads the same table again, it sees new rows, which are like “phantoms.”</p>
+<p>With the “Serializable” isolation level, such situations are impossible. When a transaction is run at this level, it behaves as if no other transactions even exist, eliminating any concurrency-related issues.</p>
+<p>However, there’s a cost for such precision. The “Serializable” isolation level sharply reduces concurrency because it locks the datasets it reads. Therefore, it can lead to significant performance degradation for large databases.</p>
+<p>In a nutshell, the “Serializable” isolation level ensures absolute data integrity at the expense of performance.</p>
+<p>Having discussed each specific isolation level, it’s crucial to note that the level you choose ultimately depends on the nature of your application. It’s always about balancing between performance and data integrity.</p>
+<h1 id="Topic-1-6-MySQL-Transaction-Isolation-Levels-Explanation"><a href="#Topic-1-6-MySQL-Transaction-Isolation-Levels-Explanation" class="headerlink" title="Topic 1.6: MySQL Transaction Isolation Levels Explanation."></a><strong>Topic 1.6: MySQL Transaction Isolation Levels Explanation</strong>.</h1><p>As we have discussed earlier, the four available transaction isolation levels that can be used in MySQL are Read Uncommitted, Read Committed, Repeatable Read, and Serializable. Each of these levels offers a different balance of data consistency, concurrency, and performance.</p>
+<p>Yet, the question remains: how does MySQL implement these levels internally?</p>
+<p>Well, MySQL mainly uses locking to ensure data consistency and isolation between concurrent transactions. It employs different types of locks such as shared and exclusive locks, depending on the requirements of the individual transaction and the isolation level set.</p>
+<p>Without going too much into the nitty-gritty details, let’s understand what these locks are:</p>
+<ol>
+<li><strong>Shared Locks (S Locks)</strong>: Shared locks are held when a transaction merely reads a record and doesn’t modify it. More than one transaction can hold a shared lock for the same record at the same time.</li>
+<li><strong>Exclusive Locks (X Locks)</strong>: Exclusive locks are held when a transaction modifies a record. Only one transaction can hold an exclusive lock to a record at a given time.</li>
+</ol>
+<p>These locks apply to the&nbsp;<em>read data</em>&nbsp;in order to maintain isolation and prevent data inconsistencies. For example:</p>
+<ul>
+<li>In the&nbsp;<strong>Read Uncommitted</strong>&nbsp;level, no locks are held that prevent other transactions from writing to the record.</li>
+<li>In the&nbsp;<strong>Read Committed</strong>&nbsp;level, shared locks are placed but released as soon as the row has been read.</li>
+<li>In the&nbsp;<strong>Repeatable Read</strong>&nbsp;level, shared locks are placed and retained until the transaction is completed.</li>
+<li>In the&nbsp;<strong>Serializable</strong>&nbsp;level, shared locks are placed, and no other transaction can modify or insert new records until the transaction is finished.</li>
+</ul>
+<p>So, depending on which isolation level is being used, the MySQL engine will acquire and release these locks differently to achieve the desired level of isolation at the expense of concurrency and vice versa.</p>
+<p>That said, this mechanism is just the tip of the iceberg. The actual implementation is much more complex and involves many other factors such as lock escalation, deadlock detection, log buffering, and more.</p>
+<h1 id="Topic-1-7-Case-Studies"><a href="#Topic-1-7-Case-Studies" class="headerlink" title="Topic 1.7: Case Studies"></a>Topic 1.7: Case Studies</h1><p>In this section, we’ll look at the practical uses of different Transaction Isolation Levels, tying all of our learning together wit real-world scenarios.</p>
+<p>The most suitable isolation level primarily depends on the specific read/write workload and the business requirements of each application. In real-world settings, we need to strike a balance between concurrency (the ability to allow multiple users to access the database simultaneously) and isolation (the degree to which each individual transaction is isolated from others).</p>
+<p>Let’s look at a few scenarios:</p>
+<p><strong>Scenario 1: Banking System</strong></p>
+<p>For a banking system that is dealing with transactional data such as bank transfers, it would be catastrophic if dirty or non-repeatable reads occurred. Imagine if you withdrew money from an ATM, but due to a concurrent transaction, the system failed to immediately register the deduction. You could potentially withdraw more money than you have — a lovely scenario for us, but not for the banks!</p>
+<p>So for such systems, a high level of isolation like&nbsp;<code>SERIALIZABLE</code>&nbsp;or&nbsp;<code>REPEATABLE READ</code>&nbsp;is often used, despite the potential impact on performance.</p>
+<p><strong>Scenario 2: E-commerce Application</strong></p>
+<p>For an e-commerce application, allowing dirty reads could result in selling more products than available. However, if we are strict on isolation level, it could slow down the application and affect the user experience. An isolation level like&nbsp;<code>READ COMMITTED</code>&nbsp;is frequently used here, trading off strict isolation for increased concurrency.</p>
+<p><strong>Scenario 3: Data Analysis</strong></p>
+<p>In data analysis or reporting scenarios where we are reading large volumes of data but not modifying it, a lower isolation level like&nbsp;<code>READ UNCOMMITTED</code>&nbsp;can often be used. This reduces the overhead of locks and allows for higher throughput.</p>
+<p>Keep in mind that there’s no one-size-fits-all answer, it always depends on the specific requirements and circumstances of the system being built.</p>
+<h1 id="Topic-1-8-Interview-ready"><a href="#Topic-1-8-Interview-ready" class="headerlink" title="Topic 1.8: Interview-ready"></a>Topic 1.8: Interview-ready</h1><p><strong>Question:</strong>&nbsp;Explain Transaction Isolation Levels.</p>
+<p><strong>Answer:</strong>&nbsp;Transaction Isolation Levels control the degree of locking that occurs when selecting data from a database. The type of locks placed on data items affects the database’s concurrency level and consistency, which is vital in transaction processing. There are four standard transaction isolation levels defined in the SQL standard: Read Uncommitted, Read Committed, Repeatable Read, and Serializable.</p>
+<p><strong>Question:</strong>&nbsp;What are the pros and cons of each Transaction Isolation Level?</p>
+<p><strong>Answer:</strong></p>
+<ul>
+<li><strong>Read Uncommitted:</strong>&nbsp;Transactions may read changes made by others that have not yet been committed, leading to dirty reads and other inconsistencies. The benefit is less need for locks, leading to better performance.</li>
+<li><strong>Read Committed:</strong>&nbsp;This level allows transactions to see only committed changes from other transactions. This prevents dirty reads but can still lead to non-repeatable reads or phantom reads. It usually offers a good balance between consistency and performance.</li>
+<li><strong>Repeatable Read:</strong>&nbsp;Guarantees that any data read cannot change, avoiding dirty and non-repeatable reads, but can still result in phantom reads.</li>
+<li><strong>Serializable:</strong>&nbsp;The highest level of isolation. Guarantees that transactions occur in a completely isolated manner. Avoids dirty reads, non-repeatable reads, and phantom reads but can lead to performance degradation due to extensive locking.</li>
+</ul>
+<p><strong>Question:</strong>&nbsp;When might you use each Isolation Level?</p>
+<p><strong>Answer:</strong></p>
+<ul>
+<li><strong>Read Uncommitted:</strong>&nbsp;Data analysis tasks where seeing uncommitted changes is permissible and performance is critical.</li>
+<li><strong>Read Committed:</strong>&nbsp;Applications where maintaining a high degree of concurrency is more important than the possibility of occasional inconsistencies, such as some low-impact e-commerce applications.</li>
+<li><strong>Repeatable Read:</strong>&nbsp;Scenarios where it’s vital to maintain a consistent picture of data across multiple reads, such as certain financial applications.</li>
+<li><strong>Serializable:</strong>&nbsp;Only used when strictly necessary due to performance implications, such as applications that manage highly sensitive data.</li>
+</ul>
+<p>These are just a few examples of potential interview questions. Remember, a deep understanding of these concepts will allow you to adapt to whatever specific questions your interviewer may ask.</p>
+<h1 id="Topic-1-9-Review-and-Assessments"><a href="#Topic-1-9-Review-and-Assessments" class="headerlink" title="Topic&nbsp;1.9: Review and Assessments"></a>Topic&nbsp;<strong>1.9: Review and Assessments</strong></h1><p>Understanding transaction isolation levels is fundamental when you’re dealing with database transactions. So far, we’ve explored different transaction isolation levels, their uses, advantages, and potential pitfalls.</p>
+<p>To solidify your understanding, let’s go through a quick review with some questions:</p>
+<p><strong>1. Explain the four Transaction Isolation Levels as per the SQL standard.</strong></p>
+<p>_Your Answer: ______</p>
+<p><strong>2. Describe a scenario in which you would use the REPEATABLE READ isolation level.</strong></p>
+<p>_Your Answer: ______</p>
+<p><strong>3. ‘A dirty read occurs when a transaction reads the uncommitted data of another transaction.’ True or False?</strong></p>
+<p>_Your Answer: ______</p>
+<p><strong>4. Which transaction isolation level has the strictest locking, leading to the most substantial effects on transaction performance? Why?</strong></p>
+<p>_Your Answer: ______</p>
+<p><strong>5.</strong>&nbsp;==<strong>‘Phantom reads can occur at the Read Committed level.’ True or False?</strong>==</p>
+<p>_Your Answer: ______</p>
+<p>Take your time to answer these questions, reflect on your responses, and compare them with what we’ve covered in the lessons. When you’re ready, we can discuss your answers together. If you have any uncertainties or need a deeper explanation of any topics, don’t hesitate to ask. Let’s ensure you’ve mastered this concept!</p>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/mysql-interview15/">https://programmerscareer.com/zh-cn/mysql-interview15/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/mysql-interview14/">MySQL Interviews: What are database transactions and why does MySQL use InnoDB as the default option</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/mysql-interview2/">MySQL interviews: What are ACID in a database?</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/mysql-interview15/';
+        this.page.identifier = 'mysql-interview15/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

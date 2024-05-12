@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL interviews: How to tune MySQL performance - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/mysql-interview9/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Let we dive into tuning MySQL performance">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL interviews: How to tune MySQL performance">
+<meta property="og:url" content="https://programmerscareer.com/mysql-interview9/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Let we dive into tuning MySQL performance">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Understanding-MySQL-Configuration">1&nbsp;&nbsp;<b>Topic: Understanding MySQL Configuration</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Tuning-Server-Settings">2&nbsp;&nbsp;<b>Topic: Tuning Server Settings</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Query-Optimization">3&nbsp;&nbsp;<b>Topic: Query Optimization</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Optimizing-Schema-Objects">4&nbsp;&nbsp;<b>Topic: Optimizing Schema Objects</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Hardware-Consideration-and-Tuning">5&nbsp;&nbsp;<b>Topic: Hardware Consideration and Tuning</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-MySQL-Replication-Partitioning">6&nbsp;&nbsp;<b>Topic: MySQL Replication &amp;amp; Partitioning</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Review-Assessments">7&nbsp;&nbsp;<b>Topic: Review &amp;amp; Assessments</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview9/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview9/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL interviews: How to tune MySQL performance
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            15 minutes read (About 2268 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Let we dive into tuning MySQL performance  </p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-Understanding-MySQL-Configuration"><a href="#Topic-Understanding-MySQL-Configuration" class="headerlink" title="Topic: Understanding MySQL Configuration"></a><strong>Topic: Understanding MySQL Configuration</strong></h1><p>One of the key aspects of tuning MySQL performance is understanding and appropriately adjusting its configuration. But first, let’s understand what we mean by “configuration” in MySQL.</p>
+<p><strong>MySQL Configuration</strong>&nbsp;refers to the set of parameters and settings that dictate how MySQL operates. Some of these settings include variables controlling memory allocation, table cache size, and sort buffer size.</p>
+<p>The configuration file for MySQL is typically named&nbsp;<code>my.cnf</code>, though the exact location of this file can vary depending on the operating system and MySQL version.</p>
+<p>The&nbsp;<code>my.cnf</code>&nbsp;file contains several sections. The&nbsp;<code>[mysqld]</code>&nbsp;section contains server-specific settings, while the&nbsp;<code>[client]</code>&nbsp;section contains client-specific options. Any modifications to the settings in this file will affect the MySQL server’s operations.</p>
+<p>Let’s consider a few important settings:</p>
+<ul>
+<li><strong>innodb_buffer_pool_size:</strong>&nbsp;This is a crucial setting if you’re using InnoDB storage engine. The buffer pool is where data and indexes are cached, so setting it appropriately can significantly improve performance.</li>
+<li><strong>max_connections:</strong>&nbsp;This determines how many concurrent connections MySQL can handle. Be cautious, though — a high number here can cause MySQL to use up available resources quickly.</li>
+<li><strong>query_cache_size:</strong>&nbsp;Query caching can help speed up response times, but it has to be used judiciously since it adds additional overhead to all query processing.</li>
+</ul>
+<p>To make changes, you would edit these parameters in the&nbsp;<code>my.cnf</code>&nbsp;file and then restart MySQL for the changes to take effect.</p>
+<p>Understanding these configurations and how to fine-tune them based on your specific use case can greatly enhance your MySQL server’s performance.</p>
+<h1 id="Topic-Tuning-Server-Settings"><a href="#Topic-Tuning-Server-Settings" class="headerlink" title="Topic: Tuning Server Settings"></a><strong>Topic: Tuning Server Settings</strong></h1><p>Now that we understand the fundamentals of MySQL configuration, let’s delve into some essential server settings that you can adjust to optimize the performance.</p>
+<p>MySQL has a vast array of server variables you can set to affect its operation. It allows for a high degree of customization and tuning to suit the specific application and hardware environment. Here’s a look at some of the key variables:</p>
+<p><strong>1. key_buffer_size:</strong>&nbsp;This variable determines the amount of memory allocated for caching MyISAM tables indexes in memory. If you’re using MyISAM tables, large values might improve performance.</p>
+<p><strong>2. innodb_buffer_pool_size:</strong>&nbsp;As mentioned earlier, this setting is critical for systems using the InnoDB storage engine. It specifies the size of the memory buffer InnoDB uses to cache data and indexes of its tables.</p>
+<p><strong>3. thread_cache_size:</strong>&nbsp;This variable is used to specify how many threads the server should cache for reuse. When a client disconnects, the client’s threads are put in the cache, and if clients connect, they can reuse the threads in the cache.</p>
+<p><strong>4. table_open_cache:</strong>&nbsp;This variable sets the number of open tables for all threads. Increasing this value increases the number of file descriptors that mysqld requires.</p>
+<p><strong>5. query_cache_size:</strong>&nbsp;It sets the size of the query cache. It is used to cache SELECT results and later return them without actual executing the same query once again.</p>
+<p>Remember that configuration and tuning MySQL is more of an art than a science, consisting largely of incremental changes and continuous monitoring. Using tools like MySQLTuner or MySQL Workbench can be very handy to monitor your MySQL server’s performance and make necessary adjustments.</p>
+<h1 id="Topic-Query-Optimization"><a href="#Topic-Query-Optimization" class="headerlink" title="Topic: Query Optimization"></a><strong>Topic: Query Optimization</strong></h1><p>Optimizing your SQL queries is one of the most effective ways to improve your MySQL server’s performance. Here are some strategies that could help:</p>
+<ol>
+<li><strong>Avoid Full Table Scans:</strong>&nbsp;Try your best to avoid full table scans by using indexes appropriately (more on this later). MySQL must read the entire table to find the relevant rows when a full table scan occurs, which can kill performance when dealing with large tables.</li>
+<li><strong>Use EXPLAIN to Analyze Query Performance:</strong>&nbsp;The EXPLAIN statement in MySQL provides information about how MySQL executes queries. It is a beneficial debugging and optimization tool.</li>
+<li><strong>Take Advantage of Indexes:</strong>&nbsp;Indexes are utilized to find rows with specific column values quickly. Without an index, MySQL must scan the entire table to locate the relevant rows.</li>
+<li><strong>Limit Your Results:</strong>&nbsp;If you don’t need the entire result set for your operations, the use of LIMIT can significantly reduce the cost of a query.</li>
+<li><strong>Normalize and De-normalize — As Needed:</strong>&nbsp;While normalization is generally a good thing as it reduces data redundancy, de-normalization may actually help in certain situations. For instance, if there are large tables and primary-key-to-primary-key joins, the joins might be slow. De-normalization might speed up such queries by allowing you to bypass those joins.</li>
+</ol>
+<h1 id="Topic-Optimizing-Schema-Objects"><a href="#Topic-Optimizing-Schema-Objects" class="headerlink" title="Topic: Optimizing Schema Objects"></a><strong>Topic: Optimizing Schema Objects</strong></h1><p>While server and query optimization, which we previously discussed, are crucial for MySQL performance, schema optimization is also a vital factor that shouldn’t be overlooked. Here’s what you should know:</p>
+<p><strong>1. Table Type Selection:</strong>&nbsp;MySQL supports several storage engines, each with its pros and cons. The most commonly used are MyISAM and InnoDB. MyISAM is more straightforward and often performs better for read-heavy loads. In contrast, InnoDB supports advanced features like transactions and foreign keys and is better suited for write-heavy loads.</p>
+<p><strong>2. Indexing:</strong>&nbsp;Indices are used to quickly locate data without needing to search every row in a database table each time a database table is accessed. They can speed up data retrieval but should be used judiciously, as each index you add increases the cost of inserting, updating, and deleting records.</p>
+<p><strong>3. Normalization:</strong>&nbsp;It is the process of efficiently organizing data in a database with two goals — eliminate redundant data (for example, storing the same data in more than one table) and ensure data dependencies make sense. While normalization often improves performance, in some cases, you might need to consider denormalization for optimization purposes.</p>
+<p><strong>4. Partitioning:</strong>&nbsp;Partitioning can be a powerful tool for improving performance in databases with large tables. It works by splitting a large table into smaller, more manageable pieces called partitions. Each partition stores a certain subset of your table’s data defined by a partitioning function.</p>
+<p>Remember, the schema optimization should be tailored to the specific needs of your application and the characteristics of your workload. Make sure to monitor your database’s performance over time and adjust your schema as your application’s requirements evolve.</p>
+<h1 id="Topic-Hardware-Consideration-and-Tuning"><a href="#Topic-Hardware-Consideration-and-Tuning" class="headerlink" title="Topic: Hardware Consideration and Tuning"></a><strong>Topic: Hardware Consideration and Tuning</strong></h1><p>MySQL performance can significantly be influenced by hardware components such as CPU, memory, disk storage, and network. Let’s take a closer look:</p>
+<p><strong>1. CPU:</strong>&nbsp;The faster your server’s CPU can process data, the faster your MySQL performance will be. One technique is to balance the load across CPUs, a feature which MySQL supports.</p>
+<p><strong>2. Memory:</strong>&nbsp;A MySQL server uses a lot of memory. The more memory you have, the more data you can cache, and the fewer disk I/O operations MySQL needs to perform, the more efficient it becomes. Consider adjusting the innodb_buffer_pool_size, which is the memory area that holds cached InnoDB data for both tables and indexes.</p>
+<p><strong>3. Disk Storage:</strong>&nbsp;The type of disk you use affects MySQL performance. Solid State Drives (SSDs) typically have faster data access times compared to traditional Hard Disk Drives (HDDs). Remember that writing to disk is much slower than reading from memory. Therefore, it’s crucial to have enough memory to minimize disk writing operations.</p>
+<p><strong>4. Network:</strong>&nbsp;Network latency can impact MySQL performance, especially in distributed systems where MySQL instances need to communicate over the network. Upgrading to a faster network technology can lower this latency and improve overall performance.</p>
+<p>Optimizing hardware to cater to your MySQL database’s needs can significantly boost its performance. Remember to monitor your database over time to assess how well your hardware serves your needs. Sometimes, certain limitations can only be overcome by upgrading or adding more hardware resources.</p>
+<h1 id="Topic-MySQL-Replication-Partitioning"><a href="#Topic-MySQL-Replication-Partitioning" class="headerlink" title="Topic: MySQL Replication &amp; Partitioning"></a><strong>Topic: MySQL Replication &amp; Partitioning</strong></h1><p><strong>MySQL Replication</strong>&nbsp;and&nbsp;<strong>Partitioning</strong>&nbsp;are two powerful tools in a developer’s arsenal to enhance database performance. Let’s break them down:</p>
+<p><strong>1. MySQL Replication:</strong></p>
+<p>MySQL replication is a process that enables you to maintain multiple copies of MySQL data by having them copied automatically from a master to a slave database. This can be helpful for many reasons, including facilitating a backup of data, creating a failover environment, or segregating the database in order to simplify routine tasks. Replication can also improve performance for high demand applications by distributing the load among multiple slave nodes.</p>
+<p><strong>2. MySQL Partitioning:</strong></p>
+<p>Partitioning is a process where large tables are divided into smaller ones, improving query performance and simplifying management tasks. MySQL has the capacity to divide tables into partitions, storing them separately. There are various ways to partition your data:</p>
+<ul>
+<li><strong>Range Partitioning:</strong>&nbsp;The table is partitioned into ranges determined by the partitioning function. The values falling into a range are stored in an assigned partition. For example, you might partition sales data into monthly ranges.</li>
+<li><strong>List Partitioning:</strong>&nbsp;Similar to range partitioning, but the partition is selected based on columns matching one of a set of discrete value lists.</li>
+<li><strong>Hash Partitioning:</strong>&nbsp;The partitioning function generates a hash value, which determines the partition.</li>
+<li><strong>Key Partitioning:</strong>&nbsp;Similar to hash partitioning, but only certain column types can be used (integer, binary, or string types).</li>
+<li><strong>Composite Partitioning:</strong>&nbsp;A mixture of range or list partitioning with hash or key partitioning.</li>
+</ul>
+<p>Understanding these concepts and implementing them can greatly enhance your database’s performance. Moreover, it also allows for more robustness and scalability in your systems.</p>
+<h1 id="Topic-Review-Assessments"><a href="#Topic-Review-Assessments" class="headerlink" title="Topic: Review &amp; Assessments"></a><strong>Topic: Review &amp; Assessments</strong></h1><p>At this stage, it is important to recap everything that we have discovered so far.</p>
+<p><strong>1. MySQL Configuration:</strong></p>
+<p>We’ve learnt the importance of MySQL configuration and how to tune various parameters to improve performance. Each MySQL installation is unique, and fine-tuning it to suit individual needs can significantly boost performance.</p>
+<p><strong>2. Tuning Server Settings:</strong></p>
+<p>We delved into the different settings we can tune, related to memory, caches, and various other server settings for optimal efficiency.</p>
+<p><strong>3. Query Optimization:</strong></p>
+<p>We understood how MySQL processes queries and ways to write them more efficiently to save resources.</p>
+<p><strong>4. Optimizing Schema Objects:</strong></p>
+<p>The importance of optimizing MySQL schema objects such as tables and indexes for better performance was highlighted, along with techniques of doing so.</p>
+<p><strong>5. Hardware Consideration and Tuning:</strong></p>
+<p>We learned about the impact of hardware parameters such as CPU, memory, disk, and network on MySQL performance and how hardware resources can be optimized for better performance.</p>
+<p>let’s go ahead with the assessments.</p>
+<p><strong>6. MySQL Replication and Partitioning:</strong></p>
+<p>We explored the concepts of MySQL replication and partitioning, understanding their utility in enhancing database performance.</p>
+<p><strong>Assessment 1: MySQL Configuration</strong></p>
+<p>What is meant by MySQL configuration and why is it significant in database management?</p>
+<p><strong>Assessment 2: Server Settings</strong></p>
+<p>Can you explain how changing server settings can help in optimizing the performance of a MySQL database?</p>
+<p><strong>Assessment 3: Query Optimization</strong></p>
+<p>What strategies can you employ to optimize your SQL queries?</p>
+<p><strong>Assessment 4: Schema Objects</strong></p>
+<p>Discuss the importance of optimizing schema objects in MySQL.</p>
+<p><strong>Assessment 5: Hardware Considerations</strong></p>
+<p>How does hardware impact MySQL performance? What parameters can be tuned for optimization?</p>
+<p><strong>Assessment 6: Replication and Partitioning</strong></p>
+<p>Explain the concepts of MySQL replication and partitioning. How do these techniques aid in enhancing database performance?</p>
+<p>Please take some time to answer these questions</p>
+<hr>
+<p><strong>Assessment 1: MySQL Configuration</strong></p>
+<p>MySQL configuration involves customizing settings that determine how MySQL operates. It’s significant because the right configuration can ensure efficient use of system resources, faster query execution, and generally improved performance.</p>
+<p><strong>Assessment 2: Server Settings</strong></p>
+<p>Changing server settings, such as increasing buffer sizes or limiting the maximum connections, can greatly improve MySQL performance. For instance, increasing the buffer size can allow more data to be stored in memory, reducing disk I/O. However, all changes should be made considering the cargo of the system resources.</p>
+<p><strong>Assessment 3: Query Optimization</strong></p>
+<p>To optimize SQL queries, one can use strategies such as selecting only necessary fields, using joins appropriately, creating indexes for faster search, using limit where possible, and avoiding the use of wildcard ‘%’ at the beginning of a query.</p>
+<p><strong>Assessment 4: Schema Objects</strong></p>
+<p>Optimizing schema objects can significantly speed up queries. Techniques such as appropriate indexing, choosing suitable data types, and normalizing the database can improve performance.</p>
+<p><strong>Assessment 5: Hardware Considerations</strong></p>
+<p>Hardware directly impacts MySQL performance. The CPU speed affects how fast queries are processed, and plenty of memory allows for larger caches and buffers — reducing disk I/O. Faster disks also decrease I/O wait time. To tune it, you can add more memory, use faster disks, or even distribute your database across several machines.</p>
+<p><strong>Assessment 6: Replication and Partitioning</strong></p>
+<p>MySQL replication is a process where data from one MySQL database server (the master) is replicated to one or more MySQL database servers (the slaves). It increases data security, improves performance for high-volume sites, and is part of a good backup strategy.</p>
+<p>Partitioning is a database design technique which is used to improves performance, manageability, simplifies maintenance and reduce the cost of storing large amounts of data. It works by breaking down a single table, which is stored in one file or area of disk, into smaller members, each of which can be managed and accessed individually.</p>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/mysql-interview9/">https://programmerscareer.com/zh-cn/mysql-interview9/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/mysql-interview8/">MySQL interviews: When doesn’t MySQL use the index?</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/redis-interview1/">Redis interviews: The application, advantages and disadvantages of skiplists in Redis</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/mysql-interview9/';
+        this.page.identifier = 'mysql-interview9/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

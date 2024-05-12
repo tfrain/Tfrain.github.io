@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>Redis 面试：如何用Redis实现分布式锁 - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/redis-interview2/" rel="alternate" hreflang="en" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="深入探讨 Redis 的基本知识，并详细了解其数据类型和发布&#x2F;订阅功能。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis 面试：如何用Redis实现分布式锁">
+<meta property="og:url" content="https://programmerscareer.com/zh-cn/redis-interview2/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="深入探讨 Redis 的基本知识，并详细了解其数据类型和发布&#x2F;订阅功能。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/zh-cn">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/zh-cn/archives">归档</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/categories">分类</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/tags">标签</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/about">关于</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="搜索" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="目录">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#1-1-深入了解-Redis">1&nbsp;&nbsp;<b>1.1 深入了解 Redis</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#1-2-了解数据库锁">2&nbsp;&nbsp;<b>1.2 了解数据库锁</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-3-分布式锁的需要">3&nbsp;&nbsp;<b>主题：1.3 分布式锁的需要</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-4-使用-Redis-实现分布式锁">4&nbsp;&nbsp;<b>主题：1.4 使用 Redis 实现分布式锁</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-5-Redis-事务">5&nbsp;&nbsp;<b>主题：1.5 Redis 事务</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-6-实践案例——在真实世界应用中使用-Redis-分布式锁">6&nbsp;&nbsp;<b>主题：1.6 实践案例——在真实世界应用中使用 Redis 分布式锁</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-7-回顾和评估">7&nbsp;&nbsp;<b>主题：1.7 回顾和评估</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>简体中文</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/redis-interview2/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/redis-interview2/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            Redis 面试：如何用Redis实现分布式锁
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">1月 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/zh-cn/categories/redis/">redis</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            27 分钟 读完 (约 4001 字)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>深入探讨 Redis 的基本知识，并详细了解其数据类型和发布/订阅功能。</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>感谢您阅读这篇文章。更多面试问题:<br><a href="https://programmerscareer.com/zh-cn/software-interview-set/">https://programmerscareer.com/zh-cn/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="1-1-深入了解-Redis"><a href="#1-1-深入了解-Redis" class="headerlink" title="1.1 深入了解 Redis"></a>1.1 <strong>深入了解 Redis</strong></h1><p>Redis（Remote Dictionary Server）是一个开源的内存数据结构存储系统，用作数据库、缓存和消息代理。它具有内置的复制、Lua脚本、LRU淘汰、事务和多种持久化级别。值得注意的是，Redis可以处理多种数据结构，例如字符串、哈希、列表、集合、有序集合（范围查询）、位图等。</p>
+<p>先讨论一下 <strong>Redis 的核心特性</strong>。</p>
+<ol>
+<li><strong>性能</strong>：Redis 将数据库完全存储在内存中，仅在持久化时使用磁盘，这使其处理数据非常快速。</li>
+<li><strong>持久性</strong>：Redis 提供了 RDB（Redis 数据库文件）和 AOF（追加只写文件）两种持久化方式，可以按时间间隔或按每次更改记录进行持久化。</li>
+<li><strong>原子操作</strong>：Redis 的操作，例如 APPEND、INCR、等，是原子的，这意味着它们完全或不执行。这确保了数据的完整性，即使处于并发环境中。</li>
+<li><strong>数据结构</strong>：Redis 不仅仅是一个简单的键值存储，它是一个数据结构服务器，支持字符串、哈希、列表、集合和更多的数据结构。</li>
+<li><strong>发布/订阅功能</strong>：Redis 包含内置的发布/订阅命令，用于消息和队列系统，使用发布/订阅范式。</li>
+<li><strong>脚本</strong>：Redis 允许脚本化在服务器端使用 Lua，将原子命令转换为强大的脚本来处理数据。</li>
+</ol>
+<p>接下来是 <strong>Redis 数据类型</strong>。 Redis 支持多种数据类型：</p>
+<ul>
+<li><strong>字符串</strong>：Redis 中的字符串可以存储任何数据，例如 JPEG 图像或序列化的 Ruby 对象。</li>
+<li><strong>列表</strong>：Redis 中的列表是有序值的序列。思考它像链表。</li>
+<li><strong>集合</strong>：Redis 中的集合是无序集合的字符串，其中添加和删除项目发生在常时间内。集合不能包含重复的成员。</li>
+<li><strong>有序集合</strong>：每个成员在有序集合中都与一个分数相关，用于对集合元素进行排序，从小到大的分数。</li>
+<li><strong>哈希</strong>：它们是键值对的映射，其中键和值都是字符串。</li>
+</ul>
+<p>Redis 的功能和特性使它成为一个多功能的系统，用于缓存、会话缓存、全页缓存、消息队列应用程序、排行榜和计数、实时分析等。</p>
+<h1 id="1-2-了解数据库锁"><a href="#1-2-了解数据库锁" class="headerlink" title="1.2 了解数据库锁"></a>1.2 <strong>了解数据库锁</strong></h1><p>在我们深入了解如何使用 Redis 实现分布式锁之前，了解数据库锁的基本概念是必要的。</p>
+<p>在数据库中，特别是允许并发事务（同时事务）的数据库中，锁是一个关键角色，用于维护数据的一致性并防止数据异常。</p>
+<p>简单地说，<strong>锁</strong> 在数据库的上下文中是数据库为数据分配的标记或标记。这个锁控制数据的访问和修改。</p>
+<p>详细说明：</p>
+<ul>
+<li><strong>共享锁</strong>（S 锁）允许读操作，并且可以读取数据库中的数据，但不能修改它。其他事务可以同时获取共享锁并读取数据，但是不能写入它。因此，共享锁帮助维护数据的一致性，确保数据在读操作期间不会被其他事务更改。</li>
+<li><strong>排他锁</strong>（X 锁）也称为“写锁”。如果一个排他锁被持有，那么不仅可以读取数据，还可以修改它。然而，其他事务不能获取任何锁（共享或排他），即使是在同一数据上。排他锁用于维护数据的完整性，确保数据在被修改时不会被其他事务访问。</li>
+</ul>
+<p>在锁的概念中，处理潜在的 <strong>死锁</strong> 是一个主要挑战。死锁是两个或多个事务处于无限等待状态的状态，其中每个事务都在等待其他事务释放资源。解决死锁涉及其检测和实现方案，例如“等待死”或“被挑战”方案，这是一个更深的主题。</p>
+<h1 id="主题：1-3-分布式锁的需要"><a href="#主题：1-3-分布式锁的需要" class="headerlink" title="主题：1.3 分布式锁的需要"></a><strong>主题：1.3 分布式锁的需要</strong></h1><p>在数据库中，锁已经为多个进程或事务访问和避免冲突访问共享数据提供了一种方法。</p>
+<p>现在，想象一下在分布式系统中的场景。分布式系统是指位于网络上的多个计算机之间通过传递消息来通信和协调操作的系统。</p>
+<p>在这样的环境中，使用常规锁就不足够了。这就是分布式锁的需要。</p>
+<p>分布式锁或全局锁允许多个分布式进程同步其操作，通常用于避免在分布式系统中访问共享资源时的冲突。换句话说，它在网络上的多个节点或系统上工作，并确保在任何时候只有一个客户端可以拥有锁。</p>
+<p>分布式锁的高级使用场景包括：</p>
+<ol>
+<li><strong>微服务架构</strong>，其中多个独立的应用程序在相互通信时，分布式锁可以控制访问共享资源。</li>
+<li><strong>数据复制或分片</strong> 经常需要确保写操作在多个位置或数据库上的一致性。</li>
+<li><strong>分布式事务的协调</strong> 在多个微服务和数据库上。</li>
+<li><strong>解决复杂的真实世界问题</strong>，例如领导选举、任务分发和同步、和确保幂等性在分布式系统中。</li>
+<li><strong>服务发现协议</strong>，其中微服务需要知道其他的存在，需要一个可靠的机制来避免竞争和冲突。这些协议通常使用分布式锁来避免冲突而更新公共注册表。</li>
+</ol>
+<p>这些只是几个例子，并且有许多其他的分布式锁使用场景在分布式系统中。</p>
+<p>请记住，分布式锁并不无挑战——一致性、可用性和网络分区（CAP 定理）都有其部分要满足。但是，随着我们进展，我们将更深入地了解如何使用 Redis 在我们的后续课程中实现分布式锁。</p>
+<h1 id="主题：1-4-使用-Redis-实现分布式锁"><a href="#主题：1-4-使用-Redis-实现分布式锁" class="headerlink" title="主题：1.4 使用 Redis 实现分布式锁"></a><strong>主题：1.4 使用 Redis 实现分布式锁</strong></h1><p>首先，要了解的是分布式锁应该满足以下属性：</p>
+<ul>
+<li>互斥性：任何时候只有一个客户端可以持有锁。</li>
+<li>死锁自由：最终，每个锁请求都应该成功。</li>
+<li>容错性：如果持有锁的客户端崩溃，系统应该恢复。</li>
+</ul>
+<p>Redis 提供了 SETNX、EXPIRE 等命令，可能会创造锁系统。但是，锁的过期和释放的客户端不是持有锁的客户端可能会导致问题。因此，为了解决和克服这些问题，引入了 Salvatore Sanfilippo（Redis 的创造者）所提出的 Redlock（Redis 分布式锁）算法。</p>
+<p>Redlock 算法的工作原理如下：</p>
+<ol>
+<li>当客户端想要获取某些资源的锁时，它生成一个唯一的随机字符串（值）。</li>
+<li>这个客户端试图在所有的 N Redis 主节点上使用 SETNX 命令（如果键不存在）并附加一个时间到生命（TTL）。</li>
+<li>如果客户端在大多数的实例上成功地设置它（&gt; N/2），它认为锁已成功获取。</li>
+<li>如果锁设置失败在大多数的实例上，客户端将尝试从所有的实例中删除键（即使在那些它初次成功地设置的地方），等待一个随机的延迟，然后再次尝试步骤 1-3。</li>
+<li>要释放锁，它只需要发送 DEL 命令来删除键。</li>
+</ol>
+<p>通过这样的方式，您可以创建一个健壮的分布式锁系统。请记住，该算法的成功主要取决于同步的时钟在 Redis 节点上，因为锁的 TTL 值与其关联。</p>
+<h1 id="主题：1-5-Redis-事务"><a href="#主题：1-5-Redis-事务" class="headerlink" title="主题：1.5 Redis 事务"></a><strong>主题：1.5 Redis 事务</strong></h1><p>Redis 事务允许执行一组命令在一个步骤中。首先，所有的命令都会排队，然后使用最后一个命令，所有的命令都会按顺序执行。 Redis 事务使用两个主要命令：<code>MULTI</code> 和 <code>EXEC</code>。</p>
+<p>下面是 Redis 事务的一个例子：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">MULTI  </span><br><span class="line">INCR foo  </span><br><span class="line">INCR bar  </span><br><span class="line">EXEC</span><br></pre></td></tr></tbody></table></figure>
+
+<p>在这个例子中，我们在键 ‘foo’ 和 ‘bar’ 上增加值，并在事务中执行这个增量操作。<code>MULTI</code> 是事务块的开始命令，<code>EXEC</code> 是事务块的结束命令并触发执行。</p>
+<p>Redis 事务具有“所有或者没有”的性质。这意味着如果一个命令失败，所有的命令都会回滚。要注意的是，Redis 命令很少会失败，因为它们在命令的语法检查中总是会先发生，在命令被排队之前。</p>
+<p>从锁的角度来看，要注意的是 Redis 使用了“乐观锁定”——锁不会在事务的执行过程中持有。相反，您可以使用 <code>WATCH</code> 命令在一个或多个键上。如果这些键在事务执行之前被其他客户端修改，则事务会被取消，允许安全地处理竞争条件。</p>
+<p>请记住以下原则：</p>
+<ul>
+<li>Redis 事务是原子的，意味着所有的命令都会执行或者不会执行。</li>
+<li>Redis 使用乐观锁定来处理并发事务。</li>
+</ul>
+<h1 id="主题：1-6-实践案例——在真实世界应用中使用-Redis-分布式锁"><a href="#主题：1-6-实践案例——在真实世界应用中使用-Redis-分布式锁" class="headerlink" title="主题：1.6 实践案例——在真实世界应用中使用 Redis 分布式锁"></a><strong>主题：1.6 实践案例——在真实世界应用中使用 Redis 分布式锁</strong></h1><p>分布式锁在多个系统、进程或线程之间的协调和同步中被广泛使用。下面是一些真实世界的使用案例：</p>
+<ol>
+<li><strong>电子商务平台</strong>：分布式锁的一个常见用例是在线购物平台中的库存管理。当多个用户同时试图购买库存中的最后一件商品时，分布式锁可以用来确保只有一个购买操作成功，防止过售。</li>
+<li><strong>银行系统</strong>：分布式锁可以在金融事务中发挥重要作用。例如，考虑两个操作（借贷）在同时进行时。需要确保这些操作在原子方式下进行，以防止余额不一致。</li>
+<li><strong>在线票务预订</strong>：分布式锁可确保单个座位不会被多个用户在并发预订操作中预订。</li>
+<li><strong>分布式系统的主节点选举</strong>：在分布式系统中，分布式锁可用于处理故障转移，并选择新的主节点当前主节点失败时。</li>
+</ol>
+<p>观察这些使用案例，可以看出分布式锁满足复杂、分布式应用系统中维持数据一致性、完整性和协调之间的优先要求。</p>
+<h1 id="主题：1-7-回顾和评估"><a href="#主题：1-7-回顾和评估" class="headerlink" title="主题：1.7 回顾和评估"></a><strong>主题：1.7 回顾和评估</strong></h1><p>在会话中，我们深入了解了 Redis、其内置支持的分布式锁和其在实际应用中的应用。我们还深入了解了 Redis 事务并获取了有关其参与分布式锁的见解。</p>
+<p>我们已经覆盖了许多主题，例如：</p>
+<ul>
+<li>Redis 深入研究：我们扩展了基本知识，深入研究 Redis 的特性，例如其数据类型和 Pub/Sub 功能。</li>
+<li>数据库锁的理解：我们获取了数据库锁的总体了解，其利用和类型。</li>
+<li>分布式锁的需要：我们看到了分布式锁的需要并了解了它们在大规模应用中的作用。</li>
+<li>使用 Redis 实现分布式锁：我们讨论了如何使用 Redis 实现分布式锁。</li>
+<li>Redis 事务：我们讨论了 Redis 事务、其命令和如何与分布式锁协作。</li>
+<li>Redis 分布式锁的实际应用：我们浏览了各种使用案例场景，其中 Redis 分布式锁已被应用。</li>
+</ul>
+<p><strong>例子问题：</strong> 假设您正在开发一个在线票务预订系统。存在一种情况，多个用户同时预订同一座位。如何使用 Redis 分布式锁来防止这种情况？</p>
+<p>这是我们如何解决这个问题的例子：</p>
+<p>首先，我们将在预订过程开始时为座位实现锁定。这个锁将防止其他用户预订同一座位。</p>
+<p>下面是如何在 Redis 中实现这个：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SET lock:seat_id value NX EX 30</span><br></pre></td></tr></tbody></table></figure>
+
+<p>在这条命令中，<code>lock:seat_id</code> 是锁定标识符（其中 seat_id 是预订座位的 ID），<code>value</code> 是用于识别处理过程的唯一字符串，<code>NX</code> 告诉 Redis 只在键不存在时设置键，并且<code>EX 30</code> 为锁定设置了 30 秒的过期时间。</p>
+<p>命令的返回值将是 <code>OK</code> 或 <code>None</code>。如果返回值是 <code>OK</code>，则表明我们成功获取了锁定。如果它是 <code>None</code>，则表明另一个进程已经获取了锁定。</p>
+<p>现在，测试你的理解。</p>
+<p><strong>简单问题（3/10）：</strong> 为什么在大规模应用中需要分布式锁定系统？</p>
+<p><strong>中等问题（6/10）：</strong> Redis 事务的主要原则是什么？</p>
+<p><strong>复杂问题（9/10）：</strong> 如何解决分布式系统中的故障转移问题，例如，使用 Redis 分布式锁？</p>
+<hr>
+<p><strong>简单问题（3/10）：</strong> 在大规模应用中，我们需要分布式锁定系统来处理并发和保证分布式系统中数据的完整性。例如，如果多个客户同时试图访问和修改同一块数据，分布式锁可帮助确保只有一个客户可以访问和修改该数据，从而防止竞争条件、不一致和其他潜在问题。</p>
+<p><strong>中等问题（6/10）：</strong> Redis 事务的主要原则如下：</p>
+<ol>
+<li>Redis 事务提供了一种执行批量命令的原子方式。</li>
+<li>使用 <code>MULTI</code> 命令开始事务，使用 <code>EXEC</code> 命令执行事务。</li>
+<li>使用 <code>WATCH</code> 命令可以实现乐观锁定。它帮助取消事务，如果监视的键已更改。</li>
+<li>在事务中命令失败时，Redis 仍然执行事务中的其余命令。</li>
+</ol>
+<p><strong>复杂问题（9/10）：</strong> 分布式锁可在分布式系统中处理故障转移时发挥重要作用。在节点故障（其中节点在集群中失败）的情况下，我们必须选择新的主节点。分布式锁可用于确保选举过程无冲突并且只有一个节点被选为新的主节点。我们可以使用前面相似的锁定模式，其中锁表示主节点。谁成功获取了锁就成为新的主节点。</p>
+<blockquote class="colorquote danger"><p>English post: <a href="https://programmerscareer.com/redis-interview2/">https://programmerscareer.com/redis-interview2/</a><br>作者：<a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>注意：本文为作者原创，转载请注明出处。  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/zh-cn/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/zh-cn/redis-interview1/">Redis 面试: 简述 Redis 中跳表的应用以及优缺点</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/zh-cn/redis-interview3/">Redis 面试：假设 Redis 的 master 节点宕机了，你会怎么进行数据恢复？</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">评论</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/zh-cn/redis-interview2/';
+        this.page.identifier = 'zh-cn/redis-interview2/';
+        
+        this.language = 'zh';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("zh-CN");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="站内搜索" />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: '文章',
+                PAGES: '页面',
+                CATEGORIES: '分类',
+                TAGS: '标签',
+                UNTITLED: '(无标题)',
+            },
+            CONTENT_URL: '/content.zh-cn.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

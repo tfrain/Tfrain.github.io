@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>Kafka 面试：Kafka 发送消息是如何保证可靠性的？ - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/kafka-interview1/" rel="alternate" hreflang="en" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="你曾被提过类似的问题在面试中问过吗？或者将来会遇到，让我们一起探索和掌握它！">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kafka 面试：Kafka 发送消息是如何保证可靠性的？">
+<meta property="og:url" content="https://programmerscareer.com/zh-cn/kafka-interview1/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="你曾被提过类似的问题在面试中问过吗？或者将来会遇到，让我们一起探索和掌握它！">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/zh-cn">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/zh-cn/archives">归档</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/categories">分类</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/tags">标签</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/about">关于</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="搜索" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="目录">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#主题-1-1-如何理解-Kafka-工作原理？">1&nbsp;&nbsp;<b>主题: 1.1 如何理解 Kafka 工作原理？</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：-1-2-Kafka-生产者">2&nbsp;&nbsp;<b>主题： 1.2 Kafka 生产者</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题-1-3-可靠消息传递-—-基本原理">3&nbsp;&nbsp;<b>主题: 1.3 可靠消息传递 — 基本原理</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题-1-4-Kafka-Brokers和主题复制">4&nbsp;&nbsp;<b>主题: 1.4 Kafka Brokers和主题复制</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题-1-5-Kafka-消费者的进入和出口">5&nbsp;&nbsp;<b>主题: 1.5 Kafka 消费者的进入和出口</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题-1-6-Kafka-如何可靠传递消息">6&nbsp;&nbsp;<b>主题: 1.6 Kafka 如何可靠传递消息</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-7-Kafka-可靠性最佳实践">7&nbsp;&nbsp;<b>主题：1.7 Kafka 可靠性最佳实践</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-8-Kafka-的消息传递语义">8&nbsp;&nbsp;<b>主题：1.8 Kafka 的消息传递语义</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-9-回顾和评估">9&nbsp;&nbsp;<b>主题：1.9 回顾和评估</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#问题1">9.1&nbsp;&nbsp;问题1</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#问题2">9.2&nbsp;&nbsp;问题2</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#问题3">9.3&nbsp;&nbsp;问题3</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#问题4">9.4&nbsp;&nbsp;问题4</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#问题5">9.5&nbsp;&nbsp;问题5</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#答案1">9.6&nbsp;&nbsp;答案1</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#答案2">9.7&nbsp;&nbsp;答案2</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#答案3">9.8&nbsp;&nbsp;答案3</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#答案-4">9.9&nbsp;&nbsp;答案 4</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#答案-5">9.10&nbsp;&nbsp;答案 5</a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>简体中文</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/kafka-interview1/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/kafka-interview1/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            Kafka 面试：Kafka 发送消息是如何保证可靠性的？
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">1月 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/zh-cn/categories/kafka/">kafka</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            35 分钟 读完 (约 5277 字)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>你曾被提过类似的问题在面试中问过吗？或者将来会遇到，让我们一起探索和掌握它！</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>感谢您阅读这篇文章。更多面试问题:<br><a href="https://programmerscareer.com/zh-cn/software-interview-set/">https://programmerscareer.com/zh-cn/software-interview-set/</a>  </p>
+</blockquote>
+
+<h1 id="主题-1-1-如何理解-Kafka-工作原理？"><a href="#主题-1-1-如何理解-Kafka-工作原理？" class="headerlink" title="主题: 1.1 如何理解 Kafka 工作原理？"></a><strong>主题</strong>: 1.1 如何理解 Kafka 工作原理？</h1><p>Apache Kafka 是 LinkedIn 开源并后来捐赠给 Apache Software Foundation 的实时数据处理软件平台。其目标是为处理实时数据流提供一个统一、高吞吐量、低延迟的平台。它使用 Scala 和 Java 编写。</p>
+<p>Kafka 生态系统包括生产者、消费者、主题、Brokers 和 ZooKeeper：</p>
+<p><strong>生产者</strong>：生产者是将原始消息推送到 Kafka Brokers 的组件。生产者可以将消息发送到特定主题或者让 Kafka 进行路由和负载平衡。</p>
+<p><strong>Brokers</strong>：Kafka Brokers 是系统的核心部分；它们接收生产者发来的消息，分配偏移量并提交消息到磁盘上的存储。</p>
+<p><strong>消费者</strong>：消费者从Brokers读取。然而，与传统的消息系统不同，消费者从Brokers拉取消息。</p>
+<p><strong>主题和分区</strong>：主题是特定类别的消息流。Kafka 主题分割成多个分区，其中包含记录的顺序不可更改的列表。分区允许并行化主题，并将数据分割到多个节点上。</p>
+<p><strong>ZooKeeper</strong>：ZooKeeper 管理和协调 Kafka 集群。ZooKeeper 服务用于维护名称和配置数据，并提供灵活和可靠的同步功能。</p>
+<p>Kafka 的工作原理类似于传递系统。例如，想象一下邮递员（生产者）向特定邮件盒（主题）投递信件（消息）。邮件局（Kafka）排序和维护这些信件，最后，居民（消费者）从邮件盒中提取他们的邮件。</p>
+<h1 id="主题：-1-2-Kafka-生产者"><a href="#主题：-1-2-Kafka-生产者" class="headerlink" title="主题： 1.2 Kafka 生产者"></a><strong>主题</strong>： 1.2 Kafka 生产者</h1><p>Kafka 生产者是负责向 Kafka 主题发布数据（称为记录）的组件。生产者是为了向 Kafka Brokers提供数据的关键组件。</p>
+<p>下面是 Kafka 生产者的工作原理：</p>
+<p><strong>创建生产者</strong>：生产者使用特定的属性创建，例如Brokers的地址、键序列化器和值序列化器。Brokers使用这些属性来识别正确的主题并了解如何解析消息。</p>
+<p><strong>写数据</strong>：创建生产者后，它可以开始发送记录到指定主题。Kafka 记录包含一个键和一个值。这些是字节数组。键是可选的，用于确定特定分区的主题，其中消息将被写入。如果键不存在，Kafka 使用轮询方法写入分区。</p>
+<p><strong>分区</strong>：生产者发布数据到不同的分区，可以采用轮询方法或者语义上的有意义方法。当键为 null 时，数据将按轮询方式写入分区。如果键存在，所有具有该键的消息都将写入同一分区（如果分区数量不变）。</p>
+<p><strong>序列化</strong>：Kafka 消息是字节数组。因此，无论数据格式如何，您必须将其转换为字节，以发送到 Kafka。我们称这个过程为序列化。因此，每次发送记录时，生产者必须将对象转换为字节。</p>
+<p><strong>确认和重试</strong>：在分布式系统中，机器会失败。Kafka 提供了确认和重试的机制。Kafka 可以设置为在写入领导者（ack=1）、所有追随者（ack=all）或者不确认（ack=0）时进行确认。</p>
+<p>从生产者配置中可以看出，我们可以通过调整可靠性和持久性保证来利用有效地事件驱动的系统的深入理解。</p>
+<h1 id="主题-1-3-可靠消息传递-—-基本原理"><a href="#主题-1-3-可靠消息传递-—-基本原理" class="headerlink" title="主题: 1.3 可靠消息传递 — 基本原理"></a><strong>主题</strong>: 1.3 可靠消息传递 — 基本原理</h1><p>可靠消息传递是任何消息中间件的关键部分。 Kafka 提供了强大的持久性保证和容错性来确保可靠消息传递。</p>
+<p>可靠消息传递的基本原理在 Kafka 中主要围绕以下主要概念：</p>
+<p><strong>生产者和消息确认</strong>：我们已经了解过，生产者向 Kafka Brokers发送消息。这些消息可以以不同的方式进行确认，控制生产者的 acks 属性。该确认级别影响消息的持久性。一个 ack 的值为 ‘1’ 表示已成功写入主题的领导者日志。一个 ack 的值为 ‘all’ 表示已成功写入所有同步复制的日志。</p>
+<p><strong>复制和同步复制</strong>：复制是确保消息持久性的关键特性。每个 Kafka 分区都有多个复制，其中一个被选为领导者。所有的写入和读取都通过领导者进行。其他是追随者，其主要任务是复制领导者。只有在所有的同步复制中写入消息时，消息才被认为已提交并成功写入。</p>
+<p><strong>消费者偏移量和传递语义</strong>：消费者从 Kafka 主题中读取消息并在其偏移量上进行跟踪，以存储消息的偏移量。Kafka 提供三种传递语义：至多一次、至少一次和精确一次。通过正确地存储和管理偏移量，Kafka 确保消息至少被传递一次。</p>
+<p><strong>提交和未提交的消息</strong>：在 Kafka 中，消息被认为已提交，当它们成功地写入所有同步复制的日志时。消息可以写入日志，但是消费者不能消费它们，直到它们被提交，保护数据一致性和部分数据在故障发生时。</p>
+<p>中文翻译:</p>
+<h1 id="主题-1-4-Kafka-Brokers和主题复制"><a href="#主题-1-4-Kafka-Brokers和主题复制" class="headerlink" title="主题: 1.4 Kafka Brokers和主题复制"></a><strong>主题:</strong> 1.4 Kafka Brokers和主题复制</h1><p>Kafka Brokers是系统的核心部分，处理生产者发送的消息，分配偏移量并将消息持久化到磁盘上。现在，让我们深入了解。</p>
+<p>Kafka 集群由多个Brokers组成。每个Brokers可以处理来自多个客户端的数据和请求，因为主题分区并分布在多个Brokers实例上。</p>
+<p><strong>主题复制:</strong> Kafka 的复制是可靠性和容错性的关键特性。每个主题可以有多个复制，允许在多个Brokers上存储。这意味着即使Brokers出现故障，主题数据仍然可以从其他Brokers处获取。</p>
+<p>复制的主题分区被分布到集群中的多个Brokers上。具有复制的主题提供了 Kafka 的容错性。</p>
+<p><strong>Leader 和 Follower:</strong> 对于分区，一个复制会成为 Leader，其他的会成为 Follower。领导者处理分区的读取和写入请求，而追随者以被动的方式复制领导者。如果领导者出现故障，其中一个追随者将自动成为新的领导者。</p>
+<p><strong>同步复制(ISR):</strong> 如果追随者超出领导者的范围（配置可变），领导者将从 ISR（同步复制）列表中删除追随者。只有 ISR 列表中的成员才能被选为领导者。</p>
+<p><strong>复制和可靠性:</strong> Brokers在主题复制的角色和功能是关键的，为 Kafka 提供的数据传递语义。读取和写入Brokers确保记录的持久性，并且Brokers的故障不会影响数据的完整性。</p>
+<h1 id="主题-1-5-Kafka-消费者的进入和出口"><a href="#主题-1-5-Kafka-消费者的进入和出口" class="headerlink" title="主题: 1.5 Kafka 消费者的进入和出口"></a><strong>主题:</strong> 1.5 Kafka 消费者的进入和出口</h1><p>Kafka 消费者是读取和处理数据的应用程序。消费者的角色和功能是关键的，为 Kafka 提供了可靠性和容错性。</p>
+<p>下面是 Kafka 消费者的一些关键方面：</p>
+<p><strong>消费者组:</strong> 多个消费者可以组成一个“消费者组”。作为组的一部分，他们共享消费负载，每个消费者读取主题的分区。这为 Kafka 提供了负载平衡和容错性的特性。</p>
+<p><strong>消费消息:</strong> 消费者读取主题并处理它们。他们维护下一条消息的偏移量。</p>
+<p><strong>偏移量和消费者位置:</strong> 每个消费者组维护其偏移量或位置——记录哪些消息已被消费。如果消费者成功处理了一条消息，则偏移量将进一步。因此，即使消费者崩溃，它也可以从其离开的地方继续，增加了系统的容错性和坚持性。</p>
+<p><strong>重平衡:</strong> 当消费者停止或新消费者加入 Kafka 消费者组时，重平衡协议被初始化。该协议确保消费者优雅地离开，而新消费者加入平滑地，不会影响消费者组内的消息消费过程。</p>
+<p><strong>传递语义:</strong> 根据消费者如何管理偏移量和提交，Kafka 提供三种传递语义——至多一次、至少一次和精确一次。正确地设计消费者应用程序是关键的，以确保它们能够正确地处理这些语义。</p>
+<p>在 Kafka 数据流中，消费者起着重要的角色，驱动实时处理系统。深入了解 Kafka 消费者是关键的，以利用 Kafka 的全部潜力来构建健壮和可扩展的数据处理系统。</p>
+<h1 id="主题-1-6-Kafka-如何可靠传递消息"><a href="#主题-1-6-Kafka-如何可靠传递消息" class="headerlink" title="主题: 1.6 Kafka 如何可靠传递消息"></a><strong>主题:</strong> 1.6 Kafka 如何可靠传递消息</h1><p>Kafka 的主要责任是可靠地传递生产者（写数据）发送的记录到消费者（读数据）。下面是 Kafka 如何确保可靠消息传递的细节：</p>
+<p><strong>复制和冗余性:</strong> Kafka 通过主题复制功能确保消息持久性。Kafka 主题被分割成分区，并且每个分区可以在多个节点上复制，称为伺服器。这意味着同一条消息可以存在多个地方，提供了高级冗余性。</p>
+<p><strong>Leader 和 Follower:</strong> 对于每个 Kafka 分区，伺服器可以在两种角色中选择：领导者和追随者。所有的读取和写入都由领导者处理，而追随者以被动的方式复制领导者。如果领导者出现故障，则追随者可以替代并为消费者提供业务持续性。</p>
+<p><strong>确认(ACKs):</strong> ACKs 起着重要的作用。当生产者发送消息时，它可以选择在写入领导者的日志中收到确认（acks=1），或者在写入所有同步复制中收到确认（acks=all）。这种选择会贡献到性能和坚持性的权衡。</p>
+<p><strong>同步复制(ISRs):</strong> Kafka 强制要求只有处于同步状态的复制才能被选为领导者。ISR 是一个复制，它已经完全抓住了分区领导者，并且没有超过指定时间内领导者日志的延迟。确保领导者总是来自 ISR 给 Kafka 提供了强一致性，因为它保证了写入到领导者并确认的消息不会丢失，只要故障数量在复制因子内。</p>
+<p><strong>消费者偏移量:</strong> Kafka 消费者维护其偏移量（读取位置）。即使消费者出现故障，它也可以从它保存的偏移量中恢复读取消息，从而最小化数据丢失。</p>
+<p>总结一下，Kafka 确保可靠地传递消息通过分割数据并复制到多个节点以提供冗余性，确认，维护 ISR 列表以提供一致性，并利用偏移量进行有效的消费。</p>
+<h1 id="主题：1-7-Kafka-可靠性最佳实践"><a href="#主题：1-7-Kafka-可靠性最佳实践" class="headerlink" title="主题：1.7 Kafka 可靠性最佳实践"></a><strong>主题</strong>：1.7 Kafka 可靠性最佳实践</h1><p>Kafka 集群的可靠性主要取决于管理和相关的传递实践。下面是 Kafka 的可靠性最佳实践：</p>
+<p><strong>监控你的集群</strong>：保持关注你的 Kafka 集群。这包括追踪各种指标，例如未提交的消息数量、进入和从每个节点传出的数据率、主题和分区数量，以及未复制的分区数量。监控可帮助您识别潜在的问题并在严重程度上进行预防。</p>
+<p><strong>合理的保留期</strong>：请记，增加保留期会增加存储和堆使用量。根据需要进行平衡，以避免资源限制。</p>
+<p><strong>合理的分区数量</strong>：在选择分区数量时，请谨慎考虑。虽然更多的分区允许更好的并行性，但它也意味着更多的打开的服务器连接和更高的 ZooKeeper 负载。</p>
+<p><strong>合理的复制因子</strong>：高复制因子提高了冗余性和可靠性，但它也会增加存储要求。根据所需的冗余程度进行配置。</p>
+<p><strong>合理的确认策略</strong>：根据应用程序要求使用正确的确认策略（‘acks’）。对于关键数据，请考虑使用 ‘acks=all’，以确保数据在所有同步复制中都被确认。</p>
+<p>**有效的 In-Sync Replicas (ISRs)**：配置 ISR 设置以确保您有正确的平衡，以便保持适当的延迟和持久性保证。请确保 min.insync.replicas 根据需要进行设置，以避免在故障期间丢失数据。</p>
+<p><strong>消费者偏移管理</strong>：请确保消费者定期提交其偏移量。这可帮助避免在故障期间重新广播大量数据。但请勿提交过于频繁，因为每次提交都是对 ZooKeeper 的调用。</p>
+<p>总之，在 Kafka 中实现可靠的传递需要一个平衡，其中包括操作要求、资源使用和应用程序特定要求。</p>
+<h1 id="主题：1-8-Kafka-的消息传递语义"><a href="#主题：1-8-Kafka-的消息传递语义" class="headerlink" title="主题：1.8 Kafka 的消息传递语义"></a><strong>主题</strong>：1.8 Kafka 的消息传递语义</h1><p>在 Kafka 中，消息传递语义决定了生产者如何将消息传递给消费者。Kafka 提供三种消息传递语义：</p>
+<p><strong>1. At Most Once</strong>：在这种情况下，消息被传递至多一次给消费者。这意味着消息可能会丢失，但它们不会被重新传递或重复。这是最快的，因为它涉及最少的生产者和 Kafka 之间的协调。然而，它不是最可靠的方法，因为任何在 Kafka 发送消息和消费者读取它之间的故障都会导致消息的丢失。</p>
+<p><strong>2. At Least Once</strong>：消息被传递至少一次给消费者。但是，在某些情况下，消息可能会重复，这可能会导致问题。这种方法更可靠，因为它确保消息不会丢失。然而，它有重复消息的风险，因为可能会重新传递。对于幂等处理，这可能是完全可以的。</p>
+<p><strong>3. Exactly Once</strong>：这确保每个消息被传递恰好一次——无损失，无重复。然而，它是最慢和最资源密集的选择，因为需要事务来跟踪进度。这通常用于关键系统，其中消息的丢失或重复可能会导致重大问题。</p>
+<p>这些传递语义决定了你的 Kafka 基于应用程序的系统的坚持和可靠性。选择速度、一致性和可靠性取决于应用程序的使用情况。</p>
+<h1 id="主题：1-9-回顾和评估"><a href="#主题：1-9-回顾和评估" class="headerlink" title="主题：1.9 回顾和评估"></a><strong>主题</strong>：1.9 回顾和评估</h1><p>我们已经详细介绍了 Kafka 课程的许多方面，让我们来做一个简短的回顾：</p>
+<ol>
+<li><strong>Kafka 是如何工作的</strong>：我们学习了各种 Kafka 组件如何相互作用以提供一个可靠、可伸缩和容错的消息系统。</li>
+<li><strong>Kafka 生产者</strong>：我们深入探讨了 Kafka 生产者如何发送消息并了解了其关键配置。</li>
+<li><strong>可靠消息传递的基本概念</strong>：我们了解了确保消息持久性和可靠性在 Kafka 中的基本概念。</li>
+<li><strong>Kafka 节点和主题复制</strong>：我们深入探讨了 Kafka 节点的工作原理并了解了主题复制如何增加可靠性。</li>
+<li><strong>Kafka 消费者</strong>：我们探索了 Kafka 消费者和消费者组的复杂性并确定了其角色在保持可靠性方面的重要性。</li>
+<li><strong>Kafka 如何可靠地发送消息</strong>：我们剖析了 Kafka 内部机制，用于确保可靠的消息传递。</li>
+<li><strong>Kafka 的可靠消息传递最佳实践</strong>：我们讨论了优化 Kafka 的消息传递以增加可靠性的具体方法。</li>
+<li><strong>Kafka 的消息传递语义</strong>：最后，我们看了三种类型的传递语义，它们的重要性和使用场景。</li>
+</ol>
+<p>现在，是时候评估你的了解和应用了。我们可以进行一些练习问题和分析真实世界中广泛使用的 Kafka 场景，以帮助固定你所学的知识并帮助你更好地将 Kafka 集成到你的系统中。</p>
+<p>例题：列出并解释 Kafka 中的三种不同的传递语义？</p>
+<p><strong>解决方案</strong>：</p>
+<ol>
+<li><strong>At Most Once</strong>：在这种情况下，消息被传递至多一次，这意味着消息可能会丢失，但它们不会被重新传递或重复。这是最快的，但是，它不是最可靠的方法，因为任何在 Kafka 发送消息和消费者读取它之间的故障都会导致消息的丢失。</li>
+<li><strong>At Least Once</strong>：消息被传递至少一次，这意味着消息是确保传递的，但是，在某些情况下，消息可能会重复，这可能会导致问题。这种方法更可靠，但是，重复可能会成为问题。</li>
+<li><strong>Exactly Once</strong>：在这种情况下，消息被传递恰好一次——无损失，无重复。然而，它是最慢和最资源密集的选择，因为需要事务来跟踪进度。这通常用于关键系统，其中消息的丢失或重复可能会导致重大问题。</li>
+</ol>
+<h2 id="问题1"><a href="#问题1" class="headerlink" title="问题1"></a>问题1</h2><p>Kafka 集群中 Kafka 生产者的角色是什么？</p>
+<h2 id="问题2"><a href="#问题2" class="headerlink" title="问题2"></a>问题2</h2><p>请解释 Kafka 中主题复制的概念。为什么它是重要的？</p>
+<h2 id="问题3"><a href="#问题3" class="headerlink" title="问题3"></a>问题3</h2><p>请介绍 Kafka 中的 In-Sync Replicas (ISRs)。</p>
+<h2 id="问题4"><a href="#问题4" class="headerlink" title="问题4"></a>问题4</h2><p>请提供可靠消息传递在 Kafka 中的一些最佳实践。</p>
+<h2 id="问题5"><a href="#问题5" class="headerlink" title="问题5"></a>问题5</h2><p>请说明 Kafka 是如何保证可靠消息传递的？</p>
+<h2 id="答案1"><a href="#答案1" class="headerlink" title="答案1"></a>答案1</h2><p>Kafka 集群中的 Kafka 生产者的角色是发布数据或消息到一个或多个 Kafka 主题。生产者发送的消息会被追加到提交日志的末尾并分配一个唯一的偏移号码。</p>
+<h2 id="答案2"><a href="#答案2" class="headerlink" title="答案2"></a>答案2</h2><p>Kafka 主题复制是 Kafka 中的一个特性，用于确保集群中的消息在某些 Kafka 节点（由于故或维护而不可用）不可用时仍然可用。每个主题可以在配置的节点数量上复制。这有助于确保没有消息丢失并提供高数据可用性。</p>
+<h2 id="答案3"><a href="#答案3" class="headerlink" title="答案3"></a>答案3</h2><p>In-Sync Replicas (ISRs) 是与领导者同步的复制集。任何超过某个配置时间未向领导者发送获取请求的复制集成 ISR 集合。如果复制集未能从领导者获取，它将从 ISR 集合中删除并不会被认为是为客户端生产数据的候选者。</p>
+<h2 id="答案-4"><a href="#答案-4" class="headerlink" title="答案 4"></a>答案 4</h2><p>在 Kafka 中可靠消息传递的一些最佳实践包括根据使用场景选择正确的消息传递语义，遵循最小权限原则进行权限管理，为长期主题使用压缩，监控并设置警报关键指标，保持 Kafka 集群和客户端库的更新，等等。</p>
+<h2 id="答案-5"><a href="#答案-5" class="headerlink" title="答案 5"></a>答案 5</h2><p>Kafka 保证可靠消息传递通过多种机制来实现，例如复制、In-Sync Replicas (ISRs)、确认和配置可靠性语义。生产者会等待来自全部 In-Sync Replicas 的确认，直到消息被写入。如果消息写入失败，生产者会自动重试。消费者会维护一个偏移量来跟进每个主题的进度。</p>
+<blockquote class="colorquote danger"><p>English post: <a href="https://programmerscareer.com/kafka-interview1/">https://programmerscareer.com/kafka-interview1/</a><br>作者：<a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>注意：本文为作者原创，转载请注明出处。  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/zh-cn/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/zh-cn/use-channel/">use-channel</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/zh-cn/mysql-interview1/">MySQL面试:简要介绍MySQL的主从同步机制</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">评论</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/zh-cn/kafka-interview1/';
+        this.page.identifier = 'zh-cn/kafka-interview1/';
+        
+        this.language = 'zh';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("zh-CN");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="站内搜索" />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: '文章',
+                PAGES: '页面',
+                CATEGORIES: '分类',
+                TAGS: '标签',
+                UNTITLED: '(无标题)',
+            },
+            CONTENT_URL: '/content.zh-cn.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

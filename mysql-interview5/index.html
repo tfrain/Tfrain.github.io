@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>DataBase interviews: Briefly describe the difference between optimistic locks and pessimistic locks and the usage scenarios - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/mysql-interview5/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DataBase interviews: Briefly describe the difference between optimistic locks and pessimistic locks and the usage scenarios">
+<meta property="og:url" content="https://programmerscareer.com/mysql-interview5/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-1-Introduction-to-MySQL-and-Locking-Mechanisms">1&nbsp;&nbsp;<b>Topic 1.1: Introduction to MySQL and Locking Mechanisms</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-2-Overview-of-Locking-Mechanisms">2&nbsp;&nbsp;<b>Topic 1.2: Overview of Locking Mechanisms</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-3-Understanding-Optimistic-Locking">3&nbsp;&nbsp;<b>Topic 1.3: Understanding Optimistic Locking</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-4-Understanding-Pessimistic-Locking">4&nbsp;&nbsp;<b>Topic 1.4: Understanding Pessimistic Locking</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-5-Comparing-Optimistic-and-Pessimistic-Locking">5&nbsp;&nbsp;<b>Topic 1.5: Comparing Optimistic and Pessimistic Locking.</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-6-Use-Case-Scenarios-for-Locking-Mechanisms">6&nbsp;&nbsp;<b>Topic: 1.6 Use Case Scenarios for Locking Mechanisms</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-7-Review-and-Assessments">7&nbsp;&nbsp;<b>Topic: 1.7 Review and Assessments</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Example-Problem">7.1&nbsp;&nbsp;Example Problem:</a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview5/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview5/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            DataBase interviews: Briefly describe the difference between optimistic locks and pessimistic locks and the usage scenarios
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            11 minutes read (About 1646 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-1-1-Introduction-to-MySQL-and-Locking-Mechanisms"><a href="#Topic-1-1-Introduction-to-MySQL-and-Locking-Mechanisms" class="headerlink" title="Topic 1.1: Introduction to MySQL and Locking Mechanisms"></a>Topic 1.1: Introduction to MySQL and Locking Mechanisms</h1><p>Let’s embark on a new journey of learning about&nbsp;<strong>MySQL</strong>&nbsp;and&nbsp;<strong>Locking Mechanisms</strong>.</p>
+<p>MySQL is one of the world’s most renowned open-source relational database management systems (RDBMS). It’s popular for web-based applications and online publishing and is a central component of the LAMP open-source web application software stack.</p>
+<p>Now let’s talk a bit about why we need locking mechanisms in databases. Imagine a scenario where two individuals are attempting to withdraw money from the same bank account simultaneously. If there isn’t a mechanism to prevent it, they could both check the account balance at the same time, see that there are sufficient funds, and proceed to withdraw more money than is actually in the account. This is known as a race condition and could lead to serious data integrity issues. This is where locking mechanisms come into play!</p>
+<h1 id="Topic-1-2-Overview-of-Locking-Mechanisms"><a href="#Topic-1-2-Overview-of-Locking-Mechanisms" class="headerlink" title="Topic 1.2: Overview of Locking Mechanisms"></a>Topic 1.2: Overview of Locking Mechanisms</h1><p>So, let’s dive deeper into the world of Locking Mechanisms in MySQL. As mentioned before, locking contributes significantly to maintaining data integrity, especially in multi-user database environments.</p>
+<p>Locking in databases essentially controls how transactions are accessed so that each transaction sees a consistent snapshot of the data it is accessing. The main types of locking used in MySQL are:</p>
+<ol>
+<li><strong>Shared Locks (Read Locks)</strong>: Shared locks are used when executing a read operation on data. They allow concurrent transactions to read (select) a resource with the guarantee that no transactions will be able to write (update/delete) it.</li>
+<li><strong>Exclusive Locks (Write Locks)</strong>: Exclusive locks are issued when executing a data modification operation. They make sure that the transaction that holds the lock is the only transaction that can read or write to the resource.</li>
+</ol>
+<p>In the next chapters, we will venture into two popular types of locking mechanisms-&nbsp;<strong>Optimistic Locking</strong>&nbsp;and&nbsp;<strong>Pessimistic Locking</strong>. The choice of which to use generally depends on the specific requirements of your system, such as the probability of concurrent transactions conflicting.</p>
+<h1 id="Topic-1-3-Understanding-Optimistic-Locking"><a href="#Topic-1-3-Understanding-Optimistic-Locking" class="headerlink" title="Topic 1.3: Understanding Optimistic Locking"></a>Topic 1.3: Understanding Optimistic Locking</h1><p>Time to take a closer look at&nbsp;<strong>Optimistic Locking</strong>. This is a strategy that can be implemented in multi-user databases to handle simultaneous updates.</p>
+<p>Optimistic Locking works on the assumption that multiple transactions can complete without affecting each other; therefore, it allows multiple transactions to access the same record for edits. This method is useful in systems where there is low contention for data.</p>
+<p>Here’s a simple way how Optimistic Locking works:</p>
+<ol>
+<li>A record is fetched from the database for an update.</li>
+<li>Just before the update, the application checks if another user has changed the record since it was last fetched.</li>
+<li>If the record was not updated by others, the application can perform its update and everything proceeds smoothly.</li>
+<li>If the record was updated by someone else, the application typically either informs the user and aborts the transaction or automatically retries the transaction.</li>
+</ol>
+<p>The main advantage of optimistic locking is its higher efficiency. It avoids the overhead of acquiring and releasing locks and avoids having transactions wait for locks.</p>
+<p>However bear in mind, nothing comes without a flip side! In an environment where contention for data is high and there are many updates to data, there could be many transaction collisions leading to a lot of rollbacks, which could lead to performance issues.</p>
+<h1 id="Topic-1-4-Understanding-Pessimistic-Locking"><a href="#Topic-1-4-Understanding-Pessimistic-Locking" class="headerlink" title="Topic 1.4: Understanding Pessimistic Locking"></a>Topic 1.4: Understanding Pessimistic Locking</h1><p>Let’s navigate into the sea of&nbsp;<strong>Pessimistic Locking</strong>&nbsp;now. This mechanism in MySQL is based on a completely different assumption from Optimistic Locking. It assumes that conflict is likely to happen and therefore enforces stringent controls to prevent this.</p>
+<p>Here’s how Pessimistic Locking works:</p>
+<ol>
+<li>When a record is fetched for updating, an exclusive lock is immediately acquired.</li>
+<li>Until the lock is released, no other transaction can update this record.</li>
+<li>The lock is released when the transaction is completed, and other transactions can then acquire the lock for this record.</li>
+</ol>
+<p>Pessimistic Locking is a surefire way to prevent conflicts, as it does not allow another transaction to proceed if it can result in a conflict. It’s a good fit for environments where contention for data is high and records are frequently updated.</p>
+<p>But remember, every coin has two sides! The downside of this approach is that it can lead to reduced concurrency and can impact system performance as transactions may be held waiting for locks for extended periods.</p>
+<h1 id="Topic-1-5-Comparing-Optimistic-and-Pessimistic-Locking"><a href="#Topic-1-5-Comparing-Optimistic-and-Pessimistic-Locking" class="headerlink" title="Topic 1.5: Comparing Optimistic and Pessimistic Locking."></a><strong>Topic 1.5: Comparing Optimistic and Pessimistic Locking.</strong></h1><p>You now are familiar with both Optimistic and Pessimistic Locking, and understanding when to use each one can significantly influence the performance and reliability of your applications.</p>
+<p><strong>Optimistic Locking</strong>&nbsp;assumes conflicts are rare and mostly avoids the need for acquiring and releasing locks. It can result in higher performance under low contention scenarios because it causes fewer blocks. However, for systems where contention is high, and conflicts are frequent, the cost and frequency of rollbacks can degrade performance.</p>
+<p>On the other hand,&nbsp;<strong>Pessimistic Locking</strong>&nbsp;assumes conflicts will commonly occur and uses locks to prevent them. This strategy can be advantageous in high contention scenarios because it avoids the need for conflict-resolution related rollbacks. However, the wait time associated with acquiring locks can degrade performance.</p>
+<p>So, the golden rule is:</p>
+<blockquote>
+<p><em>Opt for Optimistic Locking when conflicts are rare.<br>Opt for Pessimistic Locking when conflicts are expected.</em></p>
+</blockquote>
+<p>That’s a brief comparison of Optimistic and Pessimistic Locking in MySQL.</p>
+<h1 id="Topic-1-6-Use-Case-Scenarios-for-Locking-Mechanisms"><a href="#Topic-1-6-Use-Case-Scenarios-for-Locking-Mechanisms" class="headerlink" title="Topic: 1.6 Use Case Scenarios for Locking Mechanisms"></a>Topic: 1.6 Use Case Scenarios for Locking Mechanisms</h1><p>Fantastic! We now understand the primary locking mechanisms let’s look at some real-world scenarios where these mechanisms could be beneficial.</p>
+<ol>
+<li><strong>A banking system</strong>:<br> Imagine a banking application where transactions happen regularly. These transactions need to be consistent and secure. In such cases, a Pessimistic Locking mechanism is favourable as it ensures that once a user starts a transaction, no one else can modify the data, ensuring data integrity.</li>
+<li><strong>A ticket booking application</strong>:<br> Consider an online ticket booking system where multiple users are trying to book a limited number of tickets. Here, Optimistic Locking could be beneficial as it would allow multiple users to access the ticket booking function concurrently.</li>
+<li><strong>A content management system</strong>:<br> If you’re working on a Content Management System where users are updating their blog posts/articles, Optimistic Locking can be a good choice. Since the odds of two users trying to edit the same article at the same time are comparatively low, the system can handle those occasional conflicts.</li>
+<li><strong>A Stock trading application</strong>:<br> In a Stock trading application where a split-second delay could mean significant financial loss, Pessimistic Locking could help by instantly blocking other transactions until one completes.</li>
+</ol>
+<p>Remember, the decision to use Optimistic or Pessimistic Locking depends greatly on the nature of the application, the likelihood of conflicts, the level of concurrency required, and the tolerance for delay.</p>
+<h1 id="Topic-1-7-Review-and-Assessments"><a href="#Topic-1-7-Review-and-Assessments" class="headerlink" title="Topic: 1.7 Review and Assessments"></a>Topic: 1.7 Review and Assessments</h1><ol>
+<li><strong>Introduction to MySQL and Locking Mechanisms</strong>: We discussed how MySQL functions, the importance of locking mechanisms, and how it helps with concurrent database accesses.</li>
+<li><strong>Overview of Locking Mechanisms</strong>: We looked at a variety of locking mechanisms, their importance in maintaining data integrity, and handling concurrent access.</li>
+<li><strong>Understanding Optimistic Locking</strong>: We did a deep dive into the concept of optimistic locking, its pros and cons, and its implementation in MySQL.</li>
+<li><strong>Understanding Pessimistic Locking</strong>: We explored pessimistic locking, including its strengths, weaknesses, and how it can be implemented in MySQL.</li>
+<li><strong>Comparing Optimistic and Pessimistic Locking</strong>: We compared these two locking mechanisms and concluded that the choice highly depends on the particular use-cases and system requirements.</li>
+<li><strong>Use Case Scenarios for Locking Mechanisms</strong>: We looked through possible real-life application scenarios where these locking mechanisms can offer benefits.</li>
+</ol>
+<h2 id="Example-Problem"><a href="#Example-Problem" class="headerlink" title="Example Problem:"></a>Example Problem:</h2><p>Let’s take an example: you have a banking database in MySQL with a table named ‘Account’ storing users’ account balance. Two different financial transactions are trying to deduct money from the same account simultaneously. How would you handle this situation using both optimistic and pessimistic locking mechanisms in MySQL?</p>
+<p><strong>Answer</strong>:</p>
+<p>For&nbsp;<strong>Optimistic Locking</strong>, you can handle this by using a version column in the Account table. Here’s how:</p>
+<ul>
+<li>Transactions first read the account balance and note down the version. Before they update the account, they check if the version is still the same. If the version had changed, that would mean that another transaction has updated the account balance in the meantime, and therefore, the current transaction is rolled back. This way, we avoid inconsistent deductions.</li>
+</ul>
+<p>For&nbsp;<strong>Pessimistic Locking</strong>, you would lock the account for every financial transaction. Here’s how:</p>
+<ul>
+<li>Transactions lock the account immediately upon reading the account balance. Only one transaction can hold the lock at a time, and it holds it until it finishes updating the account balance. All other transactions that attempt to read the account balance while the lock is held will be blocked until the lock is released.</li>
+</ul>
+<p>Now let’s test your knowledge.</p>
+<p><strong>Question 1 (Easy):</strong></p>
+<p>In what scenario would you choose Optimistic Locking over Pessimistic Locking?</p>
+<p><strong>Question 2 (Intermediate):</strong></p>
+<p>What could be a potential downside of using Pessimistic Locking in a high throughput system, and how could this downside be mitigated?</p>
+<p><strong>Question 3 (Hard):</strong></p>
+<p>Can you describe a scenario where neither Optimistic nor Pessimistic Locking is suitable, and a different locking or concurrency control mechanism would be required?</p>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/mysql-interview5/">https://programmerscareer.com/zh-cn/mysql-interview5/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote></body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/mysql-interview4/">MySQL Interviews: Why does MySQL use B+ trees for indexing</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/mysql-interview6/">Database interviews:What are the necessary conditions for a deadlock to occur? How do I resolve deadlocks?</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/mysql-interview5/';
+        this.page.identifier = 'mysql-interview5/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

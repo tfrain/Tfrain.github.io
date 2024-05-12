@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>Redis interviews: how many data structures does Redis have? How is ZSet implemented? - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/redis-interview6/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis interviews: how many data structures does Redis have? How is ZSet implemented?">
+<meta property="og:url" content="https://programmerscareer.com/redis-interview6/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-1-Detailed-Study-on-Redis-Data-Structures">1&nbsp;&nbsp;<b>Topic: 1.1 Detailed Study on Redis Data Structures</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-2-Number-of-Data-Structures-in-Redis">2&nbsp;&nbsp;<b>Topic: 1.2 Number of Data Structures in Redis</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-3-Understanding-Zset-in-Redis">3&nbsp;&nbsp;<b>Topic: 1.3 Understanding Zset in Redis</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-4-Implementation-of-Zset-in-Redis">4&nbsp;&nbsp;<b>Topic: 1.4 Implementation of Zset in Redis</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-5-Hands-on-with-Zset-in-Redis">5&nbsp;&nbsp;<b>Topic: 1.5 Hands-on with Zset in Redis</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-6-Advanced-Redis-Topics">6&nbsp;&nbsp;<b>Topic: 1.6 Advanced Redis Topics</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-7-Redis-in-Real-World-Applications">7&nbsp;&nbsp;<b>Topic: 1.7 Redis in Real-World Applications</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-8-Review-and-Assessments">8&nbsp;&nbsp;<b>Topic: 1.8 Review and Assessments</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/redis-interview6/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/redis-interview6/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            Redis interviews: how many data structures does Redis have? How is ZSet implemented?
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/redis/">redis</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            13 minutes read (About 1913 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-1-1-Detailed-Study-on-Redis-Data-Structures"><a href="#Topic-1-1-Detailed-Study-on-Redis-Data-Structures" class="headerlink" title="Topic: 1.1 Detailed Study on Redis Data Structures"></a><strong>Topic</strong>: 1.1 Detailed Study on Redis Data Structures</h1><p>Redis, an open-source, in-memory data structure store, provides us with a set of powerful and high-performance data structures. Our journey today starts with an in-depth exploration of these diverse data structures and the understanding of their functions.</p>
+<p>Data structures in Redis are pre-built patterns that manage and organize data, which allow fast read and write operations. Redis provides several types of data structures, each one ideal for different types of data management needs. These include:</p>
+<ol>
+<li><strong>Strings</strong>: The simplest type of Redis data structure. They are binary safe and can contain any kind of data.</li>
+<li><strong>Lists</strong>: These are simply lists of strings, sorted by insertion order.</li>
+<li><strong>Sets</strong>: An unordered collection of unique strings.</li>
+<li><strong>Hashes</strong>: Hashes are perfect to represent objects. They are maps between string fields and string values.</li>
+<li><strong>Sorted sets (Zsets)</strong>: Every member of a Sorted Set is associated with a score, that is used to sort the set elements from the smallest to the greatest score.</li>
+<li><strong>Bit arrays (Bitmaps)</strong>: They offer operations to manipulate arrays of bits.</li>
+<li><strong>HyperLogLogs</strong>: a probabilistic data structure to estimate the cardinality of a set.</li>
+<li><strong>Geospatial data (Geosets)</strong>: they enable you to store latitude, longitude, and associated names.</li>
+</ol>
+<ul>
+<li><strong>Streams</strong>: they are a log data type that appends new items, like for logging or messaging.</li>
+</ul>
+<p>The choice of data structure depends on both the nature of the data and the kind of operations needed to manipulate that data effectively.</p>
+<p>Understanding data structures and choosing the right one can drastically improve the performance of an application, making Redis an invaluable tool in our tech-stack.</p>
+<h1 id="Topic-1-2-Number-of-Data-Structures-in-Redis"><a href="#Topic-1-2-Number-of-Data-Structures-in-Redis" class="headerlink" title="Topic: 1.2 Number of Data Structures in Redis"></a><strong>Topic</strong>: 1.2 Number of Data Structures in Redis</h1><p>As we have previously learned, Redis isn’t just your everyday key-value store, it’s more accurate to think of it as a data structures server. But you might be wondering, just how many data structures does Redis actually support?</p>
+<p>The answer is, Redis importantly supports&nbsp;<strong>eight</strong>&nbsp;different types of data structures:</p>
+<ol>
+<li><strong>Strings</strong></li>
+<li><strong>Lists</strong></li>
+<li><strong>Sets</strong></li>
+<li><strong>Sorted sets (Zsets)</strong></li>
+<li><strong>Hashes</strong></li>
+<li><strong>Bitmaps</strong></li>
+<li><strong>HyperLogLogs</strong></li>
+<li><strong>Geospatial data (Geosets)</strong></li>
+<li><strong>Streams</strong></li>
+</ol>
+<p>Each of these data structures has a distinct identity, serves unique purposes, and provides different capabilities, thus allowing Redis to handle a wide range of data management tasks with exceptional speed and consistency.</p>
+<h1 id="Topic-1-3-Understanding-Zset-in-Redis"><a href="#Topic-1-3-Understanding-Zset-in-Redis" class="headerlink" title="Topic: 1.3 Understanding Zset in Redis"></a><strong>Topic</strong>: 1.3 Understanding Zset in Redis</h1><p>In Redis,&nbsp;<strong>Sorted Sets</strong>, or&nbsp;<strong>Zsets</strong>, provide a fabulous combination of both Sets and Hashes. They take distinct aspects of these two data types, making this hybrid structure incredibly versatile.</p>
+<p>A Sorted Set is, in essence, a Set, which guarantees that each element is unique. However, it also associates each element with a score, as in a hash. These scores are used to sort the set elements, from the smallest score to the greatest.</p>
+<p>This might sound simple, but it has important implications. Redis can serve the Zset’s elements in the order of their score, providing a valuable resource for data range queries.</p>
+<p>Just imagine a leader board in a game, where you must display top performers in ascending or descending order. A Zset would be the ideal data structure for such a use-case, as you can directly fetch data in the sorted manner.</p>
+<p>That concludes the overview of Zsets! As we progress further, we’ll give you a live demonstration on how to implement and manipulate Zsets in Redis!</p>
+<h1 id="Topic-1-4-Implementation-of-Zset-in-Redis"><a href="#Topic-1-4-Implementation-of-Zset-in-Redis" class="headerlink" title="Topic: 1.4 Implementation of Zset in Redis"></a><strong>Topic</strong>: 1.4 Implementation of Zset in Redis</h1><p>Zsets, as we learned before, are unique in their ability to associate each element with a score and inherently sort these elements based on that score. But we haven’t yet dived into how Zsets are implemented in Redis. So let’s unravel this mystery!</p>
+<p>The implementation of Zsets is indeed quite fascinating. Redis utilizes two data structures internally to store a Zset:</p>
+<ol>
+<li><strong>HashTable</strong>&nbsp;where the element is the key and the score is the value.</li>
+<li><strong>SkipList</strong>&nbsp;or&nbsp;<strong>Sorted Set</strong>&nbsp;where every node is an element in our Zset.</li>
+</ol>
+<p>When Zsets are small, with a maximum length of 128 items, and every element in the set is internal within a small integer range, Zsets are stored in a list representation called&nbsp;<strong>ziplist</strong>.</p>
+<p>An interesting fact to note here is that the decision to use a HashTable or SkipList/Sorted Set does&nbsp;<em>not</em>&nbsp;affect the functionality of the Zset; it’s only for performance trade-offs.</p>
+<p>Redis automatically switches between these internal data structures based on the contents of the Zset, optimizing for the fastest read, write, or combination of both, as necessary!</p>
+<h1 id="Topic-1-5-Hands-on-with-Zset-in-Redis"><a href="#Topic-1-5-Hands-on-with-Zset-in-Redis" class="headerlink" title="Topic: 1.5 Hands-on with Zset in Redis"></a><strong>Topic</strong>: 1.5 Hands-on with Zset in Redis</h1><p>Alright, in Redis, you can perform various operations on Zsets:</p>
+<ol>
+<li><strong>zadd</strong>: This command allows you to add elements to a Zset. Each element added would be associated with a score. Here is how you can use it:</li>
+</ol>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">zadd myZset 1 "a"</span><br></pre></td></tr></tbody></table></figure>
+
+<ol>
+<li><strong>zrange</strong>: This command retrieves a range of elements, sorted by their scores. Here is how you would use it:</li>
+</ol>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">zrange myZset 0 -1</span><br></pre></td></tr></tbody></table></figure>
+
+<ol>
+<li><strong>zrem</strong>: This command helps you delete a specific element from the Zset:</li>
+</ol>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">zrem myZset "a"</span><br></pre></td></tr></tbody></table></figure>
+
+<ol>
+<li><strong>zrank</strong>: This command gives the rank of the element, indexed from 0. So, if you want to find out the rank of an element “a”, you can write:</li>
+</ol>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">zrank myZset "a"</span><br></pre></td></tr></tbody></table></figure>
+
+<p>Remember, Redis is quite forgiving when it comes to syntax. It’s not case sensitive and doesn’t even mind if you forget to close your quotes in some cases!</p>
+<h1 id="Topic-1-6-Advanced-Redis-Topics"><a href="#Topic-1-6-Advanced-Redis-Topics" class="headerlink" title="Topic: 1.6 Advanced Redis Topics"></a><strong>Topic</strong>: 1.6 Advanced Redis Topics</h1><p>After mastering the various data structures and commands in Redis, it’s now time to level up and explore some advanced aspects of Redis! 💪</p>
+<p>Let’s start with&nbsp;<strong>Redis Persistence</strong>. Redis offers two types of persistence:</p>
+<ol>
+<li><strong>RDB</strong>&nbsp;(Redis Database Backup): This persistent method captures snapshots of your dataset at specified intervals.</li>
+<li><strong>AOF</strong>&nbsp;(Append Only File): This persistent method logs every write operation received by the server, which when re-run, can reproduce the original dataset.</li>
+</ol>
+<p>Both persistence methods have their pros and cons, and the selection usually depends on the use-case requirements.</p>
+<p>Next in line is&nbsp;<strong>Redis Transactions</strong>. Redis Transactions allow the execution of a group of commands in a single step. It uses ‘MULTI’ to indicate the start and ‘EXEC’ to indicate the end of a transaction.</p>
+<p>Another significant aspect to discuss is Redis Security. By default, Redis has no authentication or security layer. However, Redis allows setting a password that clients must use to authenticate before being granted access.</p>
+<p>It is also important to remember that Redis doesn’t support encrypted connections, and it’s advisable to use an SSL proxy in cases where data needs to be encrypted over the network.</p>
+<p>Lastly, let’s shed light on&nbsp;<strong>Redis Pub/Sub</strong>&nbsp;model. Here, publishers send messages to specific channels without knowing or caring about the subscribers. Similarly, subscribers listen to specific channels without knowing or caring about the publishers. This leads to a highly decoupled and scalable system.</p>
+<h1 id="Topic-1-7-Redis-in-Real-World-Applications"><a href="#Topic-1-7-Redis-in-Real-World-Applications" class="headerlink" title="Topic: 1.7 Redis in Real-World Applications"></a><strong>Topic</strong>: 1.7 Redis in Real-World Applications</h1><p>Redis, with its enviable set of features, finds use in a variety of real-world applications. Let’s look at a select few:</p>
+<ol>
+<li><strong>Caching</strong>: Due to its high-speed and the availability of rich data types, Redis is an ideal choice to implement caching in web applications. It considerably speeds up application response times.</li>
+<li><strong>Session Storage</strong>: Websites that need to maintain information across multiple requests from a user often use Redis for session storage. The data types that Redis provides make it an ideal candidate.</li>
+<li><strong>Message Queue Systems</strong>: Redis can function as a Message Queue System using its Lists and Pub/Sub model. A list in Redis can be used as a queue in which you can use atomic operations like LPUSH and RPOP to push and pop elements.</li>
+<li><strong>Leaderboards and Counting</strong>: Redis works exceptionally well to manage leaderboards, especially if you are required to manage them in real-time. The Sorted Set data structure is designed to solve such problems.</li>
+<li><strong>Real-time Analysis</strong>: You can use Redis for Real-time analysis like computing or analyzing statistics in live time for immediate viewing.</li>
+</ol>
+<p>A key point to note is that the flexibility of Redis doesn’t limit it to just these applications. It can also serve as a primary database, a job management system, a search engine and much more!</p>
+<h1 id="Topic-1-8-Review-and-Assessments"><a href="#Topic-1-8-Review-and-Assessments" class="headerlink" title="Topic: 1.8 Review and Assessments"></a><strong>Topic</strong>: 1.8 Review and Assessments</h1><p>Let’s take a moment to review and practice what we’ve learned in the previous sections. It’s always a good idea to revisit the topics and start implementing them to solidify our understanding.</p>
+<p>Up until now, we’ve learned about the various data types in Redis, performed hands-on operations for each data structure, dove into advanced topics, and saw how Redis is used in real-world applications.</p>
+<p>A good methodology is for us to choose a real-world problem and try to solve it using Redis. You can try to implement a caching solution for a web application or set up a simple message queue system. Use the Redis commands we’ve learned to interact with the different data types and structures.</p>
+<p>Now let’s test your knowledge of Redis.</p>
+<p>1️⃣&nbsp;<strong>Basic Question</strong>&nbsp;(Difficulty: 3/10): What are the six data types that Redis supports?</p>
+<p>2️⃣&nbsp;<strong>Intermediate Question</strong>&nbsp;(Difficulty: 6/10): In what situation would you use a Redis List over a Redis Set?</p>
+<p>3️⃣&nbsp;<strong>Advanced Question</strong>&nbsp;(Difficulty: 9/10): How would you implement caching in a web application using Redis? Please describe a brief process of how it would work.</p>
+<hr>
+<p>1️⃣&nbsp;<strong>Basic Question Answer</strong>: Redis supports six data types, which are STRING, LIST, SET, ZSET (Sorted Set), HASH, and STREAM.</p>
+<p>2️⃣&nbsp;<strong>Intermediate Question Answer</strong>: You would use a Redis List when the order of the data matters as Redis Lists maintain the order of elements based on how they are added. On the other hand, a Redis Set is an unordered collection. So, if you need to store a list of items in a specific order (like a timeline of comments on a blog post), you would use a Redis List.</p>
+<p>3️⃣&nbsp;<strong>Advanced Question Answer</strong>: To implement caching in a web application using Redis, you could follow these steps:</p>
+<ul>
+<li>First, whenever a request is made to your web application, check if the requested data is in your Redis cache by trying to retrieve it using the request parameters as the key.</li>
+<li>If the data is in Redis (a cache hit), retrieve it and return it in the response.</li>
+<li>If the data is not in Redis (a cache hit), retrieve it from your primary database.</li>
+<li>After retrieving it from your primary database, save it to your Redis cache with an expiration time so that it doesn’t indefinitely take up memory in your cache. Then return the data in the response.</li>
+<li>Done correctly, this allows frequently requested data to be served from the Redis cache, significantly speeding up response times and reducing the load on your primary database.</li>
+</ul>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/redis-interview6/">https://programmerscareer.com/zh-cn/redis-interview6/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/redis-interview5/">Redis interviews: Briefly describe the advantages and disadvantages of RDB and AOF schemes in Redis persistence</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/hello-world/">hello-world</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/redis-interview6/';
+        this.page.identifier = 'redis-interview6/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

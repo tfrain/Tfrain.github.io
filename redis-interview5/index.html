@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>Redis interviews: Briefly describe the advantages and disadvantages of RDB and AOF schemes in Redis persistence - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/redis-interview5/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="let’s study Redis with a focus on the RDB and AOF persistence schemes.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis interviews: Briefly describe the advantages and disadvantages of RDB and AOF schemes in Redis persistence">
+<meta property="og:url" content="https://programmerscareer.com/redis-interview5/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="let’s study Redis with a focus on the RDB and AOF persistence schemes.">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Redis-Architecture">1&nbsp;&nbsp;<b>Topic: Redis Architecture</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Redis-Persistence-Overview">2&nbsp;&nbsp;<b>Topic: Redis Persistence Overview</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Redis-RDB-Persistence">3&nbsp;&nbsp;<b>Topic: Redis RDB Persistence</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Redis-AOF-Persistence">4&nbsp;&nbsp;<b>Topic: Redis AOF Persistence</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Redis-RDB-vs-AOF-Persistence">5&nbsp;&nbsp;<b>Topic: Redis RDB vs. AOF Persistence</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Implementing-Redis-Persistence">6&nbsp;&nbsp;<b>Topic: Implementing Redis Persistence</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Review-and-Assessments">7&nbsp;&nbsp;<b>Topic: Review and Assessments</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/redis-interview5/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/redis-interview5/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            Redis interviews: Briefly describe the advantages and disadvantages of RDB and AOF schemes in Redis persistence
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/redis/">redis</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            15 minutes read (About 2275 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>let’s study Redis with a focus on the RDB and AOF persistence schemes.</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-Redis-Architecture"><a href="#Topic-Redis-Architecture" class="headerlink" title="Topic: Redis Architecture"></a><strong>Topic</strong>: Redis Architecture</h1><p>Now, imagine a system, lean and efficient, furnished to quickly store and retrieve data. Allow me to introduce the marvel that is Redis!</p>
+<p>Redis, or Remote Dictionary Server, is an in-memory data structure store. It can be used as a database, cache and message broker. The “in-memory” part means that it primarily stores data in RAM, making data operations extremely fast since reading from and writing to the primary memory can be done at a swifter pace compared to disk storage.</p>
+<p>Its structure is based on a server-client architecture. This means every Redis setup has a Redis server and one or more Redis clients; think of this as a conversation where the client constantly requests, and the server responds.</p>
+<p>We have few components at play in the Redis Architecture:</p>
+<ul>
+<li><strong>Redis Clients</strong>: They could be different applications or multiple instances of the same application. They ask, and the server responds.</li>
+<li><strong>Redis Server</strong>: The server manages the data store and responds to the commands by clients.</li>
+<li><strong>Redis Data</strong>: At its core, Redis manages a data store — a crucial part of our Redis architecture.</li>
+</ul>
+<p>Now, as we have seen, Redis is an in-memory data structure. Yet, an essential feature of Redis is its ability to persist data on disk. It can log every write operation transmitted by the clients, thereby providing a high level of data safety for an in-memory database.</p>
+<p>And that’s a brief overview of the Redis Architecture!</p>
+<h1 id="Topic-Redis-Persistence-Overview"><a href="#Topic-Redis-Persistence-Overview" class="headerlink" title="Topic: Redis Persistence Overview"></a><strong>Topic</strong>: Redis Persistence Overview</h1><p>Redis, a in-memory data structure store used as a database, cache, and message broker, excels at handling data operations at lightning-fast speed. However, being in-memory raises the question of data volatility and persistence. How does Redis ensure your data longevity when it stores everything in RAM, which is volatile in nature?</p>
+<p>Fret not! Redis takes care of this potential issue by offering two methods of ensuring data persistence:&nbsp;<strong>RDB (Redis Database)</strong>&nbsp;and&nbsp;<strong>AOF (Append Only File)</strong>.</p>
+<ul>
+<li><strong>RDB Persistence:</strong>&nbsp;This method takes a point-in-time snapshot of your dataset at specified intervals and saves it on a disk in a binary format. These “snapshots” are compact and quick to load, making RDB an excellent option for backups.</li>
+<li><strong>AOF Persistence:</strong>&nbsp;The Append Only File logs all the write commands received by the server in a file. This file is read by Redis when it restarts to rebuild the state of data. Since all executed commands are saved by Redis, you can adjust the server’s data durability levels by syncing the file every time a command is written, every second, or hardly ever.</li>
+</ul>
+<p>Both methods come with their own pros and cons, the choice of which to use depends entirely on your specific use case. In some cases, a combination of both methods might be an ideal solution.</p>
+<p>In the upcoming sections, we are going to discuss these persistence technologies in more detail. This will give you a deeper understanding of both so you can make an informed choice.</p>
+<h1 id="Topic-Redis-RDB-Persistence"><a href="#Topic-Redis-RDB-Persistence" class="headerlink" title="Topic: Redis RDB Persistence"></a><strong>Topic</strong>: Redis RDB Persistence</h1><p>Let me unfold the story of&nbsp;<strong>RDB Persistence</strong>. RDB, which stands for Redis DataBase, is a very convenient persistence format in Redis. In this method, the Redis server creates point-in-time snapshots of your dataset at specified intervals. Think of it as creating periodic backups of your data that can come in super handy in certain scenarios.</p>
+<p>RDB operates in a very straightforward manner. At configured intervals, the Redis parent process forks a child process. The parent process continues to serve clients, while the child process starts writing the RDB file on the disk. This way, the database can continue to handle client requests while the snapshot is being created.</p>
+<p>When the child process finishes saving the RDB file, it replaces the old snapshot with the new one. The child process then exits and sends a success signal to the parent process. If an error occurs during saving, the child process sends an error signal back to the parent process.</p>
+<p>RDB persistence has its own set of advantages:</p>
+<ul>
+<li>It’s perfect for disaster recovery. You can configure Redis to take snapshots every minute or every few seconds. If something disastrous occurs, you would lose a maximum of one minute’s worth of data.</li>
+<li>The snapshots are created in a fraction of a second and are perfectl</li>
+</ul>
+<p>the RDB snapshotting process is fast and doesn’t affect the performance of the Redis server catering to write requests. Furthermore, it creates compact files that Redis can consume quickly during server start, reducing downtime.</p>
+<p>But, as with everything else, RDB persistence does come with its caveats:</p>
+<ul>
+<li>RDB is a point-in-time snapshotting system, meaning it doesn’t record each individual write. So in the case of a crash or failure, you might lose some data that was not included in the last snapshot.</li>
+<li>Despite being an automated process, snapshot generation can be resource-intensive for large databases, causing degradation of service during the snapshotting period.</li>
+</ul>
+<p>With this information in mind, it’s clear that while RDB has numerous benefits in terms of data backup and disaster recovery scenarios, it might not be the optimum solution for applications needing high durability.</p>
+<p>Similar to a tale with two sides, this is only half of our persistence story. In the upcoming lesson, we’ll be exploring the ins and outs of the other method — AOF (Append Only File) persistence.</p>
+<h1 id="Topic-Redis-AOF-Persistence"><a href="#Topic-Redis-AOF-Persistence" class="headerlink" title="Topic: Redis AOF Persistence"></a><strong>Topic</strong>: Redis AOF Persistence</h1><p>Now that we have a good understanding of RDB Persistence, let’s shift our focus to another method that Redis employs to persist data:&nbsp;<strong>Append Only File (AOF)</strong>.</p>
+<p>Unlike RDB Persistence which creates point-in-time snapshots, AOF takes a more comprehensive approach. Every executed write command is logged by Redis. Literally, every single one. These are then saved to an&nbsp;<code>append-only file</code>, hence the name.</p>
+<p>Now, when Redis restarts, it uses this file to restore its previous state. The commands are simply executed one after another to recreate the data.</p>
+<p>One of the beauties of this approach is its durability. Since every write operation is logged, you’ve got quite an account of all the changes. It might also be music to your ears to know that Redis offers adjustable levels of durability:</p>
+<ul>
+<li>You can set Redis to sync this log file every time a command is written</li>
+<li>Or, Redis could be set to sync the file every second</li>
+<li>Or even, you can trust your luck (or perhaps the stability of your power supply) and hardly ever sync at all!</li>
+</ul>
+<p>Imagine that! Full control over your database persistence method!</p>
+<p>Of course, AOF persistence has its own pros and cons. In the subsequent lesson, we’ll pit RDB and AOF against each other, compare their strengths, and help you understand when to use which.</p>
+<h1 id="Topic-Redis-RDB-vs-AOF-Persistence"><a href="#Topic-Redis-RDB-vs-AOF-Persistence" class="headerlink" title="Topic: Redis RDB vs. AOF Persistence"></a><strong>Topic</strong>: Redis RDB vs. AOF Persistence</h1><p>When it comes to Redis and data persistence, RDB and AOF are the two knights in shining armor. However, they each have their strengths and weaknesses.</p>
+<p>Firstly, RDB persistence creates point-in-time snapshots of your dataset at specified intervals. So in the event of an unexpected shutdown, you can restore your data to the last snapshot.</p>
+<p>However, this could mean that data written after the most recent snapshot would be lost forever! While RDB file creation is fast and doesn’t use much memory, you can experience a performance hit when dealing with larger databases due to decreased input/output operations.</p>
+<p>On the other hand, AOF persistence logs every write operation received by the server. This can be beneficial. Not a single piece of data is lost because everything is logged almost instantly. But, the log files can eventually become quite large, and the constant writing can introduce latency.</p>
+<p>ltimately, the choice between RDB and AOF depends on your use-case. If you can’t afford to lose any data, AOF is the way to go. But if your data can be easily reconstituted and you need quicker backups and recovery, then RDB could be a better fit.</p>
+<p>In many instances, using both RDB and AOF together will give you the benefits of both worlds. You’d have the durability of AOF and the speedy backups and data recovery of RDB.</p>
+<h1 id="Topic-Implementing-Redis-Persistence"><a href="#Topic-Implementing-Redis-Persistence" class="headerlink" title="Topic: Implementing Redis Persistence"></a><strong>Topic</strong>: Implementing Redis Persistence</h1><p>Redis’ flexibility with persistence configurations is one of its strengths. You can opt for RDB, AOF or even both based on your needs. Here’s how you can do it:</p>
+<ol>
+<li><strong>Implementing RDB Persistence</strong>: Enabling RDB persistence primarily involves configuring how often you’d like Redis to save a snapshot of your database to disk. This is controlled by the&nbsp;<code>save</code>&nbsp;configuration directive in the Redis configuration file (<code>redis.conf</code>). The syntax is&nbsp;<code>save &lt;seconds&gt; &lt;changes&gt;</code>, where&nbsp;<code>&lt;seconds&gt;</code>&nbsp;specifies a certain number of seconds and&nbsp;<code>&lt;changes&gt;</code>&nbsp;specifies a minimum number of changes. You can have multiple&nbsp;<code>save</code>&nbsp;directives in the&nbsp;<code>redis.conf</code>&nbsp;file for finer control.</li>
+<li><strong>Implementing AOF Persistence</strong>: To turn on AOF persistence, you’ll have to update the&nbsp;<code>appendonly</code>&nbsp;configuration directive in the&nbsp;<code>redis.conf</code>&nbsp;file to&nbsp;<code>yes</code>. Additionally,&nbsp;<code>appendfsync</code>&nbsp;is another significant directive which defines how often the data is written to the AOF file. It can be set to&nbsp;<code>always</code>&nbsp;(fsync every write),&nbsp;<code>everysec</code>&nbsp;(fsync every second), or&nbsp;<code>no</code>&nbsp;(fsync only when Redis decides).</li>
+<li><strong>Using RDB and AOF Together</strong>: Both of these persistence methods can be used at the same time by enabling their respective directives in&nbsp;<code>redis.conf</code>. You get point-in-time snapshots from RDB and durability from AOF.</li>
+</ol>
+<p>And voila! You have configured Redis persistence according to your application’s needs. When in doubt, keep in mind the key differences between RDB and AOF persistence and their respective use-cases.</p>
+<h1 id="Topic-Review-and-Assessments"><a href="#Topic-Review-and-Assessments" class="headerlink" title="Topic: Review and Assessments"></a><strong>Topic</strong>: Review and Assessments</h1><p>We’ve covered a lot over the course of these lessons:</p>
+<ol>
+<li><strong>Redis Architecture:</strong>&nbsp;We delved into the workings of Redis, especially as an in-memory data structure store.</li>
+<li><strong>Redis Persistence Overview:</strong>&nbsp;We discussed how Redis handles data persistence and some of the inherent trade-offs.</li>
+<li><strong>Redis RDB Persistence:</strong>&nbsp;We explored the RDB persistence scheme, how it works and when it can be beneficial.</li>
+<li><strong>Redis AOF Persistence:</strong>&nbsp;Similarly, we looked at the AOF persistence scheme and its applications.</li>
+<li><strong>Redis RDB vs. AOF:</strong>&nbsp;We compared both persistence schemes in terms of performance, data safety and use-cases.</li>
+<li><strong>Implementing Redis Persistence:</strong>&nbsp;We put our knowledge into practice by chaining different types of persistence in different scenarios.</li>
+</ol>
+<p>I hope these lessons cleared your understanding of Redis, RDB and AOF. Now, it’s time to see how much you’ve learned. I will give a few questions to answer. Don’t worry if you can’t answer them all. The real learning often happens during the process of finding the answers, not demonstrating what you already know!</p>
+<ol>
+<li><strong>Describe the fundamental differences between AOF and RDB persistence.</strong></li>
+<li><strong>In what situations would you prefer using AOF and when would you opt for RDB? Give specific examples.</strong></li>
+<li><strong>What are some potential disadvantages of using these persistence methods?</strong></li>
+</ol>
+<p>Please take your time and type your answers.</p>
+<hr>
+<ol>
+<li><strong>Describe the fundamental differences between AOF and RDB persistence.</strong></li>
+</ol>
+<p>RDB (Redis Database) and AOF (Append Only File) are the two types of persistence provided by Redis. The fundamental difference lies in how and when they save data.</p>
+<ul>
+<li><em>RDB</em>: This method captures a point-in-time snapshot of your dataset at specified intervals. It’s advantageous for backups and for quicker recovery after a restart.</li>
+<li><em>AOF</em>: This approach logs every write operation received by the server, offering a more durable persistence method. AOF logs make Redis much more resistant to issues like power failures, as it maintains a complete log of all operations.</li>
+</ul>
+<ol>
+<li><strong>In what situations would you prefer using AOF and when would you opt for RDB? Give specific examples.</strong></li>
+</ol>
+<p>Your choice between AOF and RDB depends on your specific project and what trade-offs you’re willing to make.</p>
+<ul>
+<li><em>RDB</em>: If you’re building a caching layer where data can be re-cached or recalculated from another store, the faster backups and recovery time of RDB is a clear advantage.</li>
+<li><em>AOF</em>: If you’re building an application where every write is critical — for example, a messaging or collaboration application — the added durability of AOF would be a more suitable choice.</li>
+</ul>
+<ol>
+<li><strong>What are some potential disadvantages of using these persistence methods?</strong></li>
+</ol>
+<p>Each persistence method comes with its own set of drawbacks:</p>
+<ul>
+<li><em>RDB</em>: While capturing snapshots of the data, Redis forks the server process, which can be system intensive. Moreover, you could lose a significant amount of data if Redis was to crash between snapshots. Also, bigger databases can take a long time and a lot of I/O to create the RDB snapshot.</li>
+<li><em>AOF</em>: The log files can get significantly large with time because it records every operation. Moreover, AOF logs are usually larger than the equivalent RDB snapshots, and AOF can be slower than RDB when Redis restarts.</li>
+</ul>
+<p>Remember, these answers serve as a guide. When dealing with real-world projects, your specific context and requirements may lead you to different conclusions.</p>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/redis-interview5/">https://programmerscareer.com/zh-cn/redis-interview5/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/redis-interview4/">Redis interviews: how to prevent cache avalanche and cache penetration with Redis</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/redis-interview6/">Redis interviews: how many data structures does Redis have? How is ZSet implemented?</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/redis-interview5/';
+        this.page.identifier = 'redis-interview5/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL interviews: What is the difference between a unique index and a normal index? What are the advantages and disadvantages of using indexes? - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/mysql-interview11/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Let’s dive into the review and assessment of understanding “Unique Index” and “Normal Index” in MySQL.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL interviews: What is the difference between a unique index and a normal index? What are the advantages and disadvantages of using indexes?">
+<meta property="og:url" content="https://programmerscareer.com/mysql-interview11/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Let’s dive into the review and assessment of understanding “Unique Index” and “Normal Index” in MySQL.">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.283Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Understanding-Indexes-in-MySQL">1&nbsp;&nbsp;<b>Topic: Understanding Indexes in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Normal-Indexes-in-MySQL">2&nbsp;&nbsp;<b>Topic: Normal Indexes in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Unique-Indexes-in-MySQL">3&nbsp;&nbsp;<b>Topic: Unique Indexes in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-The-Differences-Between-Normal-Indexes-and-Unique-Indexes">4&nbsp;&nbsp;<b>Topic: The Differences Between Normal Indexes and Unique Indexes</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Optimizing-SQL-Queries-with-Indexes">5&nbsp;&nbsp;<b>Topic: Optimizing SQL Queries with Indexes</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Common-Pitfalls-with-Indexes">6&nbsp;&nbsp;<b>Topic: Common Pitfalls with Indexes</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Review-and-Assessments">7&nbsp;&nbsp;<b>Topic: Review and Assessments</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview11/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview11/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL interviews: What is the difference between a unique index and a normal index? What are the advantages and disadvantages of using indexes?
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            15 minutes read (About 2272 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Let’s dive into the review and assessment of understanding “Unique Index” and “Normal Index” in MySQL.  </p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-Understanding-Indexes-in-MySQL"><a href="#Topic-Understanding-Indexes-in-MySQL" class="headerlink" title="Topic: Understanding Indexes in MySQL"></a><strong>Topic</strong>: Understanding Indexes in MySQL</h1><p>In any relational database management system like MySQL, efficient access to data is one of the key aspects, especially when dealing with large amounts of data. The efficiency we’re concerned about is the speed and ease with which our system can locate and retrieve the data we need. This is where&nbsp;<strong>Indexes</strong>&nbsp;come into play.</p>
+<p>You can think of an index as if it were an index at the back of a book. Suppose you wanted to look up a specific topic in a book. You have two choices:</p>
+<ol>
+<li>You could scan through each page until you find the topic.</li>
+<li>You could go to the index, find the page number of the topic, and then flip directly to that page.</li>
+</ol>
+<p>The second method is faster, isn’t it? In the database world, scanning through all the data is called a&nbsp;<strong>full table scan</strong>. If you have millions of rows, this can take a very long time. But if you have an index, MySQL can use it to locate the data much more quickly — just like you used the book’s index to find your topic.</p>
+<p>An index creates an entry for each value and thus it will be much quicker to retrieve data. Keep in mind, however, that while indexes speed up querying, they can slow down the speed of writing operations (INSERT, UPDATE, DELETE) because each time we write, we need to update the index as well. Therefore, we need to maintain a balance and only use indexing on columns that will be frequently searched against.</p>
+<h1 id="Topic-Normal-Indexes-in-MySQL"><a href="#Topic-Normal-Indexes-in-MySQL" class="headerlink" title="Topic: Normal Indexes in MySQL"></a><strong>Topic</strong>: Normal Indexes in MySQL</h1><p>Now that we have a good understanding of what an index is and the role it plays in MySQL, let’s delve into one specific type of index, which is a&nbsp;<strong>Normal Index</strong>.</p>
+<p>A Normal Index, also known as a Non-unique Index, allows you to speed up the query process by creating an index on one or more columns of your database table. Unlike a Unique Index, a Normal Index does not impose any constraints on the values you can have in the column. In other words, a Normal Index allows duplicated values in the column(s) it is indexed on.</p>
+<p>To illustrate, let’s say we have a&nbsp;<code>Students</code>&nbsp;table that has columns&nbsp;<code>ID, Name, Age, and Address</code>. While querying data, we often use the&nbsp;<code>WHERE</code>&nbsp;clause to filter data. For example:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">`SELECT * FROM Students WHERE Age = 20`</span><br></pre></td></tr></tbody></table></figure>
+
+<p>Without an index, MySQL would have to go through every row in the&nbsp;<code>Students</code>&nbsp;table to find the ones where&nbsp;<code>Age</code>&nbsp;is equal to 20. This can be time-consuming and inefficient. If we create a Normal Index on the&nbsp;<code>Age</code>&nbsp;column, MySQL can use this index to quickly locate the relevant rows.</p>
+<p>Creating a Normal Index in MySQL is pretty straightforward, you use the&nbsp;<code>CREATE INDEX</code>&nbsp;command, followed by the name you want to give to the index, and the table and column you want to create it on.</p>
+<p>Here’s an example of how you’d create an index on the&nbsp;<code>Age</code>&nbsp;column in the&nbsp;<code>Students</code>&nbsp;table:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CREATE INDEX age_index ON Students (Age);</span><br></pre></td></tr></tbody></table></figure>
+
+<p>Remember, while Normal Indexes can undeniably speed up read operations, they also take up storage space and can slow down write operations (INSERT, UPDATE, DELETE) as they need to be updated each time a write operation occurs. Therefore, they should be used thoughtfully and strategically.</p>
+<h1 id="Topic-Unique-Indexes-in-MySQL"><a href="#Topic-Unique-Indexes-in-MySQL" class="headerlink" title="Topic: Unique Indexes in MySQL"></a><strong>Topic</strong>: Unique Indexes in MySQL</h1><p>Now that we have a solid grasp on Normal Indexes, it’s time to discuss&nbsp;<strong>Unique Indexes</strong>&nbsp;in MySQL.</p>
+<p>A Unique Index is a type of index that enforces a constraint that all values in the index must be different. This means, a Unique Index doesn’t allow duplicate values in the column (or combination of columns) it is indexed on, making it useful when you want to prevent duplication in certain fields.</p>
+<p>For example, consider a Users table in a database where every user is supposed to have a unique email address. In such a scenario, a Unique Index on the email column would ensure that two users cannot have the same email.</p>
+<p>The syntax to create a Unique Index is just slightly different than a Normal Index:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CREATE UNIQUE INDEX index_name ON table_name (column_name);</span><br></pre></td></tr></tbody></table></figure>
+
+<p>You can replace&nbsp;<code>index_name</code>&nbsp;with the name you want to give to the index,&nbsp;<code>table_name</code>&nbsp;with the name of the table in which you want to create the index, and&nbsp;<code>column_name</code>&nbsp;should be replaced by the name of the column on which you want to create the index.</p>
+<p>For example, to create a unique index on the&nbsp;<code>Email</code>&nbsp;column in the&nbsp;<code>Users</code>&nbsp;table, you would write:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CREATE UNIQUE INDEX email_index ON Users (Email);</span><br></pre></td></tr></tbody></table></figure>
+
+<p>Every time a new email is inserted or an existing one is updated in the Users table, MySQL will check the unique index, and if it finds another row with the same email value, it won’t allow the change to be made.</p>
+<p>Keep in mind, a Unique Index not only helps in ensuring data integrity but, just like a Normal Index, it can also help in improving the performance of data retrieval operations.</p>
+<h1 id="Topic-The-Differences-Between-Normal-Indexes-and-Unique-Indexes"><a href="#Topic-The-Differences-Between-Normal-Indexes-and-Unique-Indexes" class="headerlink" title="Topic: The Differences Between Normal Indexes and Unique Indexes"></a><strong>Topic</strong>: The Differences Between Normal Indexes and Unique Indexes</h1><p>As we’ve discussed in the previous sessions, indexes are integral to efficient data operations in databases. We’ve also looked at two specific types of indexes:&nbsp;<strong>Normal Indexes</strong>&nbsp;(or non-unique indexes) and&nbsp;<strong>Unique Indexes</strong>. Both of these index types fulfill different roles and it’s important to understand the differences.</p>
+<ol>
+<li><strong>Uniqueness</strong>: The foremost difference lies in the name itself — Normal Indexes in MySQL allow duplication in the column or set of columns. In contrast, a Unique Index will prevent the insertion of a new row with a duplicate index column value.</li>
+<li><strong>Usage</strong>: Normal indexes are mainly used to increase the speed of operations in MySQL. Unique indexes, however, serve a dual purpose. They can both increase operational efficiencies and maintain data integrity by rejecting duplicate values.</li>
+<li><strong>Constraints</strong>: When you insert a row in a table that has a Unique Index, MySQL first checks whether inserting the new data will violate the uniqueness constraint. If it does, MySQL rejects the change and issues an error. In contrast, with Normal Indexes, MySQL does not perform such checks.</li>
+</ol>
+<p>It’s crucial to know when to use which type of index. When you need to speed up queries on a large dataset, a Normal Index would do the job. But if you need to ensure data consistency in a column where each value must be unique, you would use a Unique Index, even though it will consume more resources to enforce the uniqueness constraint.</p>
+<h1 id="Topic-Optimizing-SQL-Queries-with-Indexes"><a href="#Topic-Optimizing-SQL-Queries-with-Indexes" class="headerlink" title="Topic: Optimizing SQL Queries with Indexes"></a><strong>Topic</strong>: Optimizing SQL Queries with Indexes</h1><p>Enhancing the performance of our database by organizing its data is one of the primary objectives of using indexes in MySQL. When used properly, indexes can significantly speed up data retrieval operations. Here are some pointers on how to optimize your SQL queries using indexes:</p>
+<ol>
+<li><strong>Index the Search Fields</strong>: It seems pretty straightforward, but it’s worth repeating. If you are frequently searching a particular field in the table, consider indexing it. This could vastly improve your database performance.</li>
+<li><strong>Consider Index Size</strong>: The smaller the index (in terms of data size), the faster it is. Therefore, indexed columns with smaller data types will usually be faster than those with larger data types. For example, an INT is faster than a VARCHAR, and a VARCHAR is faster than a TEXT.</li>
+<li><strong>Limit Indexes on Write-Heavy Tables</strong>: Indexes can slow down write operations (like INSERT, UPDATE, and DELETE statements) because every time you modify the data, the index also needs to be updated. If a table is frequently updated, consider minimizing the number of indexes.</li>
+<li><strong>Composite Indexes</strong>: They consist of more than one column and can speed data retrieval when you’re filtering on multiple columns in your WHERE clause. The trick is they work on the left-most prefix basis. That means the order of columns in the index matters.</li>
+<li><strong>Use Explain Plan</strong>: MySQL’s EXPLAIN statement can show you how the MySQL optimizer would execute your query, helping you understand whether the database is able to utilize the index or not, and allowing you to optimize your queries further.</li>
+</ol>
+<p>That concludes our lesson on how to optimize your SQL queries using indexes.</p>
+<h1 id="Topic-Common-Pitfalls-with-Indexes"><a href="#Topic-Common-Pitfalls-with-Indexes" class="headerlink" title="Topic: Common Pitfalls with Indexes"></a><strong>Topic</strong>: Common Pitfalls with Indexes</h1><p>Indexes in MySQL are powerful tools that can significantly speed up your queries. However, there are a few common pitfalls that you should be aware of when working with them.</p>
+<ol>
+<li><strong>Too Many Indexes</strong>: Having numerous indexes can be counterproductive. Every index that you add increases the amount of time that MySQL spends updating and managing these indexes. This can slow down write operations. Hence, it’s important to have only necessary indexes.</li>
+<li><strong>Not Understanding Cardinality</strong>: Cardinality is the number of unique values in the index. If the cardinality is low (meaning there are many repeated values), the index may not be very effective. You should pay attention to the cardinality of your indexes and consider if an alternative column might serve as a better index.</li>
+<li><strong>Indexing the Wrong Column</strong>: Indexing should be done based on the columns that you will be searching or sorting on frequently. Indexing the wrong column can lead to inefficient queries.</li>
+<li><strong>Ignoring the Query Execution Plan</strong>: The query execution plan provided by MySQL’s&nbsp;<code>EXPLAIN</code>&nbsp;statement can offer valuable insights into how your query will be executed and which indexes are used. Ignoring this information can lead to inefficient indexes or missed opportunities for optimization.</li>
+<li><strong>Using Large String Indexes</strong>: Indexes on large VARCHAR or TEXT columns can consume a lot of memory and slow down your queries. This is where indexing a prefix of a column (<code>INDEX(column(10))</code>) can be useful.</li>
+</ol>
+<p>Remember, the secret to effective indexing lies in understanding your data and how your application queries it. An optimal number of well-chosen indexes can make your database perform dramatically better.</p>
+<h1 id="Topic-Review-and-Assessments"><a href="#Topic-Review-and-Assessments" class="headerlink" title="Topic: Review and Assessments"></a><strong>Topic</strong>: Review and Assessments</h1><p>We’ve learned a lot about MySQL indexes, including what they are, their types (normal and unique indexes), how they are used in query optimization, as well as some common misconceptions and pitfalls when implementing them.</p>
+<p>Now it’s time for a quick assessment. This will reinforce your learning and help highlight any areas we might need to revisit.</p>
+<p><strong>Example Problem:</strong><br>To see how well you’ve grasped the topic, let’s go through an example problem.</p>
+<p>We have a&nbsp;<code>students</code>&nbsp;table in our MySQL database with the following structure:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">| id (INT) | name (VARCHAR) | class (VARCHAR) | age (INT) |</span><br></pre></td></tr></tbody></table></figure>
+
+<p>You need to frequently run a query to find students in a specific&nbsp;<code>class</code>. How can you optimize this query?</p>
+<p><strong>Solution:</strong><br>To optimize this query, we could add an index on the&nbsp;<code>class</code>&nbsp;column. As we’re frequently searching this field, having an index could significantly increase the performance of our query.</p>
+<p>Here’s the SQL statement to do this:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CREATE INDEX idx_students_class ON students (class);</span><br></pre></td></tr></tbody></table></figure>
+
+<p>Now, let’s test your understanding:</p>
+<ol>
+<li><strong>Simple Problem (Difficulty: 3/10)</strong>: What SQL statement would you use to add an index on the&nbsp;<code>age</code>&nbsp;column in the&nbsp;<code>students</code>&nbsp;table?</li>
+<li><strong>Complex Familiar Problem (Difficulty: 6/10)</strong>: What factors should you consider before deciding to add an index?</li>
+<li><strong>Complex Unfamiliar Problem (Difficulty: 9/10)</strong>: The&nbsp;<code>students</code>&nbsp;table also has a&nbsp;<code>registration_date</code>&nbsp;column (date type) and you’re running queries to find students who registered in a particular year. What type of index could you use to optimize this query and how would you create it?</li>
+</ol>
+<hr>
+<ol>
+<li><strong>Simple Problem</strong>: To add an index on the&nbsp;<code>age</code>&nbsp;column in the&nbsp;<code>students</code>&nbsp;table, you would use the statement:</li>
+</ol>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CREATE INDEX idx_students_age ON students(age);</span><br></pre></td></tr></tbody></table></figure>
+
+<ol>
+<li><strong>Complex Familiar Problem</strong>: Before adding an index, consider:</li>
+</ol>
+<ul>
+<li>The column’s cardinality: High cardinality columns (columns with many unique values) are best-suited for indexing.</li>
+<li>Your application’s read-write ratio: If the application performs many more reads than writes, indexing is beneficial. But if your application performs many write operations (insert, update, delete), the cost of maintaining the index could outweigh the benefits.</li>
+<li>The column’s data type: Indexing on smaller data type columns is faster.</li>
+</ul>
+<ol>
+<li><strong>Complex Unfamiliar Problem</strong>: In the case of running queries to find students who registered in a particular year, you could create an index on the&nbsp;<code>YEAR(registration_date)</code>. MySQL allows creating an index on a function or expression, known as a Functional Index.</li>
+</ol>
+<p>To create a functional index in MySQL 8.0+, you could use the following statement:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CREATE INDEX idx_students_registration_year ON students((YEAR(registration_date));</span><br></pre></td></tr></tbody></table></figure>
+
+<p>This way, MySQL would directly map the year to the row in the index, thus speeding up your queries.</p>
+<p>Please note that creating an index on a function or expression is supported in MySQL 8.0 and later. If you’re using an earlier version of MySQL, you would need to add a separate column for the year and then index that column.</p>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/mysql-interview11/">https://programmerscareer.com/zh-cn/mysql-interview11/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/mysql-interview10/">MySQL interviews: Briefly describe gap locks in MySQL</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/mysql-interview12/">MySQL Interviews: Briefly describe the occurrence scenarios of dirty reading and phantom reading. How does InnoDB solve phantom reading?</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/mysql-interview11/';
+        this.page.identifier = 'mysql-interview11/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

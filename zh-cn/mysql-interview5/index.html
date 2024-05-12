@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL 面试：简述乐观锁以及悲观锁的区别以及使用场景 - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/mysql-interview5/" rel="alternate" hreflang="en" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="你曾被提过类似问题在面试中问过吗？或者将来会遇到，让我们一起探索和掌握它！">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL 面试：简述乐观锁以及悲观锁的区别以及使用场景">
+<meta property="og:url" content="https://programmerscareer.com/zh-cn/mysql-interview5/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="你曾被提过类似问题在面试中问过吗？或者将来会遇到，让我们一起探索和掌握它！">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/zh-cn">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/zh-cn/archives">归档</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/categories">分类</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/tags">标签</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/about">关于</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="搜索" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="目录">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#主题-1-1：MySQL-和锁定机制简介">1&nbsp;&nbsp;<b>主题 1.1：MySQL 和锁定机制简介</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题-1-2：锁定机制概述">2&nbsp;&nbsp;<b>主题 1.2：锁定机制概述</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题-1-3：了解乐观锁定">3&nbsp;&nbsp;<b>主题 1.3：了解乐观锁定</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题-1-4：了解悲观锁定">4&nbsp;&nbsp;<b>主题 1.4：了解悲观锁定</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题1-5：比较乐观锁和悲观锁。">5&nbsp;&nbsp;<b>主题1.5：比较乐观锁和悲观锁。</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题1-6：锁定机制的使用场景">6&nbsp;&nbsp;<b>主题1.6：锁定机制的使用场景</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题1-7-回顾和评估">7&nbsp;&nbsp;<b>主题1.7 回顾和评估</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#例子问题：">7.1&nbsp;&nbsp;例子问题：</a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>简体中文</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview5/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview5/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL 面试：简述乐观锁以及悲观锁的区别以及使用场景
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">1月 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/zh-cn/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            18 分钟 读完 (约 2653 字)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>你曾被提过类似问题在面试中问过吗？或者将来会遇到，让我们一起探索和掌握它！</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>感谢您阅读这篇文章。更多面试问题:<br><a href="https://programmerscareer.com/zh-cn/software-interview-set/">https://programmerscareer.com/zh-cn/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="主题-1-1：MySQL-和锁定机制简介"><a href="#主题-1-1：MySQL-和锁定机制简介" class="headerlink" title="主题 1.1：MySQL 和锁定机制简介"></a>主题 1.1：MySQL 和锁定机制简介</h1><p>让我们开始学习 MySQL 和锁定机制！</p>
+<p>MySQL 是世界上最著名的开源关系数据库管理系统（RDBMS）之一。它非常受欢迎，特别是用于网站和在线出版的网络应用程序，并是 LAMP 开源网站应用程序软件堆栈的核心组件。</p>
+<p>现在让我们谈谈为什么我们需要锁定机制在数据库中。 想象一场场景，两名人同时试图从同一银行账户中提款。 如果没有机制来防止它，他们可能会同时检查帐户余额，看到足够的资金，并继续提取超过帐户中实际存在的资金。 这是一种竞争条件，并可能导致严重的数据完整性问题。 这就是锁定机制发挥作用的地方！</p>
+<h1 id="主题-1-2：锁定机制概述"><a href="#主题-1-2：锁定机制概述" class="headerlink" title="主题 1.2：锁定机制概述"></a>主题 1.2：锁定机制概述</h1><p>所以，让我们深入探讨 MySQL 中的锁定机制。 就像我们所说的，锁定在数据库中非常重要，特别是在多用户数据库环境中。</p>
+<p>在 MySQL 中，锁定主要用于控制如何访问事务，以便每个事务可以看到数据的一致快照。 MySQL 中使用的主要类型的锁定有：</p>
+<ol>
+<li><strong>共享锁（读锁）</strong>：共享锁用于执行读操作（选择）时。 它允许并发事务读取（选择）资源，并保证无事务可以写入（更新/删除）该资源。</li>
+<li><strong>排他锁（写锁）</strong>：排他锁用于执行数据修改操作时。 它确保持有锁的事务是唯一的事务，可以读取或写入资源。</li>
+</ol>
+<p>在下一章中，我们将深入探讨两种流行的锁定机制—— 乐观锁定和悲观锁定。 选择使用哪种锁定机制通常取决于系统的特定要求，例如并发事务可能会发生冲突的概率。</p>
+<h1 id="主题-1-3：了解乐观锁定"><a href="#主题-1-3：了解乐观锁定" class="headerlink" title="主题 1.3：了解乐观锁定"></a>主题 1.3：了解乐观锁定</h1><p>让我们来详细了解<strong>乐观锁定</strong>！ 这是在多用户数据库中处理并发更新的策略。</p>
+<p>乐观锁定基于多个事务可以完成而不会影响彼此的假设，因此允许多个事务访问同一条记录进行编辑。 这种方法在数据的争用较低的系统中很有用。</p>
+<p>下面是乐观锁定的简单方法：</p>
+<ol>
+<li>从数据库中获取记录以进行更新。</li>
+<li>更新之前，应用程序会检查另一用户是否已更新该记录以来。</li>
+<li>如果记录未被其他用户更新，应用程序可以执行更新并一切顺利进行。</li>
+<li>如果记录已被其他用户更新，应用程序通常会通知用户并中止事务或自动重试事务。</li>
+</ol>
+<p>乐观锁定的主要优点是其高效性。 它避免了获取和释放锁的开销并避免了事务等待锁。</p>
+<p>但请记住，没有免费的午餐！ 在数据争用较高并且数据更新频繁的环境中，可能会出现许多事务冲突，这可能会导致性能问题。</p>
+<h1 id="主题-1-4：了解悲观锁定"><a href="#主题-1-4：了解悲观锁定" class="headerlink" title="主题 1.4：了解悲观锁定"></a>主题 1.4：了解悲观锁定</h1><p>让我们来深入了解<strong>悲观锁定</strong>！ 这是 MySQL 中基于完全不同的假设的机制。 它假设冲突很可能会发生并强制执行严格的控制来防止这种情况。</p>
+<p>下面是悲观锁定的工作方式：</p>
+<ol>
+<li>当获取记录以进行更新时，立即获取排他锁。</li>
+<li>直到释放锁，其他事务不能更新此记录。</li>
+<li>释放锁时，其他事务可以获取锁并更新此记录。</li>
+</ol>
+<p>悲观锁定是防止冲突的绝佳方法，因为它不允许另一事务进行，如果它可能会导致冲突。 它适用于数据争用较高并且记录频繁更新的环境。</p>
+<p>但请记住，每个硬币都有两面！ 这种方法可能会导致降低并发性并影响系统性能，因为事务可能会被长时间保持等待锁。</p>
+<h1 id="主题1-5：比较乐观锁和悲观锁。"><a href="#主题1-5：比较乐观锁和悲观锁。" class="headerlink" title="主题1.5：比较乐观锁和悲观锁。"></a><strong>主题1.5：比较乐观锁和悲观锁。</strong></h1><p>现在你已经熟悉了乐观锁和悲观锁，了解在哪些场景下使用哪一种可以显著影响应用的性能和可靠性。</p>
+<p><strong>乐观锁</strong> 假设冲突较少并大多数避免了锁的获取和释放。它可能在低争用场景下导致更高的性能，因为它会导致更少的阻塞。然而，对于经常发生冲突的系统，锁的成本和频率的回滚可能会降低性能。</p>
+<p>另一方面，<strong>悲观锁</strong> 假设冲突会经常发生并使用锁来防止它们。这种策略可能在高争用场景下有好处，因为它避免了冲突解决相关的回滚。然而，获取锁所需的等待时间可能会降低性能。</p>
+<p>因此， golden rule 是：</p>
+<blockquote>
+<p><em>在冲突较少的情况下，选择乐观锁。在冲突经常发生的情况下，选择悲观锁。</em></p>
+</blockquote>
+<p>这就是 MySQL 中乐观锁和悲观锁的简要比较。</p>
+<h1 id="主题1-6：锁定机制的使用场景"><a href="#主题1-6：锁定机制的使用场景" class="headerlink" title="主题1.6：锁定机制的使用场景"></a><strong>主题1.6：锁定机制的使用场景</strong></h1><p>厉害！现在我们已经了解了主要的锁定机制，让我们来看看这些机制在真实的场景中可能会有好处。</p>
+<ol>
+<li><p><strong>银行系统</strong>：<br>考虑一种银行应用程序，其中经常发生交易。这些交易需要一致和安全。在这种情况下，悲观锁是有利的，因为它确保一旦用户开始交易，就不会有其他用户修改数据，保证数据一致性。</p>
+</li>
+<li><p><strong>票务预订应用程序</strong>：<br>考虑一个在线票务预订系统，其中多个用户试图预订有限数量的票。在这种情况下，乐观锁可能是有利的，因为它允许多个用户同时访问票务预订功能。</p>
+</li>
+<li><p><strong>内容管理系统</strong>：<br>如果你在一个内容管理系统上工作，其中用户正在更新他们的博文或文章，乐观锁可能是有利的。由于两个用户试图编辑同一文章的可能性相对较低，系统可以处理这些偶尔的冲突。</p>
+</li>
+<li><p><strong>股票交易应用程序</strong>：<br>在一个股票交易应用程序上，悲观锁可能是有利的，因为它立即阻止其他交易，直到完成。在这种情况下，由于一次性的延迟可能会导致重大财务损失，悲观锁可能会有好处。</p>
+</li>
+</ol>
+<p>记住，决定使用乐观锁或悲观锁主要取决于应用的性质，冲突的可能性，并发性的要求，以及延迟的容忍度。</p>
+<h1 id="主题1-7-回顾和评估"><a href="#主题1-7-回顾和评估" class="headerlink" title="主题1.7 回顾和评估"></a>主题1.7 回顾和评估</h1><ol>
+<li><strong>MySQL 和锁定机制的介绍</strong>：我们讨论了 MySQL 的功能，锁定机制的重要性和并发数据库访问的帮助。</li>
+<li><strong>锁定机制的概述</strong>：我们浏览了各种锁定机制，它们的重要性在维护数据一致性和处理并发访问中，并分析了它们的优缺点。</li>
+<li><strong>了解乐观锁定</strong>：我们深入探讨了乐观锁定的概念，它的优缺点和在 MySQL 中的实现。</li>
+<li><strong>了解悲观锁定</strong>：我们探讨了悲观锁定，包括其强项和在 MySQL 中的实现。</li>
+<li><strong>比较乐观和悲观锁定</strong>：我们比较了这两种锁定机制并结论了选择高度取决于特定的使用案例和系统要求。</li>
+<li><strong>锁定机制的使用场景</strong>：我们浏览了可能的真实应用场景，其中这些锁定机制可以提供好处。</li>
+</ol>
+<h2 id="例子问题："><a href="#例子问题：" class="headerlink" title="例子问题："></a>例子问题：</h2><p>让我们来看一个例子：你有一个 MySQL 数据库，其中一个名为“Account”的表存储了用户的账户余额。两个不同的金融事务试图从同一帐户中扣除资金同时进行。如何使用 MySQL 中的乐观和悲观锁定机制来处理这种情况？</p>
+<p><strong>答案</strong>：</p>
+<p>对于 <strong>乐观锁定</strong>，您可以通过在 Account 表中使用版本列来处理这种情况。这是怎样做的：</p>
+<ul>
+<li>事务先读取帐户余额并记下版本。在更新帐户之前，它们检查版本是否仍然相同。如果版本已更改，这意味着另一事务在此期间更新了帐户余额，因此当前事务被回滚。这样就避免了不一致的扣除。</li>
+</ul>
+<p>对于 <strong>悲观锁定</strong>，您将锁定帐户对于每个金融事务。这是怎样做的：</p>
+<ul>
+<li>事务立即锁定帐户，在读取帐户余额时。只有一个事务可以持有锁，并持有它直到更新帐户余额。所有试图读取帐户余额的其他事务，当锁被持有时，将被阻止，直到锁被释放。</li>
+</ul>
+<p>现在，测试你的知识。</p>
+<p>**问题 1 (简单)**：</p>
+<p>在哪种情况下会选择乐观锁定而不是悲观锁定？</p>
+<p>**问题 2 (中等)**：</p>
+<p>悲观锁定在高吞吐量系统中可能会有哪些缺点，并说明如何减轻这些缺点？</p>
+<p>**问题 3 (困难)**：</p>
+<p>描述一种场景，其中既不适合乐观锁定也不适合悲观锁定，并说明所需的锁定或并发控制机制。</p>
+<blockquote class="colorquote danger"><p>English post: <a href="https://programmerscareer.com/mysql-interview5/">https://programmerscareer.com/mysql-interview5/</a><br>作者：<a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>注意：本文为作者原创，转载请注明出处。  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/zh-cn/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/zh-cn/mysql-interview4/">为什么MySQL使用B+树进行索引?</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/zh-cn/mysql-interview6/">MySQL 面试：产生死锁的必要条件有哪些？如何解决死锁？</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">评论</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/zh-cn/mysql-interview5/';
+        this.page.identifier = 'zh-cn/mysql-interview5/';
+        
+        this.language = 'zh';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("zh-CN");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="站内搜索" />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: '文章',
+                PAGES: '页面',
+                CATEGORIES: '分类',
+                TAGS: '标签',
+                UNTITLED: '(无标题)',
+            },
+            CONTENT_URL: '/content.zh-cn.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

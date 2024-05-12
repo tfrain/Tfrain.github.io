@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>为什么MySQL使用B+树进行索引? - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/mysql-interview4/" rel="alternate" hreflang="en" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="讨论数据库中索引的重要性，特别是如何提高查询性能。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="为什么MySQL使用B+树进行索引?">
+<meta property="og:url" content="https://programmerscareer.com/zh-cn/mysql-interview4/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="讨论数据库中索引的重要性，特别是如何提高查询性能。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/zh-cn">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/zh-cn/archives">归档</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/categories">分类</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/tags">标签</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/about">关于</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="搜索" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="目录">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#1-1-为什么索引？">1&nbsp;&nbsp;<b>1.1 **为什么索引？</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#1-2-MySQL-中的索引类型：">2&nbsp;&nbsp;<b>1.2 MySQL 中的索引类型：</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#1-3-B-树解析">3&nbsp;&nbsp;<b>1.3 B+ 树解析</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题-1-4-B-树的优势">4&nbsp;&nbsp;<b>主题 1.4: B+ 树的优势</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题-1-5-MySQL-中的-B-树索引">5&nbsp;&nbsp;<b>主题 1.5: MySQL 中的 B+ 树索引</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题-1-6-MySQL-索引最佳实践">6&nbsp;&nbsp;<b>主题 1.6: MySQL 索引最佳实践:</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题-1-7-实际案例研究">7&nbsp;&nbsp;<b>主题 1.7: 实际案例研究</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题1-8：可能的面试问题和答案">8&nbsp;&nbsp;<b>主题1.8：可能的面试问题和答案</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题1-9：回和自我评估">9&nbsp;&nbsp;<b>主题1.9：回和自我评估</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>简体中文</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview4/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview4/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            为什么MySQL使用B+树进行索引?
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">1月 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/zh-cn/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            25 分钟 读完 (约 3696 字)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>讨论数据库中索引的重要性，特别是如何提高查询性能。</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>感谢您阅读这篇文章。更多面试问题:<br><a href="https://programmerscareer.com/zh-cn/software-interview-set/">https://programmerscareer.com/zh-cn/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="1-1-为什么索引？"><a href="#1-1-为什么索引？" class="headerlink" title="1.1 **为什么索引？"></a>1.1 **为什么索引？</h1><p>类似书的索引一样，数据库中的索引帮助我们快速找到数据，无需阅读整本书。索引在数据库表被访问时大大加快数据检索的速度，从而提高应用性能。索引对大表的优化非常重要，尤其是对“SELECT”查询和 WHERE 子句的优化。虽然索引提高了读性能，但它们也会慢下写性能（插入、更新和删除）。这是因为每次数据变化时，索引都需要更新。因此，有过多的索引可能会影响数据库性能。总之，一个好的索引是创造一个平衡。我们想要保持查询快速和有效，但不要过载系统并使其性能受到损害的索引维护。</p>
+<h1 id="1-2-MySQL-中的索引类型："><a href="#1-2-MySQL-中的索引类型：" class="headerlink" title="1.2 MySQL 中的索引类型："></a>1.2 <strong>MySQL 中的索引类型</strong>：</h1><p>MySQL 使用各种索引类型来提高查询性能。下面是常见的类型：</p>
+<ul>
+<li><strong>主键索引（Primary Index）</strong>：这种索引要求列只能包含唯一、非空值。每张表只能有一个主键索引。</li>
+<li><strong>唯一索引（Unique Index）</strong>：如果列不包含 NULL 值，这种索引防止字段具有重复值。除了允许 NULL 值外，唯一索引与主键索引几乎相同。</li>
+<li><strong>索引（或普通索引）</strong>：它允许重复和 NULL 值在列中。它是 MySQL 中的基本索引类型。</li>
+<li><strong>全文索引（Full-text Index）</strong>：如果你处理文本数据并经常使用全文搜索，这种索引非常有用。</li>
+<li><strong>复合索引（或多列索引）</strong>：如果在 WHERE 子句中使用多列，创建复合索引可以加快查询性能。</li>
+</ul>
+<p>这些索引类型为我们创建或管理的数据库提供了不同的优势，并帮助我们确保数据库性能尽可能优化。</p>
+<h1 id="1-3-B-树解析"><a href="#1-3-B-树解析" class="headerlink" title="1.3 B+ 树解析"></a>1.3 <strong>B+ 树解析</strong></h1><p>B+ 树是一种自平衡搜索树，它维护有序数据并允许高效的插入、删除和搜索操作。与二叉搜索树（BST）不同，B+ 树是多层次的树，每个节点可以有多个子节（通常大于两个）。B+ 树的重要特性包括：</p>
+<ol>
+<li>所有数据都存储在叶节点中。</li>
+<li>所有叶节点处于同一深度，确保平衡。</li>
+<li>所有叶节点都相连，允许有效的范围查询。</li>
+<li>非叶节点存储复制的键来指导搜索。</li>
+</ol>
+<p>B+ 树的组合特性使它们特别适合处理大量数据和大量读操作的系统，例如数据库或文件系统。</p>
+<p>每个节点在 B+ 树中包含一些键和指针。键用作分隔值，分割其子树。例如，如果节点包含值 [10, 20, 30]，它有四个子节（子树）。</p>
+<p>B+ 树中的一个基本属性是，如果节点包含 n 个键，它将有 n+1 个指针（子节）。另一个属性是，所有的 B+ 树键是排序的。</p>
+<p>由于 B+ 树的高效性在访问、存储和检索数据方面受到广泛的欢迎，它们与数据库世界，包括 MySQL 密切相关。</p>
+<h1 id="主题-1-4-B-树的优势"><a href="#主题-1-4-B-树的优势" class="headerlink" title="主题 1.4: B+ 树的优势"></a><strong>主题 1.4: B+ 树的优势</strong></h1><p>让我们深入探讨 B+ 树为数据库带来的优势，特别是 MySQL：</p>
+<ol>
+<li><strong>有效的磁盘读写操作:</strong> 每个 B+ 树节点包含多个键和指针在同一磁盘块上，这大大减少了读取或写入大范围的数据所需的 I/O 操作。因此，您可以扫描大量数据使用最少的磁盘读取。</li>
+<li><strong>更快的搜索时间:</strong> 由于 B+ 树是平衡的，所以相等数量的比较都会导致所有叶节点，使数据检索变得更快。搜索操作的时间复杂度为对数级别。</li>
+<li><strong>有效的插入和删除:</strong> B+ 树的数据结构使其在插入和删除操作时保持平衡和有序。这导致最小的磁盘空间浪费并最大化了性能效率。</li>
+<li><strong>升序或降序排序顺序检索:</strong> B+ 树的叶节点相互链接，这使得快速的顺序读取变得更加容易，特别是在数据库中。</li>
+<li><strong>适用于等式和范围检索:</strong> 由于自平衡性和每个页面的最小和最大键，B+ 树非常适合等式和范围查询。</li>
+<li><strong>多级索引:</strong> B+ 树可以适应多级索引，进一步提高搜索性能并减少磁盘 I/O 操作。</li>
+</ol>
+<h1 id="主题-1-5-MySQL-中的-B-树索引"><a href="#主题-1-5-MySQL-中的-B-树索引" class="headerlink" title="主题 1.5: MySQL 中的 B+ 树索引"></a><strong>主题 1.5: MySQL 中的 B+ 树索引</strong></h1><p>让我们详细了解 MySQL 中为什么和如何使用 B+ 树进行索引。</p>
+<p>在 MySQL 中，特别是使用 InnoDB 存储引擎时，B+ 树用作主索引和辅助索引来提高数据库的性能，主要是通过显著地减少数据访问时间。</p>
+<p>这是怎样工作的：</p>
+<ol>
+<li><strong>主索引:</strong> MySQL 使用 B+ 树作为主索引来唯一地识别每行，其中按主键顺序排列。叶节点存储实际数据，主键值作为指针来访问数据。因此，当直接搜索主键时，MySQL 快速地通过 B+ 树来找到并检索数据。</li>
+<li><strong>辅助索引:</strong> MySQL 表中的辅助索引也是一个 B+ 树。唯一的差异是叶节点不存储实际数据，而是存储主键的指针。因此，当使用辅助索引进行搜索时，MySQL 使用辅助索引的 B+ 树来找到主键，然后使用主键来导航主 B+ 树来获取实际数据。虽然这需要导航两个 B+ 树，但它仍然非常快和有效。</li>
+</ol>
+<p>B+ 树在 MySQL 索引中的优势是它大大减少了需要进行磁盘访问的项目数量，这大大提高了性能，因为磁盘访问比内存操作慢得多。</p>
+<h1 id="主题-1-6-MySQL-索引最佳实践"><a href="#主题-1-6-MySQL-索引最佳实践" class="headerlink" title="主题 1.6: MySQL 索引最佳实践:"></a><strong>主题 1.6: MySQL 索引最佳实践:</strong></h1><p>基于我们对 B+ 树的了解，让我们来讨论 MySQL 索引的最佳实。有效的索引是绝对必要的，以确保数据库查询运行顺畅和迅速。</p>
+<ol>
+<li><strong>了解数据:</strong> 在开始索引之前，先深入了解你所处理的数据。哪些列通常一起被查询？哪些列在 WHERE 子句中出现得比较常？这些了解可帮助指导索引策略。</li>
+<li><strong>使用 EXPLAIN 关键字:</strong> 当优化索引时，使用 SQL 中的 EXPLAIN 关键字来了解数据库是如何解释查询的。这可以为你提供有关 SQL 优化器如何使用索引以及在哪里可以进行改进的见解。</li>
+<li><strong>谨慎使用索引的开销:</strong> 虽然索引加速了搜索查询，但它们也涉及成本。它们占用空间，并且每次修改表中的数据（INSERT、UPDATE、DELETE）时，索引也需要更新。这可能会慢下来这些操作。</li>
+<li><strong>索引 WHERE 子句中使用的列:</strong> 经常在 WHERE 子句中使用的列通常是索引的好候选。</li>
+<li><strong>有效地使用多列索引:</strong> MySQL 允许您在多个列上创建索引。当您创建这样的索引时，MySQL 可以使用它来处理第一列，或者第一和第二列，或者所有列在索引中。</li>
+<li><strong>为不同的存储引擎使用适当的索引:</strong> 如果您使用 InnoDB，请注意，它根据主键在磁盘上存储其行。因此，主键的选择对 InnoDB 表的性能有很大影响。</li>
+</ol>
+<p>请记，这些只是指导，最佳实可能会因使用情况的差异而变化。</p>
+<h1 id="主题-1-7-实际案例研究"><a href="#主题-1-7-实际案例研究" class="headerlink" title="主题 1.7: 实际案例研究"></a><strong>主题 1.7: 实际案例研究</strong></h1><p>好！我们已经顺利地完成了结构化课程的学习。总是有帮助的是通过实际例子来增强我们的学习。因此，让我们来研究一些 MySQL 索引和 B+ 树的实际案例研究。</p>
+<ol>
+<li><strong>电子商务系统:</strong> 考虑亚马顿这样的在线商店系统。这些平台处理了巨大的数据量，包括商品、用户详细信息、交易详细信息等等。给定巨大数量的产品和交易频率，数据检索的速度至关重要。在这里，MySQL 索引发挥了重要作用。有效使用主键、唯一和全文索引显著加速了查询处理过程，为用户提供了有效、流畅的体验。B+ 树用于索引允许系统处理数百万个项目，而性能下降不会太大。</li>
+<li><strong>社交媒体平台:</strong> 社交媒体平台如脸书或推特也广泛使用索引。每次我们打开我们的时线，系统就会查询一个非常大的数据库，以获取相关的帖子。想象一下在海量数据中找到一个 needle 在 haystack 中——这就是在没有索引的情况下找到我们的个人化时线所需要的时间。有效的索引允许这些服务快速地为我们提供每次登录或刷新时线所需要的数据。</li>
+<li><strong>搜索引擎:</strong> Google、Yahoo、Bing 等搜索引擎也广泛使用索引来提供快速和准确的搜索结果。在没有有效的索引策略的情况下，无法在互联网的庞大世界中立即获取搜索结果。</li>
+</ol>
+<p>这些只是展示了实际应用中 B+ 树和索引的一些快照。无 matter 您是开发网站、应用程序或任何处理大量数据的平台，了解并有效地使用这些结构可以为性能和效率带来显著的差异。</p>
+<h1 id="主题1-8：可能的面试问题和答案"><a href="#主题1-8：可能的面试问题和答案" class="headerlink" title="主题1.8：可能的面试问题和答案"></a><strong>主题1.8：可能的面试问题和答案</strong></h1><p>好的，让我们前进。让我们为 MySQL 索引和 B+ 树准备好一些可能的面试问题。掌握这些概念可以帮助你在工作申请中表现良好，总是更好的准备好！</p>
+<p>下面是一些问题和答案</p>
+<ol>
+<li><strong>为什么数据库中的索引重要？</strong><br>索引在数据库中增加了数据检索的效率。索引与书籍中的索引类似，可以更快地访问数据。在 absence 的情况下，要找到数据，数据库需要浏览整个表的每一行——称为全表扫描——这可能会耗费时间和资源。</li>
+<li><strong>什么是 B+ 树？</strong><br>B+ 树是数据库中用于有效和有序地存储数据的数据结构。它是一个平衡树结构，其中所有叶节点位于同一级别，使搜索、插入和删除操作都非常有效，即使处理大量数据也是如此。</li>
+<li><strong>MySQL 是如何使用 B+ 树进行索引？</strong><br>MySQL 在 InnoDB 存储引擎中使用 B+ 树作为默认索引方案。主索引和辅助索引的 B+ 树都存储在 InnoDB 中。主索引的 B+ 树的叶节点包含表的行数据，辅助索引的 B+ 树的叶节点包含主键值。</li>
+<li><strong>MySQL 索引的最佳实践？</strong><br>重要的最佳实践包括了解数据之前进行索引，使用 EXPLAIN 关键字来了解查询执行，索引列用于 WHERE 子句，有效地使用多列索引，考虑索引开销，并使用适当的索引取决于存储引擎。</li>
+<li><strong>在哪里索引可以显著提高性能？</strong><br>电子商务平台可以作为一个好的例子。它们需要处理大量数据——用户详细信息、产品详细信息、交易历史等。索引可帮助排序和检索这些数据，提高搜索和交易效率并增加用户体验。</li>
+</ol>
+<h1 id="主题1-9：回和自我评估"><a href="#主题1-9：回和自我评估" class="headerlink" title="主题1.9：回和自我评估"></a><strong>主题1.9：回和自我评估</strong></h1><p>到了课程的最后一部分，我们将回主要内容并进行自我评估。</p>
+<p>让我们回一下我们学习的内容：</p>
+<ul>
+<li><strong>为什么索引</strong>：我们已经了解了数据库中索引的重要性，并提高了数据检索的效率。</li>
+<li><strong>MySQL 中的索引类型</strong>：我们已经探讨了 MySQL 中的各种索引类型，包括主索引、唯一索引、全文索引、简单索引和复合索引，并了解了它们的应用场景。</li>
+<li><strong>B+ 树</strong>：我们已经深入了解了 B+ 树的结构，以及它们是如何工作的。</li>
+<li><strong>B+ 树在 MySQL 索引中的应用</strong>：我们已经看到了 MySQL 如何使用 B+ 树作为索引结构，特别是 InnoDB 存储引擎。</li>
+<li><strong>MySQL 索引的最佳实践</strong>：我们已经探讨了如何有效地使用索引，并提供了三个最佳实践。</li>
+<li><strong>实际应用</strong>：我们已经看到了如何在社交媒体平台、搜索引擎和电子商务系统中应用索引和 B+ 树。</li>
+</ul>
+<p>现在，为了自我评估，请参考以下问题和小项目：</p>
+<p>问题：</p>
+<ol>
+<li>数据库中的索引有哪些作用？</li>
+<li>简要描述 B+ 树的结构和工作原理。</li>
+<li>主索引和辅助索引在 MySQL 中有什么区别？</li>
+<li>在 MySQL 中使用索引时，可以提供三个最佳实践。</li>
+</ol>
+<p>小项目：</p>
+<ol>
+<li>创建或下载一个小数据集，并在 MySQL 中实现索引，然后观察检索数据时的性能差异。</li>
+<li>考虑一个电子商务数据库，其中包含用户信息、产品详细信息和交易历史表。为其设计一个基本架构并说明各种 MySQL 索引的应用。</li>
+</ol>
+<p>开心学习！</p>
+<blockquote class="colorquote danger"><p>English post: <a href="https://programmerscareer.com/mysql-interview4/">https://programmerscareer.com/mysql-interview4/</a><br>作者：<a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>注意：本文为作者原创，转载请注明出处。  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/zh-cn/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/zh-cn/mysql-interview3/">MySQL 面试：MySQL 如何设计索引，如何优化查询？</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/zh-cn/mysql-interview5/">MySQL 面试：简述乐观锁以及悲观锁的区别以及使用场景</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">评论</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/zh-cn/mysql-interview4/';
+        this.page.identifier = 'zh-cn/mysql-interview4/';
+        
+        this.language = 'zh';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("zh-CN");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="站内搜索" />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: '文章',
+                PAGES: '页面',
+                CATEGORIES: '分类',
+                TAGS: '标签',
+                UNTITLED: '(无标题)',
+            },
+            CONTENT_URL: '/content.zh-cn.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

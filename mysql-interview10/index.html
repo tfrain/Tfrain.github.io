@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL interviews: Briefly describe gap locks in MySQL - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/mysql-interview10/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL interviews: Briefly describe gap locks in MySQL">
+<meta property="og:url" content="https://programmerscareer.com/mysql-interview10/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.283Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Deep-Dive-into-MySQL">1&nbsp;&nbsp;<b>Topic: Deep Dive into MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Exploring-MySQL-Transactions">2&nbsp;&nbsp;<b>Topic: Exploring MySQL Transactions</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Introduction-to-Locking-in-MySQL">3&nbsp;&nbsp;<b>Topic: Introduction to Locking in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Row-Locks-and-Table-Locks-in-MySQL">4&nbsp;&nbsp;<b>Topic: Row Locks and Table Locks in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Discussing-Gap-Locks-in-MySQL">5&nbsp;&nbsp;<b>Topic: Discussing Gap Locks in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Example-Scenarios-for-Gap-Locks">6&nbsp;&nbsp;<b>Topic: Example Scenarios for Gap Locks</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Traversing-the-Locking-Labyrinth">7&nbsp;&nbsp;<b>Topic: Traversing the Locking Labyrinth</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Review-and-Assessments">8&nbsp;&nbsp;<b>Topic: Review and Assessments</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Example-Problem">8.1&nbsp;&nbsp;Example Problem:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Simple-Problem">8.2&nbsp;&nbsp;Simple Problem:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Advanced-Problem">8.3&nbsp;&nbsp;Advanced Problem:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Expert-Problem">8.4&nbsp;&nbsp;Expert Problem:</a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview10/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview10/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL interviews: Briefly describe gap locks in MySQL
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            16 minutes read (About 2415 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-Deep-Dive-into-MySQL"><a href="#Topic-Deep-Dive-into-MySQL" class="headerlink" title="Topic: Deep Dive into MySQL"></a><strong>Topic</strong>: Deep Dive into MySQL</h1><p>MySQL is a widely used, open-source Relational Database Management System (RDBMS). It uses a relational database and SQL (Structured Query Language) to manage its data. The “My” in MySQL is named after co-founder Michael Widenius’s daughter, My.</p>
+<p>MySQL database is a stable, reliable and powerful solution with advanced features like:</p>
+<ul>
+<li>Robust Transactional Support</li>
+<li>Replication &amp; Failover Cluster Support</li>
+<li>Workflow Control &amp; Scheduled Job</li>
+<li>Query Caching</li>
+<li>Advanced Replication Technology</li>
+</ul>
+<p>That makes MySQL an excellent choice for applications that demand complete data protection and real-time analytics like financial, banking, e-commerce, CRM, ERP applications and many more.</p>
+<p>Next, let’s start understanding databases from a theoretical perspective. For the sake of simplicity, let’s imagine a database as a big, digital filing cabinet full of file folders. The file folders represent tables. Within each table is the real data, represented as records. Each record includes information about a single entity.</p>
+<p>For example, if you own a business, you might have a database with a table for Customers, another for Order, and so on. Each row in the Customers table would represent a single customer, and each row in the Orders table would represent a single order.</p>
+<h1 id="Topic-Exploring-MySQL-Transactions"><a href="#Topic-Exploring-MySQL-Transactions" class="headerlink" title="Topic: Exploring MySQL Transactions"></a><strong>Topic</strong>: Exploring MySQL Transactions</h1><p>Transactions are a fundamental concept of all database systems. A transaction in MySQL is a group of SQL statements that are executed as if they were one single unit. A transaction follows the ACID model which stands for Atomicity, Consistency, Isolation, and Durability. This model ensures the reliability of database transactions.</p>
+<p>For example, if you’re transferring money from one bank account to another, it involves several operations such as debiting money from one account and crediting that money to another. Here, transactions make sure these operations (credit and debit) happen entirely or not at all. If one operation fails, the whole transaction fails, ensuring data integrity.</p>
+<p>Our next step is to learn about locking mechanisms in MySQL, which are closely related to transactions. In the context of databases, a lock is a flag associated with a record. This flag can regulate whether the record can be read from or written to.</p>
+<p>It is locking that allows many users to access the database at the same time without conflict. When a record or a table is locked, it means some transaction is accessing the data and should not be interrupted.</p>
+<h1 id="Topic-Introduction-to-Locking-in-MySQL"><a href="#Topic-Introduction-to-Locking-in-MySQL" class="headerlink" title="Topic: Introduction to Locking in MySQL"></a><strong>Topic</strong>: Introduction to Locking in MySQL</h1><p>In the realm of databases, “Locking” is an essential feature that ensures consistency and order in concurrent data access. In MySQL, the InnoDB storage engine supports several types of locks at different levels to make sure transactions do not interfere with each other in an undesired manner.</p>
+<p>Locking is particularly crucial when there are several transactions trying to access and manipulate the same piece of data. When we say a transaction “locks” a piece of data, it prevents other transactions from making conflicting changes to that data until the lock is released.</p>
+<p>There are two primary types of locks:</p>
+<ol>
+<li><strong>Shared Locks (S)</strong>: This is a read-only lock. More than one shared lock can be held for a particular piece of data as long as there’s no exclusive lock.</li>
+<li><strong>Exclusive Locks (X)</strong>: An exclusive lock is a write lock. When a transaction holds an exclusive lock on data, no other transaction can read or write the data until the lock is released.</li>
+</ol>
+<p>Locking in MySQL can take place at three levels:</p>
+<ul>
+<li><strong>Row-level locks</strong>: These locks are placed on rows of data. This is the finest level of locking granularity and allows the highest degree of concurrency.</li>
+<li><strong>Page-level locks</strong>: These locks are placed on blocks of rows called “pages”. Page-level locks are less fine-granular than row-level locks and offer a medium degree of concurrency.</li>
+<li><strong>Table-level locks</strong>: These locks are placed on an entire table. This is the coarsest level of locking, and it offers the lowest degree of concurrency. You typically want to avoid table-level locks in high transaction environments because they can become a bottleneck.</li>
+</ul>
+<p>Once we understand these basic locking concepts, we can dig deeper into some advanced types of locks in MySQL, including gap locks.</p>
+<h1 id="Topic-Row-Locks-and-Table-Locks-in-MySQL"><a href="#Topic-Row-Locks-and-Table-Locks-in-MySQL" class="headerlink" title="Topic: Row Locks and Table Locks in MySQL"></a><strong>Topic</strong>: Row Locks and Table Locks in MySQL</h1><p>To ensure data integrity while allowing for maximum concurrency, MySQL employs two types of locks: row-level locks and table-level locks. Each of these has its own place and purpose.</p>
+<p><strong>Row-Level Locks</strong></p>
+<p>Row-level locking is more granular and is used when a specific row of the table is being updated. This means that only the rows involved in an operation are locked and not the entire table. This allows for a higher degree of concurrency, where multiple transactions can access different rows from the same table simultaneously.</p>
+<p>InnoDB supports row-level locking. It sets locks automatically during read and write operations but it doesn’t lock the entire table.</p>
+<p><strong>Example</strong>: If you’re updating a specific record in an Employee Table, such a locking mechanism would only block transactions trying to modify that particular Employee record. However, tasks that involve other Employee records can proceed unhindered.</p>
+<p><strong>Table-Level Locks</strong></p>
+<p>Table-level locking is less granular. It locks the entire table during a particular database operation. Most often MySQL applies such locks during write operations.</p>
+<p>Whilst this locking method allows for simple management and less memory use, the level of concurrency is low when compared to row-level locks. Thus, table-level locks can be inefficient for high concurrency use cases, where many transactions need to access the same table simultaneously.</p>
+<p>By understanding the inner workings of these two types of locks, you are one step closer to mastering database manipulation with MySQL. Having this knowledge will also help when we delve into more complex topics like gap locks.</p>
+<h1 id="Topic-Discussing-Gap-Locks-in-MySQL"><a href="#Topic-Discussing-Gap-Locks-in-MySQL" class="headerlink" title="Topic: Discussing Gap Locks in MySQL"></a><strong>Topic</strong>: Discussing Gap Locks in MySQL</h1><p>Gap locking is a crucial MySQL mechanism used to prevent phantom rows. A phantom row is a row that matches a query’s WHERE clause; however, it is not initially seen or changed by the transaction.</p>
+<p>Let’s imagine a situation where we have a transaction that selects rows in a specific range with the intention of later updating those rows. During this operation, another transaction inserts a new row into that range, creating what we refer to as a “phantom” row. Without gap locks, the first transaction won’t be aware of the new row added by the second one and may lead to data inconsistency.</p>
+<p>This is where gap locks prove beneficial!</p>
+<p>A gap lock is a lock on a gap between index records. More explicitly, it’s a lock on the range of index records. Gap locks in MySQL prevent other transactions from inserting new rows into the gap locked by a transaction providing repeatable reads.</p>
+<p>Suppose you have an index on a column and you run the following statement in a REPEATABLE READ isolation level:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM table_name WHERE index_column &gt; 100 FOR UPDATE;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>MySQL will put a next-key lock on all index records where&nbsp;<code>index_column</code>&nbsp;is greater than 100 and a gap lock on the gap following those index records.</p>
+<p>Remember, though, that gap locks are a double-edged sword! While they can ensure consistency, they might also introduce lock waits or even deadlocks if not managed properly.</p>
+<h1 id="Topic-Example-Scenarios-for-Gap-Locks"><a href="#Topic-Example-Scenarios-for-Gap-Locks" class="headerlink" title="Topic: Example Scenarios for Gap Locks"></a><strong>Topic</strong>: Example Scenarios for Gap Locks</h1><p>To understand gap locks better, let’s go with an example scenario. Assume we have a table&nbsp;<code>orders</code>&nbsp;and it has a bunch of rows.</p>
+<p>Scenario 1:<br>For instance, let’s consider the following SQL statement,</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM orders WHERE id &gt; 3 FOR UPDATE;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>With this query in a transaction, MySQL will put an exclusive next-key lock on all records where id &gt; 3. That implies that no other transaction can insert any new records with the id value &gt; 3 into the&nbsp;<code>orders</code>&nbsp;table till the first transaction is completed.</p>
+<p>Scenario 2:<br>Now let’s consider another SQL statement,</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">INSERT INTO orders (id, item) VALUES (102, 'New_Item');</span><br></pre></td></tr></tbody></table></figure>
+
+<p>If we try to execute this statement while the earlier transaction (with the SELECT … FOR UPDATE statement) is still active, it will have to wait till the first transaction is completed. This is because of the gap lock applied by the first transaction, which doesn’t allow any new records with id &gt; 3.</p>
+<p>These example scenarios illustrate how gap locks control the concurrent transactions, ensuring consistent data state and eliminating phantom reads under certain transaction isolation levels like REPEATABLE READ or SERIALIZABLE.</p>
+<p>With this understanding, we can now move forward to more intricate details about traversing the Locking Labyrinth in MySQL.</p>
+<h1 id="Topic-Traversing-the-Locking-Labyrinth"><a href="#Topic-Traversing-the-Locking-Labyrinth" class="headerlink" title="Topic: Traversing the Locking Labyrinth"></a><strong>Topic</strong>: Traversing the Locking Labyrinth</h1><p>Locks in MySQL form an intricate labyrinth where each lock plays an essential role, but it could cause confusion, delay, or even deadlocks if not handled properly.</p>
+<p>Here’s a simplified view on how the main types of locks interact with each other:</p>
+<ol>
+<li><strong>Shared Locks and Exclusive Locks</strong>:</li>
+</ol>
+<ul>
+<li>A shared lock allows other transactions to read (shared lock) the locked object but not to write (exclusive lock) it.</li>
+<li>An exclusive lock prevents other transactions from reading/writing the locked object.</li>
+<li>Additional shared locks can be applied to an object that’s already been shared-locked, but requests for exclusive locks will wait.</li>
+</ul>
+<ol>
+<li><strong>Table Locks and Row Locks</strong>:</li>
+</ol>
+<ul>
+<li>Table locks are straightforward but offer less specificity, leading to higher chances of transaction delay.</li>
+<li>Row locks provide higher concurrency as they only lock specific rows in a table.</li>
+</ul>
+<ol>
+<li><strong>Gap Locks and Next-Key Locks</strong>:</li>
+</ol>
+<ul>
+<li>Gap locks prohibit insertion into a specific range of index records. They team up with row locks (or next-key locks) to prevent phantom reads in REPEATABLE READ or SERIALIZABLE isolation levels.</li>
+</ul>
+<ol>
+<li><strong>Intent Locks</strong>:</li>
+</ol>
+<ul>
+<li>Intent locks indicate the kind of lock a transaction intends to acquire (shared or exclusive) before it actually obtains it. They are a notification mechanism, not a control mechanism.</li>
+</ul>
+<ol>
+<li><strong>Auto-Increment Lock</strong>:</li>
+</ol>
+<ul>
+<li>Auto-increment locks are used to maintain the sequence of auto-increment values. They avoid conflicts when multiple transactions attempt to insert into an auto-increment column simultaneously.</li>
+</ul>
+<p>Navigating this labyrinth successfully requires a clear understanding of each lock type and how transactions connect and affect each other.</p>
+<h1 id="Topic-Review-and-Assessments"><a href="#Topic-Review-and-Assessments" class="headerlink" title="Topic: Review and Assessments"></a><strong>Topic</strong>: Review and Assessments</h1><p>Over the past lessons, we’ve covered a lot of ground on MySQL and its locking mechanisms. Let’s briefly revisit these concepts to ensure a solid understanding:</p>
+<ol>
+<li><strong>Deep Dive into MySQL</strong>: We started by getting to know MySQL’s interface, commands, and how it differs from other SQL implementations, setting a strong foundation for the learning process that followed.</li>
+<li><strong>Exploring MySQL Transactions</strong>: We delved into the core concept of transactions in MySQL, discussing its consistency and isolation levels, which ensures data accuracy and concurrency.</li>
+<li><strong>Introduction to Locking in MySQL</strong>: We introduced the concept of locking in MySQL, which is crucial in maintaining data integrity and concurrency control.</li>
+<li><strong>Row Locks and Table Locks</strong>: We explored row-level locks and table-level locks and their significance in MySQL in managing concurrent transactions.</li>
+<li><strong>Discussing Gap Locks in MySQL</strong>: We took a deep dive into gap locks, including what they are, how they work, and their importance in preventing phantom reads.</li>
+<li><strong>Example Scenarios for Gap Locks</strong>: We walked through common scenarios where gap locks are beneficial to understand their practical implementation.</li>
+<li><strong>Traversing the Locking Labyrinth</strong>: We discussed the interaction and influence among the various types of locks in MySQL, a complex but interesting topic.</li>
+</ol>
+<h2 id="Example-Problem"><a href="#Example-Problem" class="headerlink" title="Example Problem:"></a>Example Problem:</h2><p>Consider a scenario where you have a high traffic database and you constantly find yourself running into deadlocks. Your task is to identify a plausible solution to minimize these occurrences.</p>
+<p><strong>Solution</strong>: Potential solutions could be reducing transaction time, ensuring transactions access tables in the same order, or even increasing the innodb_lock_wait_timeout value. Also, making sure that the most precise locks are used can help reduce the chances of encountering deadlocks.</p>
+<h2 id="Simple-Problem"><a href="#Simple-Problem" class="headerlink" title="Simple Problem:"></a>Simple Problem:</h2><p>Consider a transaction that reads and writes several records in a table. What type of lock (row-level, table-level, or gap lock) would you use to ensure minimal blocking in a database with high traffic, with the condition that phantom reads should be avoided?</p>
+<h2 id="Advanced-Problem"><a href="#Advanced-Problem" class="headerlink" title="Advanced Problem:"></a>Advanced Problem:</h2><p>In a ticket booking system, there can be concurrent transactions trying to book the same seat at the same time. How would you handle this situation using MySQL’s locking mechanisms to ensure a fair system?</p>
+<h2 id="Expert-Problem"><a href="#Expert-Problem" class="headerlink" title="Expert Problem:"></a>Expert Problem:</h2><p>In the context of MySQL, how might you deal with a deadlock scenario in a banking application where two transactions attempt to transfer money between two accounts concurrently?  </p>
+<hr>
+<p><strong>Simple Problem Solution</strong>:<br>For this scenario, using a row-level lock mechanism would be the most efficient. It will provide the necessary locking to ensure data integrity while avoiding unnecessary blocking of unrelated rows in high traffic situations. Furthermore, including the “FOR UPDATE” clause in the SELECT statement could avoid phantom reads.</p>
+<p><strong>Advanced Problem Solution</strong>:<br>In a ticket booking system, to ensure a fair system, we can use the SELECT FOR UPDATE command. This will place exclusive nex-key locks on all index records the search encounters, thus preventing other transactions from inserting a new row in the gap covered by the record locks. It will also select the seat’s current status, and if it’s available, the transaction will update it as booked, ensuring that the seat can’t be double-booked.</p>
+<p><strong>Expert Problem Solution</strong>:<br>In a banking application where two transactions are concurrently attempting to transfer money, we may run into a deadlock scenario. To handle this situation, we could use a fixed order in accessing the accounts. For instance, transactions could access the account with the lower ID first. This will prevent a deadlock as both transactions won’t wait for each other indefinitely, eliminating the circular wait condition for deadlock.</p>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/mysql-interview10/">https://programmerscareer.com/zh-cn/mysql-interview10/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/mysql-interview1/">MySQL interviews: Briefly describe the primary and secondary synchronization mechanism of MySQL</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/mysql-interview11/">MySQL interviews: What is the difference between a unique index and a normal index? What are the advantages and disadvantages of using indexes?</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/mysql-interview10/';
+        this.page.identifier = 'mysql-interview10/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

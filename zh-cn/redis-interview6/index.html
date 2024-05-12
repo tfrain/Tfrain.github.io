@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>Redis 面试：Redis 有几种数据结构？Zset 是如何实现的？ - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/redis-interview6/" rel="alternate" hreflang="en" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="你曾被提过类似问题在面试中问过吗？或者将来会遇到，让我们一起探索和掌握它！">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis 面试：Redis 有几种数据结构？Zset 是如何实现的？">
+<meta property="og:url" content="https://programmerscareer.com/zh-cn/redis-interview6/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="你曾被提过类似问题在面试中问过吗？或者将来会遇到，让我们一起探索和掌握它！">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/zh-cn">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/zh-cn/archives">归档</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/categories">分类</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/tags">标签</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/about">关于</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="搜索" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="目录">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-1-详细研究-Redis-数据结构">1&nbsp;&nbsp;<b>主题：1.1 详细研究 Redis 数据结构</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-2-Redis-支持多少数据结构">2&nbsp;&nbsp;<b>主题：1.2 Redis 支持多少数据结构</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-3-了解-Redis-中的有序集（Zset）">3&nbsp;&nbsp;<b>主题：1.3 了解 Redis 中的有序集（Zset）</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-4-在-Redis-中实现有序集">4&nbsp;&nbsp;<b>主题：1.4 在 Redis 中实现有序集</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-5-Redis-中的-Zset-实践">5&nbsp;&nbsp;<b>主题：1.5 Redis 中的 Zset 实践</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-6-Redis-高级主题">6&nbsp;&nbsp;<b>主题：1.6 Redis 高级主题</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-7-Redis-在实际应用中的应用">7&nbsp;&nbsp;<b>主题：1.7 Redis 在实际应用中的应用</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：1-8-回顾和评估">8&nbsp;&nbsp;<b>主题：1.8 回顾和评估</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>简体中文</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/redis-interview6/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/redis-interview6/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            Redis 面试：Redis 有几种数据结构？Zset 是如何实现的？
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">1月 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/zh-cn/categories/redis/">redis</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            20 分钟 读完 (约 3018 字)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>你曾被提过类似问题在面试中问过吗？或者将来会遇到，让我们一起探索和掌握它！</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>感谢您阅读这篇文章。更多面试问题:<br><a href="https://programmerscareer.com/zh-cn/software-interview-set/">https://programmerscareer.com/zh-cn/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="主题：1-1-详细研究-Redis-数据结构"><a href="#主题：1-1-详细研究-Redis-数据结构" class="headerlink" title="主题：1.1 详细研究 Redis 数据结构"></a><strong>主题</strong>：1.1 详细研究 Redis 数据结构</h1><p>Redis 是一个开源的内存数据结构存储，为我们提供了一组强大和高性能的数据结构。今天的旅程开始于深入探索这些多样的数据结构并了解其功能。</p>
+<p>Redis 中的数据结构是预构建的模式，用于管理和组织数据，并允许快速的读写操作。 Redis 提供了多种类型的数据结构，每一种数据结构都适合不同类型的数据管理需求。这些包括：</p>
+<ol>
+<li><strong>字符串</strong>：最简单的 Redis 数据结构。它们是二进制安全的，可以包含任何类型的数据。</li>
+<li><strong>列表</strong>：这些是简单的字符串列表，按插入顺序排序。</li>
+<li><strong>集合</strong>：这是一个不重复的字符串集合。</li>
+<li><strong>哈希</strong>：哈希是表示对象的完美选择。它们是字符串字段和字符串值的映射。</li>
+<li><strong>排序集（Zsets）</strong>：每个 Zset 成员都与一个分数相关，该分数用于排序集元素从最小到最大分数。</li>
+<li><strong>位数组（Bitmaps）</strong>：它们提供了操作数组的位的功能。</li>
+<li><strong>HyperLogLogs</strong>：这是一个概率数据结构，用于估计集合的卡inality。</li>
+<li><strong>地理空间数据（Geosets）</strong>：它们允许您存储纬度、经度和相关名称。</li>
+<li><strong>流</strong>：它们是日志数据类型，用于追加新项目，例如日志或消息。</li>
+</ol>
+<p>数据结构的选择取决于数据的性质和有效地操作数据的类型。</p>
+<p>了解数据结构并选择正确的一种可以大大提高应用的性能，使 Redis 成为我们的技术堆栈中的一个不可或缺的工具。</p>
+<h1 id="主题：1-2-Redis-支持多少数据结构"><a href="#主题：1-2-Redis-支持多少数据结构" class="headerlink" title="主题：1.2 Redis 支持多少数据结构"></a><strong>主题</strong>：1.2 Redis 支持多少数据结构</h1><p>我们先学习了，Redis 不仅仅是一个简单的键值存储，它更像是数据结构服务器。可能会问，Redis 实际上支持多少种数据结构呢？</p>
+<p>答案是，Redis 重要地支持<strong>八</strong>种不同类型的数据结构：</p>
+<ol>
+<li><strong>字符串</strong></li>
+<li><strong>列表</strong></li>
+<li><strong>集合</strong></li>
+<li><strong>排序集（Zsets）</strong></li>
+<li><strong>哈希</strong></li>
+<li><strong>Bitmaps</strong></li>
+<li><strong>HyperLogLogs</strong></li>
+<li><strong>地理空间数据（Geosets）</strong></li>
+<li><strong>流</strong></li>
+</ol>
+<p>每种这些数据结构都有其独特的身份，为特定的目的服务，并提供不同的功能，因此允许 Redis 处理一系列数据管理任务的宽范围，具有出色的速度和一致性。</p>
+<h1 id="主题：1-3-了解-Redis-中的有序集（Zset）"><a href="#主题：1-3-了解-Redis-中的有序集（Zset）" class="headerlink" title="主题：1.3 了解 Redis 中的有序集（Zset）"></a><strong>主题</strong>：1.3 了解 Redis 中的有序集（Zset）</h1><p>在 Redis 中，<strong>排序集（Zset）</strong> 是 Set 和 Hash 的合成体。它们采用这两种数据类型的独特方面，使这种混合结构变得非常灵活。</p>
+<p>有序集是，本质上说，是一个 Set，它确保每个元素都是唯一的。然而，它还与每个元素相关联的分数，就像是一个哈希。这些分数用于排序集元素，从最小分数到最大分数。</p>
+<p>这可能听起来很简单，但它有重要的后果。Redis 可以为有序集的元素按分数顺序提供有用的资源，为数据范围查询提供了值得的帮助。</p>
+<p>想象一下游戏中的排行榜，其中你必须显示顶级表现者以升序或降序顺序排列。有序集是这种用例的理想数据结构，因为你可以直接获取排序的数据。</p>
+<p>这就是有序集的概述！随着我们进一步的探索，我们将为您展示如何在 Redis 中实现和操作有序集！</p>
+<h1 id="主题：1-4-在-Redis-中实现有序集"><a href="#主题：1-4-在-Redis-中实现有序集" class="headerlink" title="主题：1.4 在 Redis 中实现有序集"></a><strong>主题</strong>：1.4 在 Redis 中实现有序集</h1><p>我们先学习，有序集在 Redis 中是如何工作的。有序集是通过与每个元素相关联的分数相关联的方式来区分的。然而，我们还没有深入研究它们在 Redis 中的实现。所以让我们来解开这个谜题！</p>
+<p>Redis 在内部使用两种数据结构来存储有序集：</p>
+<ol>
+<li><strong>HashTable</strong>，其中元素是键，分数是值。</li>
+<li><strong>跳表</strong>或<strong>排序集</strong>，其中每个节点是我们的有序集中的元素。</li>
+</ol>
+<p>当有序集非常小，其长度最多为 128 项，并且每个集合中的每个元素都在一个小整数范围内时，有序集被存储为<strong>ziplist</strong>的列表表示。</p>
+<p>值得注意的是，决定使用 HashTable 还是跳表/排序集并不会影响有序集的功能；它只是为了性能的交换。</p>
+<p>Redis 根据有序集的内容自动切换这些内部数据结构，优化读取、写入或两者的组合，根据需要！</p>
+<h1 id="主题：1-5-Redis-中的-Zset-实践"><a href="#主题：1-5-Redis-中的-Zset-实践" class="headerlink" title="主题：1.5 Redis 中的 Zset 实践"></a><strong>主题</strong>：1.5 Redis 中的 Zset 实践</h1><p>在 Redis 中，可以对 Zset 进行各种操作：</p>
+<ol>
+<li><strong>zadd</strong>：此命令允许向 Zset 中添加元素，并为每个元素分配一个分数。下面是如何使用它的示例：</li>
+</ol>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">zadd myZset 1 "a"</span><br></pre></td></tr></tbody></table></figure>
+
+<ol start="2">
+<li><strong>zrange</strong>：此命令检索有序的元素，根据其分数进行排序。下面是如何使用它的示例：</li>
+</ol>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">zrange myZset 0 -1</span><br></pre></td></tr></tbody></table></figure>
+
+<ol start="3">
+<li><strong>zrem</strong>：此命令用于从 Zset 中删除特定的元素：</li>
+</ol>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">zrem myZset "a"</span><br></pre></td></tr></tbody></table></figure>
+
+<ol start="4">
+<li><strong>zrank</strong>：此命令返回元素的排名，从 0 开始计数。要找到元素 “a” 的排名，请执行以下操作：</li>
+</ol>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">zrank myZset "a"</span><br></pre></td></tr></tbody></table></figure>
+
+<p>请记住，Redis 对语法非常宽容。它不区分大小写并且在某些情况下甚至不需要关闭引号！</p>
+<h1 id="主题：1-6-Redis-高级主题"><a href="#主题：1-6-Redis-高级主题" class="headerlink" title="主题：1.6 Redis 高级主题"></a><strong>主题</strong>：1.6 Redis 高级主题</h1><p>经过了解各种数据结构和命令后，现在是时候深入探讨 Redis 的高级主题了！💪</p>
+<p>让我们先讨论 Redis 的 <strong>持久性</strong>。Redis 提供两种持久性方法：</p>
+<ol>
+<li><strong>RDB</strong>（Redis 数据库备份）：此持久性方法定期创建数据集的快照。</li>
+<li><strong>AOF</strong>（追加只写文件）：此持久性方法记录每次写操作接收到的服务器，重新运行它们可以重新创建数据集。</li>
+</ol>
+<p>两种持久性方法都有其优缺点，并且选择通常取决于使用场景的要求。</p>
+<p>接下来是 Redis <strong>事务</strong>。Redis 事务允许执行一组命令作为一个单步。它使用 ‘MULTI’ 来指示开始和 ‘EXEC’ 来指示结束。</p>
+<p>另一个值得讨论的重要方面是 Redis <strong>安全性</strong>。默认情况下，Redis 没有身份验证或安全层。然而，Redis 允许设置密码，客户必须使用它来进行身份验证并被授予访问权限。</p>
+<p>请记住，Redis 不支持加密连接，并建议在需要数据加密时使用 SSL 代理。</p>
+<p>最后，让我们讨论 Redis <strong>发布/订阅</strong> 模型。在这种模型中，发布者发送消息到特定的频道，不关心或者不在乎订阅者。相反，订阅者侦听特定的频道，不关心或者不在乎发布者。这导致了高度解耦合和可伸缩的系统。</p>
+<h1 id="主题：1-7-Redis-在实际应用中的应用"><a href="#主题：1-7-Redis-在实际应用中的应用" class="headerlink" title="主题：1.7 Redis 在实际应用中的应用"></a><strong>主题</strong>：1.7 Redis 在实际应用中的应用</h1><p>Redis 在各种实际应用中发，由于其出色的特性，是一个理想的选择。让我们来看看一些例子：</p>
+<ol>
+<li><strong>缓存</strong>：由于其高速和丰富的数据类型，Redis 是为网站应用程序实现缓存的理想选择。它显著加快了应用程序的响应时间。</li>
+<li><strong>会话存储</strong>：需要在多个用户请求之间维护网站的信息的网站通常使用 Redis 进行会话存储。Redis 提供的数据类型使它成为一个理想的候选者。</li>
+<li><strong>消息队列系统</strong>：使用 Redis 的列表和发布/订阅模型可以创建消息队列系统。列表在 Redis 中可以用作队列，在其中您可以使用原子操作，例如 LPUSH 和 RPOP，来推和弹出元素。</li>
+<li><strong>排行榜和计数</strong>：Redis 非常适合管理排行榜，特别是如果您需要在实时中管理它们。排序集数据结构是为解决这些问题而设计的。</li>
+<li><strong>实时分析</strong>：您可以使用 Redis 进行实时分析，例如计算或分析统计数据以进行即时查看。</li>
+</ol>
+<p>请记住，Redis 的灵活性不限于这些应用。它还可以用作主数据库、作业管理系统、搜索引擎等等！</p>
+<h1 id="主题：1-8-回顾和评估"><a href="#主题：1-8-回顾和评估" class="headerlink" title="主题：1.8 回顾和评估"></a><strong>主题</strong>：1.8 回顾和评估</h1><p>让我们花些时间来回顾和练习我们在前面几节中学到的内容。总是有好处的重新访问主题并开始实施它们，以巩固我们的理解。</p>
+<p>直到现在，我们学习了 Redis 中各种数据类型，为每种数据结构执行了手动操作，深入探讨了高级主题，并看到了 Redis 在实际应用中的应用。</p>
+<p>一个好的方法是为我们选择一个实际问题并试图使用 Redis 来解决它。您可以试图为网站应用程序实现一个缓存解决方案或设置一个简单的消息队列系统。使用我们学习的 Redis 命令与不同的数据类型和结构交互。</p>
+<p>现在让我们测试你的 Redis 知识！</p>
+<p>1️⃣ <strong>基本问题</strong>（难度：3/10）：Redis 支持六种数据类型，它们分别是 STRING、LIST、SET、ZSET（有序集合）、HASH、和 STREAM。</p>
+<p>2️⃣ <strong>中级问题</strong>（难度：6/10）：在哪种情况下会使用 Redis List 而不是 Redis Set？当数据的顺序重要时，你会使用 Redis List，因为 Redis List 会根据元素被添加的顺序来维护元素的顺序。在另一方面，Redis Set 是一个无序的集合。例如，如果你需要存储一系列的项目并希望它们按时间顺序显示（例如，博文的评论时间线），你会使用 Redis List。</p>
+<p>3️⃣ <strong>高级问题</strong>（难度：9/10）：如何在网站应用程序中使用 Redis 进行缓存？请简要描述一下它的工作原理：</p>
+<ul>
+<li>当请求被发送到你的网站应用程序时，先检查请求的数据是否在 Redis 缓存中可用，通过请求参数作为键来尝试检索它。</li>
+<li>如果数据在 Redis 缓存中可用（命中缓存），则从缓存中检索数据并返回它作为响应。</li>
+<li>如果数据不在 Redis 缓存中可用（未命中缓存），则从主数据库中检索数据。</li>
+<li>在从主数据库中检索数据后，将其保存到 Redis 缓存中，并为其设置过期时间，以防止它无限地占用缓存的内存。然后返回数据作为响应。</li>
+<li>如果正确地执行，这允许经常请求的数据来自 Redis 缓存，显著缩短响应时间并降低主数据库的负载。</li>
+</ul>
+<blockquote class="colorquote danger"><p>English post: <a href="https://programmerscareer.com/redis-interview6/">https://programmerscareer.com/redis-interview6/</a><br>作者：<a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>注意：本文为作者原创，转载请注明出处。  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/zh-cn/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/zh-cn/redis-interview5/">Redis 面试：简述 Redis 持久化中 RDB 以及 AOF 方案的优缺点</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/zh-cn/hello-world/">新的开始</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">评论</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/zh-cn/redis-interview6/';
+        this.page.identifier = 'zh-cn/redis-interview6/';
+        
+        this.language = 'zh';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("zh-CN");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="站内搜索" />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: '文章',
+                PAGES: '页面',
+                CATEGORIES: '分类',
+                TAGS: '标签',
+                UNTITLED: '(无标题)',
+            },
+            CONTENT_URL: '/content.zh-cn.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

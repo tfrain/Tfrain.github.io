@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL Interviews: Briefly describe the occurrence scenarios of dirty reading and phantom reading. How does InnoDB solve phantom reading? - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/mysql-interview12/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL Interviews: Briefly describe the occurrence scenarios of dirty reading and phantom reading. How does InnoDB solve phantom reading?">
+<meta property="og:url" content="https://programmerscareer.com/mysql-interview12/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.283Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-1-Introduction-to-Problems-in-Database-Transactions">1&nbsp;&nbsp;<b>Topic: 1.1 Introduction to Problems in Database Transactions</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-2-Understanding-Dirty-Reading">2&nbsp;&nbsp;<b>Topic: 1.2 Understanding Dirty Reading</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-3-Understanding-Phantom-Reading">3&nbsp;&nbsp;<b>Topic: 1.3 Understanding Phantom Reading</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-4-The-Role-of-InnoDB-in-Handling-Phantom-Reads">4&nbsp;&nbsp;<b>Topic: 1.4 The Role of InnoDB in Handling Phantom Reads</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-5-Transaction-Isolation-Levels">5&nbsp;&nbsp;<b>Topic: 1.5 Transaction Isolation Levels</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-6-Strategies-to-Implement-Concurrency-Control">6&nbsp;&nbsp;<b>Topic: 1.6 Strategies to Implement Concurrency Control</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-7-Review-and-Assessments">7&nbsp;&nbsp;<b>Topic: 1.7 Review and Assessments</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Simple-Problem-Difficulty-3-10">7.1&nbsp;&nbsp;Simple Problem (Difficulty: 3/10)</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Complex-Familiar-Problem-Difficulty-6-10">7.2&nbsp;&nbsp;Complex Familiar Problem (Difficulty: 6/10)</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Complex-Unfamiliar-Problem-Difficulty-9-10">7.3&nbsp;&nbsp;Complex Unfamiliar Problem (Difficulty: 9/10)</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Simple-Problem-Difficulty-3-10-1">7.4&nbsp;&nbsp;Simple Problem (Difficulty: 3/10)</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Complex-Familiar-Problem-Difficulty-6-10-1">7.5&nbsp;&nbsp;Complex Familiar Problem (Difficulty: 6/10)</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Complex-Unfamiliar-Problem-Difficulty-9-10-1">7.6&nbsp;&nbsp;Complex Unfamiliar Problem (Difficulty: 9/10)</a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview12/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview12/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL Interviews: Briefly describe the occurrence scenarios of dirty reading and phantom reading. How does InnoDB solve phantom reading?
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            14 minutes read (About 2157 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-1-1-Introduction-to-Problems-in-Database-Transactions"><a href="#Topic-1-1-Introduction-to-Problems-in-Database-Transactions" class="headerlink" title="Topic: 1.1 Introduction to Problems in Database Transactions"></a><strong>Topic</strong>: 1.1 Introduction to Problems in Database Transactions</h1><p>As we dive into the complexities of database transactions, it’s essential to acknowledge that these operations are not always straightforward. Their primary purpose is to execute a series of operations so that the database morphs from one consistent state to another. However, with simultaneous transactions, we encounter a plethora of issues that need to be resolved for maintaining consistency and integrity.</p>
+<p>One such challenge arises due to the concurrency of transactions. To maintain the&nbsp;<strong>ACID</strong>&nbsp;properties (Atomicity, Consistency, Isolation, and Durability) of transactions, the database systems must handle the concurrent execution of transactions properly. The failure to ensure proper management can lead to several problems:</p>
+<ol>
+<li><strong>Dirty Reading</strong>: This problem occurs when one transaction reads changes made by another transaction that hasn’t been committed yet. If the latter transaction is rolled back for some reason, the former would have read an invalid value.</li>
+<li><strong>Non-Repeatable Read</strong>: This occurs when a single transaction reads the same row multiple times and gets different data each time as other transactions are updating this row simultaneously.</li>
+<li><strong>Phantom Read</strong>: This scenario is a variation of non-repeatable read where a transaction performs two identical queries, but the second result set includes additional rows that weren’t present in the first result set, added by a different transaction.</li>
+</ol>
+<p>These transaction control problems disrupt the smooth functionality of the database transactions and affect data integrity. In the following lessons, we’ll do a deep dive into the scenarios involving dirty reads and phantom reads and understand the solutions, including those offered by InnoDB engine in MySQL.</p>
+<h1 id="Topic-1-2-Understanding-Dirty-Reading"><a href="#Topic-1-2-Understanding-Dirty-Reading" class="headerlink" title="Topic: 1.2 Understanding Dirty Reading"></a><strong>Topic</strong>: 1.2 Understanding Dirty Reading</h1><p>The term “dirty read” in the context of a database involves one transaction reading uncommitted or “dirty” data from another transaction. Picture this: Transaction 1 modifies a certain row but hasn’t committed it yet. Now, before Transaction 1 is either committed or rolled back, Transaction 2 comes along and reads the uncommitted change. This phenomenon is known as a dirty read.</p>
+<p>Why is this a problem? Well, suppose Transaction 1 is eventually rolled back. In that case, the change is undone, but Transaction 2 has already read the uncommitted data, leading to inconsistencies and potentially invalid results in the database.</p>
+<p>Here’s a simple example for clarity:</p>
+<p><strong>Step 1:</strong></p>
+<ul>
+<li>Transaction 1 modifies a row in the&nbsp;<code>orders</code>&nbsp;table, updating the&nbsp;<code>order_status</code>&nbsp;from ‘Pending’ to ‘Shipped’.</li>
+</ul>
+<p><strong>Step 2:</strong></p>
+<ul>
+<li>Before Transaction 1 commits, Transaction 2 reads the&nbsp;<code>order_status</code>&nbsp;for the same row and finds it as ‘Shipped’.</li>
+</ul>
+<p><strong>Step 3:</strong></p>
+<ul>
+<li>Transaction 1 encounters an error and executes a ROLLBACK operation, changing&nbsp;<code>order_status</code>&nbsp;back to ‘Pending’.</li>
+</ul>
+<p><strong>Step 4:</strong></p>
+<ul>
+<li>Transaction 2, however, proceeds with the ‘Shipped’ status, hence reading data that never should have existed.</li>
+</ul>
+<p>Dirty read can lead to significant errors, particularly in data analysis or reporting processes where accuracy is paramount.</p>
+<h1 id="Topic-1-3-Understanding-Phantom-Reading"><a href="#Topic-1-3-Understanding-Phantom-Reading" class="headerlink" title="Topic: 1.3 Understanding Phantom Reading"></a><strong>Topic</strong>: 1.3 Understanding Phantom Reading</h1><p>Like dirty reading, phantom reading is another concurrency problem that arises in database transactions. Phantom reading typically occurs when a transaction re-queries data it has already queried, but finds new rows that were not there in the initial read.</p>
+<p>These “phantom” rows are the result of another transaction that inserted or updated some rows after our original transaction began and before it ended.</p>
+<p>To visualise this, let’s consider a simple example:</p>
+<p><strong>Step 1:</strong></p>
+<ul>
+<li>Transaction 1 retrieves all rows from the&nbsp;<code>orders</code>&nbsp;table where&nbsp;<code>order_status</code>&nbsp;is ‘Pending’.</li>
+</ul>
+<p><strong>Step 2:</strong></p>
+<ul>
+<li>Meanwhile, Transaction 2 inserts a new row in the&nbsp;<code>orders</code>&nbsp;table with&nbsp;<code>order_status</code>&nbsp;as ‘Pending’ and commits.</li>
+</ul>
+<p><strong>Step 3:</strong></p>
+<ul>
+<li>Now, Transaction 1 re-runs the same retrieval query. This time, it finds the row inserted by Transaction 2 — this is a phantom row.</li>
+</ul>
+<p>The problem of phantom reads persists mostly in lower isolation levels such as “Read Committed” but not in higher isolation levels like “Serializable”. This is due to the use of exclusive range locks that prohibit the insertion of new rows in the read range for “Serializable” isolation level.</p>
+<p>However, these higher levels of isolation come with their own problems such as lower concurrency and higher contention. Therefore, the selection of transaction isolation level often involves a trade-off between performance and consistency. But don’t worry, technologies like InnoDB provide ways to handle these situations.</p>
+<h1 id="Topic-1-4-The-Role-of-InnoDB-in-Handling-Phantom-Reads"><a href="#Topic-1-4-The-Role-of-InnoDB-in-Handling-Phantom-Reads" class="headerlink" title="Topic: 1.4 The Role of InnoDB in Handling Phantom Reads"></a><strong>Topic</strong>: 1.4 The Role of InnoDB in Handling Phantom Reads</h1><p>The InnoDB storage engine plays a crucial role in handling transaction problems, including phantom reads, in MySQL. It does so by using&nbsp;<strong>multi-version concurrency control (MVCC)</strong>, which allows multiple transactions to access the same row without affecting each other’s work.</p>
+<p>Each transaction sees a snapshot of the database at the start of its work, keeping concurrent transactions isolated from each other. This contributes to maintaining the ‘I’ (Isolation) part of the ACID properties in MySQL InnoDB.</p>
+<p>Moreover, you can also set different isolation levels in MySQL to customize the balance between read consistency, concurrency, and performance. These isolation levels are READ UNCOMMITTED, READ COMMITTED, REPEATABLE READ, and SERIALIZABLE.</p>
+<p>The Repeatable Read level is the default level in InnoDB, which guarantees that all reads within the same transaction will see a snapshot of the database as it was at the start of the transaction. This feature effectively prevents phantom reads.</p>
+<p>However, in some business scenarios, the Serializable level, providing the highest data consistency but at the cost of concurrency and performance, might be required.</p>
+<p>In the later stage of this curriculum, we will discuss in detail how InnoDB implements the ACID properties and the customization of these transaction properties as per user requirements.</p>
+<h1 id="Topic-1-5-Transaction-Isolation-Levels"><a href="#Topic-1-5-Transaction-Isolation-Levels" class="headerlink" title="Topic: 1.5 Transaction Isolation Levels"></a><strong>Topic</strong>: 1.5 Transaction Isolation Levels</h1><p>Transaction Isolation Levels play a central role in how a database management system like MySQL manages concurrency and protects transactions from potential problems like dirty reading, non-repeatable read, and phantom reading.</p>
+<p>In MySQL, there are four preset isolation levels, each with a different level of protection versus performance trade-off:</p>
+<ol>
+<li><strong>READ UNCOMMITTED</strong>: This is the lowest level of isolation, and it allows transactions to see uncommitted changes made by other transactions. This means a transaction can see “dirty” data that another transaction may later roll back, leading to dirty reads.</li>
+<li><strong>READ COMMITTED</strong>: This level guarantees that any data read is committed at the moment it is read. Thus, it prevents dirty reads. However, if a transaction reads the same row twice, it could see different values if another transaction modifies that row between the reads, leading to non-repeatable read.</li>
+<li><strong>REPEATABLE READ</strong>: This is the default isolation level in InnoDB. It prevents both dirty reads and non-repeatable reads by ensuring that all reads of the same row for a single transaction return the same result, unless the row was changed by that transaction itself.</li>
+<li><strong>SERIALIZABLE</strong>: This is the highest level of isolation. It locks the rows that a transaction reads, preventing other transactions from accessing them (read or write) until the first transaction is finished. While this level prevents dirty reads, non-repeatable reads, and phantom reads, it significantly reduces concurrency.</li>
+</ol>
+<p>Understanding these isolation levels is key to managing concurrent transactions effectively. In the coming topics, we will discuss some techniques and practices for implementing concurrency control based on these isolation levels.</p>
+<h1 id="Topic-1-6-Strategies-to-Implement-Concurrency-Control"><a href="#Topic-1-6-Strategies-to-Implement-Concurrency-Control" class="headerlink" title="Topic: 1.6 Strategies to Implement Concurrency Control"></a><strong>Topic</strong>: 1.6 Strategies to Implement Concurrency Control</h1><p>Concurrency control in databases aims to allow multiple transactions to access the database without conflicts or errors simultaneously. To implement concurrency control effectively, there are several strategies we can leverage:</p>
+<ol>
+<li><strong>Lock-Based Protocols</strong>: This common method works by giving a transaction lock access to a data item when it needs. There are exclusive and shared locks. The former doesn’t permit another transaction to access the data; the latter does but only for reading purposes.</li>
+<li><strong>Timestamp-Based Protocols</strong>: This approach involves assigning a timestamp to each transaction, ensuring that earlier transactions get priority in case of conflict.</li>
+<li><strong>Validation-Based Protocols</strong>: Also known as optimistic concurrency control, this method allows transactions to execute without restriction and validates the transactions only at commit time.</li>
+<li><strong>Multiversion Concurrency Control (MVCC)</strong>: Primarily used in InnoDB, MVCC allows each user connected to the database to view the database from a consistent snapshot set at the start of their transaction.</li>
+<li><strong>Granularity of Data</strong>: This decides the size of the data item for locking — from a single row to the entire database.</li>
+</ol>
+<p>Each of these strategies has its strengths and trade-offs. For example, lock-based protocols can create performance issues due to lock contention, while MVCC can provide high concurrency with reduced need for locking at the potential cost of increased storage.</p>
+<p>It’s important to choose a strategy that aligns with your application’s needs and considerations, such as performance, consistency, and complexity.</p>
+<h1 id="Topic-1-7-Review-and-Assessments"><a href="#Topic-1-7-Review-and-Assessments" class="headerlink" title="Topic: 1.7 Review and Assessments"></a><strong>Topic</strong>: 1.7 Review and Assessments</h1><p>You’ve done a fantastic job exploring the crucial aspects of database transactions, understanding the concept of concurrency control, the problems it poses, and the various strategies employed to handle such issues.</p>
+<p>By now, we’ve journeyed through understanding the necessity of handling simultaneous transactions — concurrency control. We’ve identified potential challenges like dirty reading, non-repeatable read, and phantom read, which basically involve how transactions handle changes in data from other transactions.</p>
+<p>We took a deep dive into what dirty reading is, how it occurs, and its implications on database transactions. Similarly, we had an in-depth discussion into the occurrence scenarios of phantom readings and the issues it can cause.</p>
+<p>We investigated the role of the InnoDB storage engine in MySQL, specifically how it implements a ‘consistent read’ to manage phantom readings.</p>
+<p>We further dissected the concept of Transaction Isolation Levels, understanding how configuring different transaction isolation levels can in turn affect the occurrence of dirty and phantom reads.</p>
+<p>We also touched upon the various strategies employed to handle concurrency issues — for instance, transaction scheduling and using various types of lock-based<br>protocols.</p>
+<p>As we wrap up this unit, let’s revisit some of these key concepts covered through an assessment to evaluate your understanding of dirty reading, phantom reading, and the methods used by InnoDB to resolve these issues.</p>
+<p>Alright, let’s move on to the three assessment problems. Try to solve each one, and I’ll provide the solutions afterward.</p>
+<h2 id="Simple-Problem-Difficulty-3-10"><a href="#Simple-Problem-Difficulty-3-10" class="headerlink" title="Simple Problem (Difficulty: 3/10)"></a>Simple Problem (Difficulty: 3/10)</h2><p>Suppose you have two transactions happening simultaneously where transaction 1 reads a data object, and transaction 2 updates it later. Identify the kind of reading problem that could occur here and explain your reasoning.</p>
+<h2 id="Complex-Familiar-Problem-Difficulty-6-10"><a href="#Complex-Familiar-Problem-Difficulty-6-10" class="headerlink" title="Complex Familiar Problem (Difficulty: 6/10)"></a>Complex Familiar Problem (Difficulty: 6/10)</h2><p>In the context of database transactions, how does the InnoDB storage engine in MySQL handle phantom readings? Describe how ‘consistent read’ contributes to managing these phantom reads.</p>
+<h2 id="Complex-Unfamiliar-Problem-Difficulty-9-10"><a href="#Complex-Unfamiliar-Problem-Difficulty-9-10" class="headerlink" title="Complex Unfamiliar Problem (Difficulty: 9/10)"></a>Complex Unfamiliar Problem (Difficulty: 9/10)</h2><p>You are the database manager of a banking system. Two transactions are happening concurrently, one where the customer ‘A’ transfers an amount to customer ‘B’, and the other where the bank calculates the total balance of customer ‘A’. Due to the concurrency of these separate transactions, the bank balance calculation occurs before the transfer transaction is complete. Explain the issues that could arise in this scenario.</p>
+<hr>
+<h2 id="Simple-Problem-Difficulty-3-10-1"><a href="#Simple-Problem-Difficulty-3-10-1" class="headerlink" title="Simple Problem (Difficulty: 3/10)"></a>Simple Problem (Difficulty: 3/10)</h2><p>This problem is associated with a ‘dirty read’. A dirty read is a concept in Database Management where a transaction (Transaction 1) is allowed to read data from a row that has been modified by another transaction (Transaction 2) but not yet committed. So, if Transaction 2 rolls back the change, Transaction 1 will have read data that is considered not to have existed.</p>
+<h2 id="Complex-Familiar-Problem-Difficulty-6-10-1"><a href="#Complex-Familiar-Problem-Difficulty-6-10-1" class="headerlink" title="Complex Familiar Problem (Difficulty: 6/10)"></a>Complex Familiar Problem (Difficulty: 6/10)</h2><p>The InnoDB storage engine in MySQL uses ‘consistent read’ for handling phantom readings. Consistent read is a non-locking read used by InnoDB select operations to provide a point-in-time snapshot of the data. It’s done by applying multi-version concurrency control (MVCC) where multiple versions of a record are stored. This way, users can view the database without lock-induced delays.</p>
+<h2 id="Complex-Unfamiliar-Problem-Difficulty-9-10-1"><a href="#Complex-Unfamiliar-Problem-Difficulty-9-10-1" class="headerlink" title="Complex Unfamiliar Problem (Difficulty: 9/10)"></a>Complex Unfamiliar Problem (Difficulty: 9/10)</h2><p>In the given scenario, a non-repeatable read may occur. Non-repeatable reads happen when a transaction reads the same row twice and gets different data each time. In this case, the bank balance calculating transaction may first calculate the balance before any transaction occurs then repeat the reading process after customer ‘A’ has transferred the amount to customer ‘B’. Hence the first and second read will result in different balances for customer ‘A’.</p>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/mysql-interview12/">https://programmerscareer.com/zh-cn/mysql-interview12/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/mysql-interview11/">MySQL interviews: What is the difference between a unique index and a normal index? What are the advantages and disadvantages of using indexes?</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/mysql-interview13/">MySQL interviews: What is the difference between a clustered index and a non-clustered index?</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/mysql-interview12/';
+        this.page.identifier = 'mysql-interview12/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

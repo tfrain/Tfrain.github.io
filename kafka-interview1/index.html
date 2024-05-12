@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>Kafka interviews: How does Kafka send messages reliably? - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/kafka-interview1/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kafka interviews: How does Kafka send messages reliably?">
+<meta property="og:url" content="https://programmerscareer.com/kafka-interview1/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.283Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-1-How-Does-Kafka-Work">1&nbsp;&nbsp;<b>Topic: 1.1 How Does Kafka Work?</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-2-Kafka-Producers">2&nbsp;&nbsp;<b>Topic: 1.2 Kafka Producers</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-3-Reliable-Message-Delivery-—-Basics">3&nbsp;&nbsp;<b>Topic: 1.3 Reliable Message Delivery — Basics</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-4-Kafka-Brokers-and-Topic-Replication">4&nbsp;&nbsp;<b>Topic: 1.4 Kafka Brokers and Topic Replication</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-5-Ins-and-Outs-of-Kafka-Consumers">5&nbsp;&nbsp;<b>Topic: 1.5 Ins and Outs of Kafka Consumers</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-6-How-does-Kafka-Send-Messages-Reliably">6&nbsp;&nbsp;<b>Topic: 1.6 How does Kafka Send Messages Reliably?</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-7-Best-Practices-for-Reliable-Messaging-in-Kafka">7&nbsp;&nbsp;<b>Topic: 1.7 Best Practices for Reliable Messaging in Kafka</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-8-Kafka’s-Message-Delivery-Semantics">8&nbsp;&nbsp;<b>Topic: 1.8 Kafka’s Message Delivery Semantics</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-9-Review-and-Assessments">9&nbsp;&nbsp;<b>Topic: 1.9 Review and Assessments</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Question-1">9.1&nbsp;&nbsp;Question 1</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Question-2">9.2&nbsp;&nbsp;Question 2</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Question-3">9.3&nbsp;&nbsp;Question 3</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Question-4">9.4&nbsp;&nbsp;Question 4</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Question-5">9.5&nbsp;&nbsp;Question 5</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Answer-1">9.6&nbsp;&nbsp;Answer 1</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Answer-2">9.7&nbsp;&nbsp;Answer 2</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Answer-3">9.8&nbsp;&nbsp;Answer 3</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Answer-4">9.9&nbsp;&nbsp;Answer 4</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Answer-5">9.10&nbsp;&nbsp;Answer 5</a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/kafka-interview1/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/kafka-interview1/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            Kafka interviews: How does Kafka send messages reliably?
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/kafka/">kafka</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            22 minutes read (About 3243 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-1-1-How-Does-Kafka-Work"><a href="#Topic-1-1-How-Does-Kafka-Work" class="headerlink" title="Topic: 1.1 How Does Kafka Work?"></a><strong>Topic</strong>: 1.1 How Does Kafka Work?</h1><p>Apache Kafka is an open-source stream-processing software platform developed by LinkedIn and later donated to the Apache Software Foundation. The project aims to provide a unified, high-throughput, low-latency platform for handling real-time data feeds. It is written in Scala and Java.</p>
+<p>The Kafka ecosystem consists of producers, brokers, consumers, topics, and Zookeeper:</p>
+<p><strong>Producers</strong>: Producers are components that push raw messages to Kafka brokers. Producers can send messages to a specific topic or allow Kafka to do the routing and load balancing.</p>
+<p><strong>Brokers</strong>:&nbsp;Kafka brokers are the heart of the system;&nbsp;they receive messages from producers, assign offsets to them, and commit the messages to storage on disk.</p>
+<p><strong>Consumers</strong>: Consumers read from brokers. However, unlike traditional messaging systems, consumers pull messages from brokers.</p>
+<p><strong>Topics and Partitions</strong>: Topics are feeds of messages in specific categories. Kafka topics are divided into a number of partitions, which contain records in an unchangeable sequence. Partitions allow you to parallelize topics by splitting the data across multiple nodes.</p>
+<p><strong>Zookeeper</strong>: Zookeeper manages and coordinates the Kafka cluster. ZooKeeper service is used to maintain naming and configuration data and to provide flexible and robust synchronization within distributed systems.</p>
+<p>A simple analogy for the working of Kafka is a messaging system. Think of it like a postman (producer) delivering mail letters (messages) to specific mailboxes (topics). The mail agency (Kafka) sorts out and maintains these letters, and finally, the residents (consumers) pick up their mail from the mailboxes.</p>
+<h1 id="Topic-1-2-Kafka-Producers"><a href="#Topic-1-2-Kafka-Producers" class="headerlink" title="Topic:&nbsp;1.2 Kafka Producers"></a><strong>Topic:</strong>&nbsp;1.2 Kafka Producers</h1><p>Kafka Producers are responsible for publishing or writing data (known as records) to one or more Kafka topics.&nbsp;Producers play a crucial role in feeding Kafka brokers with data.</p>
+<p>Here’s how Kafka Producers work:</p>
+<p><strong>Creating a Producer:</strong>&nbsp;The producers are created with certain properties like the broker’s address, the key serializer, and the value serializer. Brokers use these properties to identify the correct topic and understand how to parse the messages.</p>
+<p><strong>Writing Data:</strong>&nbsp;After creating a producer, it can start sending records to the specified topic. A record in Kafka contains a&nbsp;<strong>key</strong>&nbsp;and a&nbsp;<strong>value</strong>. These are byte arrays. The key, which is optional, is used in determining the specific partition of the topic where the message will be written. If a key isn’t provided, Kafka uses a round-robin method to write to a partition.</p>
+<p><strong>Partitioning:</strong>&nbsp;The producers publish data to different partitions in a round-robin way or a semantically meaningful manner. When the key is null, data is sent round-robin. If a key is present, all messages for that key will go to the same partition (if the number of partitions does not change).</p>
+<p><strong>Serialization:</strong>&nbsp;Kafka messages are byte arrays. Therefore, whatever data format you have, you must convert it to bytes when it’s sent to Kafka. We call this process serialization. Therefore, whenever a producer is sending a record, it needs to convert the objects into bytes.</p>
+<p><strong>Acknowledgements and Retries:</strong>&nbsp;In a distributed system, machines fail. Kafka provides mechanism of acknowledgements and retries. Kafka can be set to acknowledge a write once it has been written to the leader (ack=1), all followers (ack=all), or none at all (ack=0).</p>
+<p>From the producer configurations, it’s clear that we can adjust the reliability and durability guarantees by choosing the number of acknowledgements (acks) and specifying whether the producer should retry sending messages.</p>
+<p>A deep understanding of Kafka Producers is&nbsp;key to leveraging effectively the power of Kafka&nbsp;and to implementing reliable and efficient event-driven systems.</p>
+<h1 id="Topic-1-3-Reliable-Message-Delivery-—-Basics"><a href="#Topic-1-3-Reliable-Message-Delivery-—-Basics" class="headerlink" title="Topic: 1.3 Reliable Message Delivery — Basics"></a><strong>Topic</strong>: 1.3 Reliable Message Delivery — Basics</h1><p>Reliable message delivery is a critical aspect of any message-oriented middleware. Kafka provides strong durability guarantees and fault-tolerance to ensure reliable message delivery.</p>
+<p>The basics of reliable message delivery in Kafka revolve around these main concepts:</p>
+<p><strong>Producers and Message Acknowledgments:</strong>&nbsp;As we’ve learned before, Producers send messages to Kafka brokers. These messages can be acknowledged in different ways, controlled by the&nbsp;<code>acks</code>&nbsp;property of the producers. This level of acknowledgement impacts the durability of the messages. An ack of ‘1’ means that the message is considered written successfully once written to the leader’s log. An ack of ‘all’ means that the message is considered written successfully once all in-sync replicas have applied it to their log.</p>
+<p><strong>Replication and In-sync replicas:</strong>&nbsp;Replication is a key feature in ensuring message durability. Each partition in Kafka has multiple replicas, one of which is elected as the leader. All writes and reads go through the leader. The rest are followers, and their main job is to replicate the leader. Only when a message is written to all in-sync replicas, it is considered committed and hence, successfully written.</p>
+<p><strong>Consumer Offsets and Delivery Semantics:</strong>&nbsp;Consumers read message from Kafka topics at their own pace and keep track of what messages they have read by storing the offset of messages. Kafka provides three delivery semantics: at most once, at least once, and exactly once. By storing and managing offsets properly, Kafka ensures that messages are delivered at least once.</p>
+<p><strong>Committed and Uncommitted Messages:</strong>&nbsp;Messages in Kafka are considered committed once they’re written successfully to the log on all in-sync replicas. Consumers can only consume committed messages. This ensures that consumers always get complete, correct data. Messages can be written to the log but not viewable to consumers until they’re committed, protecting against data inconsistencies and partial data in case of a failure.</p>
+<h1 id="Topic-1-4-Kafka-Brokers-and-Topic-Replication"><a href="#Topic-1-4-Kafka-Brokers-and-Topic-Replication" class="headerlink" title="Topic:&nbsp;1.4 Kafka Brokers and Topic Replication"></a><strong>Topic:</strong>&nbsp;1.4 Kafka Brokers and Topic Replication</h1><p>Kafka Brokers, as we’ve previously learned, are the heart of the system, handling receiving messages from producers, assigning offsets to them, and committing the messages to storage on disk. Now, let’s dig deeper.</p>
+<p>A Kafka cluster is composed of multiple brokers. Each broker can handle data and requests from many clients because topics are partitioned and replicas are distributed across multiple broker instances.</p>
+<p><strong>Topic Replication</strong>: Replication is a crucial feature in Kafka for reliability and fault-tolerance. Each topic can have multiple replicas allowing it to be stored on multiple brokers. This means that even if a broker goes down, the topic data is still available from the other broker holding another replica.</p>
+<p>Replicas of a Kafka topic partition are distributed to different brokers in the cluster. Having replicas makes Kafka fault-tolerant.</p>
+<p><strong>Leader and Follower</strong>:&nbsp;For a partition, one replica will serve as the Leader, and the rest will be Followers. The Leader handles all read and write requests for the partition, while Followers passively replicate the leader. If the Leader fails, one of the Followers will automatically become the new Leader.</p>
+<p><strong>In-Sync Replica(ISR)</strong>: If a follower remains too far behind the leader (configurable by a parameter), the leader will remove the follower from the list of ISR (in-sync replica). Only members in the ISR list can be elected as the leader.</p>
+<p><strong>Replication and Reliability</strong>: The role played by each broker in a partition’s replication is vital for the delivery semantics Kafka provides. Reading and writing to a broker ensures durability of records, and a broker’s failure doesn’t affect data integrity.</p>
+<h1 id="Topic-1-5-Ins-and-Outs-of-Kafka-Consumers"><a href="#Topic-1-5-Ins-and-Outs-of-Kafka-Consumers" class="headerlink" title="Topic: 1.5 Ins and Outs of Kafka Consumers"></a><strong>Topic</strong>: 1.5 Ins and Outs of Kafka Consumers</h1><p>Kafka Consumers are applications that read and process data from Kafka topics. The role and functionality of Kafka consumers is vital in maintaining the reliability and fault tolerance of Kafka as a distributed system.</p>
+<p>Here are some key aspects of Kafka Consumers:</p>
+<p><strong>Consumer Groups:</strong>&nbsp;Multiple consumers can form a ‘Consumer Group’. As a part of the group, they share the load of consuming messages, each consumer reading from one or more partitions of a topic. This provides both load balancing and fault tolerance features to Kafka.</p>
+<p><strong>Consuming Messages:</strong>&nbsp;Consumers read the messages from a topic and process it. They maintain the offset of the next message they expect to read.</p>
+<p><strong>Offsets and Consumer Position:</strong>&nbsp;Each consumer group maintains its offset or position — a record of which messages have been consumed. If a consumer has processed a message successfully, the offset will be advanced. So, even if a consumer crashes, it can pick up where it left off, increasing the system’s fault tolerance and resiliency.</p>
+<p><strong>Rebalancing</strong>: When a consumer stops or a new consumer joins a Kafka consumer group, a rebalancing protocol is initiated. The protocol ensures that consumers leave gracefully if they are planning to stop, while new consumers join smoothly without affecting the message consumption process within the group.</p>
+<p><strong>Delivery Semantics:</strong>&nbsp;based on how the consumers manage the offsets and commits, Kafka provides three semantics for message delivery — at most once, at least once, and exactly once. It’s important to design consumer applications such that they’re capable of handling these semantics accurately and consistently.</p>
+<p>In a Kafka data flow, Consumers play a significant role in driving real-time processing systems. Getting a solid grasp of Kafka Consumers is key to leveraging Kafka’s full potential for building robust and scalable data processing systems.</p>
+<h1 id="Topic-1-6-How-does-Kafka-Send-Messages-Reliably"><a href="#Topic-1-6-How-does-Kafka-Send-Messages-Reliably" class="headerlink" title="Topic: 1.6 How does Kafka Send Messages Reliably?"></a><strong>Topic</strong>: 1.6 How does Kafka Send Messages Reliably?</h1><p>Kafka’s primary responsibility is to reliably transfer records from producers (which write the data) to consumers (which read the data). Here’s a breakdown of how Kafka ensures reliable message delivery:</p>
+<p><strong>Replication and Redundancy</strong>: Kafka ensures message durability through its topic replication feature. A Kafka topic is divided into partitions, and each partition can be replicated across multiple nodes called brokers. This means the same message can live in multiple places, providing a high level of redundancy.</p>
+<p><strong>Leader and Follower</strong>: For every partition of Kafka, the broker can play two types of roles: leader and follower. All read and writes are served by the leader, and followers passively replicate the leader. If a leader fails, a follower can take its place and serve data to consumers,&nbsp;therefore providing business continuity.</p>
+<p><strong>Acknowledgments (ACKs)</strong>: ACKs play a significant role in reliability. When a producer sends a message, it can choose to receive an acknowledgment after the message is written to the leader’s log (acks=1), or after it’s written to all in-sync replicas (acks=all). This choice contributes to a trade-off between performance and resilience.</p>
+<p><strong>In-sync Replicas (ISRs)</strong>: Kafka enforces that only replicas which are in-sync can be elected as leader. An ISR is a replica that has fully caught up with the partition leader, and hasn’t lagged behind the leader’s log for more than a specified time. Ensuring the leader is always from ISR gives Kafka a strong consistency as it guarantees any message that was written to the leader and acknowledged, will not be lost as long as the number of failures is within the replication factor.</p>
+<p><strong>Consumer Offsets</strong>: Kafka consumers maintain their offset (the position from where they have read). Even if a consumer fails, it can resume reading messages from the offset it has kept track of, thereby minimizing data loss.</p>
+<p>In summary, Kafka guarantees the reliable delivery of messages by dividing data across multiple nodes for redundancy, ensuring data persistence through acknowledgments, maintaining ISR list for consistency, and utilizing&nbsp;offsets for effective consumption.</p>
+<h1 id="Topic-1-7-Best-Practices-for-Reliable-Messaging-in-Kafka"><a href="#Topic-1-7-Best-Practices-for-Reliable-Messaging-in-Kafka" class="headerlink" title="Topic: 1.7 Best Practices for Reliable Messaging in Kafka"></a><strong>Topic</strong>: 1.7 Best Practices for Reliable Messaging in Kafka</h1><p>The reliability of a Kafka cluster greatly depends on how well it is managed and the practices in place regarding messaging. Here are some best practices for reliable messaging in Kafka:</p>
+<p><strong>Monitor Your Cluster</strong>: Be sure to keep an eye on your Kafka cluster. This includes tracking things like the number of uncommitted messages, data rate in and out of each broker, topic and partition count, and under-replicated partitions. Monitoring will help you identify potential issues before they become serious.</p>
+<p><strong>Set Appropriate Retention Periods</strong>: Keep in mind that increasing the retention period increases storage and heap use. Balance needs accordingly to avoid resource constraints.</p>
+<p><strong>Sensible Partitioning of Topics</strong>: Choose the number of partitions with thought. While more partitions allow greater parallelism, they also imply more open server connections and greater Zookeeper overhead.</p>
+<p><strong>Reasonable Replication Factors</strong>: Higher replication factor boosts redundancy and thus reliability, but it also increases storage requirements. Choose a replication factor that matches the level of fault tolerance needed.</p>
+<p><strong>Proper Acknowledgement Policies</strong>: Use the correct acknowledgment policy (‘acks’) based on your application requirements. For critical data, consider using ‘acks=all’ to ensure data is replicated to all in-sync replicas before confirmation.</p>
+<p><strong>Effective Use of In-Sync Replicas (ISRs)</strong>: Configure your ISR settings to ensure you have the right balance between latency and durability guarantees. Make sure min.insync.replicas is set as per your needs, so you don’t lose data during failovers.</p>
+<p><strong>Consumer Offset Management</strong>: Make sure consumers commit their offsets regularly. This avoids rebroadcasting massive amounts of data if a failure occurs. But don’t commit too frequently, since each commit is a call to Zookeeper.</p>
+<p>To sum up, achieving reliable messaging with Kafka is crucial, but it requires a balance between operational requirements, resource usage, and application-specific needs.</p>
+<h1 id="Topic-1-8-Kafka’s-Message-Delivery-Semantics"><a href="#Topic-1-8-Kafka’s-Message-Delivery-Semantics" class="headerlink" title="Topic: 1.8 Kafka’s Message Delivery Semantics"></a><strong>Topic</strong>: 1.8 Kafka’s Message Delivery Semantics</h1><p>In Kafka, message delivery semantics govern how messages are delivered from the producer to the consumer. Kafka provides three types of delivery semantics:</p>
+<p><strong>1. At Most Once</strong>: In this case, the messages are delivered to the consumer at most once. This means that messages may be lost, but they are never redelivered or duplicated. This approach is fastest because it involves the least coordination between the producer and Kafka. However, it is not as reliable as other methods because any failure between the time Kafka sends the message and the consumer reads it will result in the loss of that message.</p>
+<p><strong>2. At Least Once</strong>: Messages are delivered at least once to the consumer. But, in certain situations, messages may be redelivered, resulting in duplicates. This method is more reliable than ‘at most once’ because it ensures messages are not lost. However, it has the risk of duplicate messages due to potential redelivery. For idempotent processing, this can be perfectly fine.</p>
+<p><strong>3. Exactly Once</strong>: This&nbsp;ensures that each message is delivered exactly once — no losses, no duplicates. However, it’s the slowest and most resource-intensive option because of the transactions needed to keep track of the progress. This is typically used in critical systems where message loss or duplication can lead to significant issues.</p>
+<p>These delivery semantics determine how resilient and reliable your Kafka-based system will be. The choice between speed, consistency, and reliability is yours to make depending on the use case of your application.</p>
+<h1 id="Topic-1-9-Review-and-Assessments"><a href="#Topic-1-9-Review-and-Assessments" class="headerlink" title="Topic: 1.9 Review and Assessments"></a><strong>Topic</strong>: 1.9 Review and Assessments</h1><p>We’ve covered a great deal in our Kafka curriculum, let’s do a brief round-up of those lessons:</p>
+<ol>
+<li><strong>How Kafka Works</strong>: We learned how various components of Kafka interact with each other to provide a robust, scalable, and fault-tolerant messaging system.</li>
+<li><strong>Kafka Producers</strong>: We delved into how Kafka Producers send messages and explored their crucial configurations.</li>
+<li><strong>Reliable Message Delivery Basics</strong>: We understood the fundamental concepts involved in ensuring message durability and reliability in Kafka.</li>
+<li><strong>Kafka Brokers &amp; Topic Replication</strong>: We dived into the functioning of Kafka Brokers and learned how Topic replication furthers reliability.</li>
+<li><strong>Kafka Consumers</strong>: We navigated the complexities of Kafka Consumers, Consumer groups, and ascertained their role in maintaining reliability.</li>
+<li><strong>How Kafka Sends Messages Reliably</strong>: Unraveled Kafka’s internal mechanisms for ensuring reliable message delivery.</li>
+<li><strong>Best Practices for Reliable Messaging in Kafka</strong>: We have discussed practical ways to optimize Kafka’s message delivery for reliability.</li>
+<li><strong>Kafka’s Message Delivery Semantics</strong>: Finally, we looked at the three types of delivery semantics, their significance, and use cases.</li>
+</ol>
+<p>Now, it’s time to assess your understanding and application of this knowledge. We can proceed with some practice problems and analysis of real-world scenarios where Kafka is extensively used. This will help reinforce what you’ve learned and enable you to better incorporate Kafka into your systems.</p>
+<p>Example Problem: List and explain the three different delivery semantics in Kafka?</p>
+<p><strong>Solution</strong>:</p>
+<ol>
+<li><strong>At Most Once</strong>: Messages are delivered at most once, meaning they could be lost but will not be redelivered resulting in duplicates. This method is the fastest, but is less reliable as messages could be lost.</li>
+<li><strong>At least Once</strong>: Messages are delivered at least once, which means that messages are assured to be delivered, but there’s a possibility of duplicates due to potential redelivery. This method is more reliable, but the duplication could potentially be an issue.</li>
+<li><strong>Exactly Once</strong>: In this case, messages are delivered exactly once, meaning there are no losses or duplicates. This method is the most reliable, but also the slowest because of the overhead of keeping track of the delivery state of each message.</li>
+</ol>
+<p>Are you ready for the test questions? Let’s proceed.</p>
+<h2 id="Question-1"><a href="#Question-1" class="headerlink" title="Question 1"></a>Question 1</h2><p>What is the role of a Kafka Producer in a Kafka cluster?</p>
+<h2 id="Question-2"><a href="#Question-2" class="headerlink" title="Question 2"></a>Question 2</h2><p>Explain the concept of Topic replication in Kafka. Why is it important?</p>
+<h2 id="Question-3"><a href="#Question-3" class="headerlink" title="Question 3"></a>Question 3</h2><p>What are In-Sync Replicas (ISRs) in Kafka?</p>
+<h2 id="Question-4"><a href="#Question-4" class="headerlink" title="Question 4"></a>Question 4</h2><p>Mention some of the best practices for reliable messaging in Kafka.</p>
+<h2 id="Question-5"><a href="#Question-5" class="headerlink" title="Question 5"></a>Question 5</h2><p>How does Kafka ensure reliable message delivery?</p>
+<h2 id="Answer-1"><a href="#Answer-1" class="headerlink" title="Answer 1"></a>Answer 1</h2><p>A Kafka producer’s role in a Kafka cluster is to publish data or messages to one or more Kafka topics. The messages sent by producers are appended to the committed log at the end and are assigned a unique offset number.</p>
+<h2 id="Answer-2"><a href="#Answer-2" class="headerlink" title="Answer 2"></a>Answer 2</h2><p>Topic replication is a feature in Kafka to ensure that messages in the cluster remain available during the unavailability of a broker (due to a failure or being taken down for maintenance). Each topic can be replicated across a configurable number of Kafka brokers to ensure redundancy. This helps in ensuring no message loss and high data availability.</p>
+<h2 id="Answer-3"><a href="#Answer-3" class="headerlink" title="Answer 3"></a>Answer 3</h2><p>In-Sync Replicas (ISRs) are the set of replicas that are up-to-date with the leader replica. Any replica that has not sent a fetch request to the leader for some configurable time is removed from the ISR set. If a follower fails to fetch from the leader, it will be out of ISR and won’t be considered for producing data to clients.</p>
+<h2 id="Answer-4"><a href="#Answer-4" class="headerlink" title="Answer 4"></a>Answer 4</h2><p>Some of the best practices for reliable messaging in Kafka include choosing the right message delivery semantics for your use case, following the principle of least privilege with permissions, using compaction for long-term topics with key-value data, monitoring and setting alerts for critical metrics, keeping your Kafka cluster and client libraries up-to-date, etc.</p>
+<h2 id="Answer-5"><a href="#Answer-5" class="headerlink" title="Answer 5"></a>Answer 5</h2><p>Kafka ensures reliable message delivery through several mechanisms like replication, in-sync replica sets, acknowledgements, and configurable delivery semantics. The producers wait for acknowledgements that a message has been written to the full set of in-sync replicas. If a message fails to be written, the producer will automatically retry. The consumers maintain an offset to track their progress through each topic.</p>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/kafka-interview1/">https://programmerscareer.com/zh-cn/kafka-interview1/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote></body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/golang-syntactic-sugar/">Syntactic Sugars that You Should Know in Golang</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/mysql-interview1/">MySQL interviews: Briefly describe the primary and secondary synchronization mechanism of MySQL</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/kafka-interview1/';
+        this.page.identifier = 'kafka-interview1/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL Interviews: What are database transactions and why does MySQL use InnoDB as the default option - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/mysql-interview14/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL Interviews: What are database transactions and why does MySQL use InnoDB as the default option">
+<meta property="og:url" content="https://programmerscareer.com/mysql-interview14/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.283Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-1-—-Deep-Dive-into-Transactions">1&nbsp;&nbsp;<b>Topic 1.1 — Deep Dive into Transactions</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-2-—-MySQL-and-Transactions">2&nbsp;&nbsp;<b>Topic 1.2 — MySQL and Transactions</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-3-—-Introduction-to-InnoDB">3&nbsp;&nbsp;<b>Topic 1.3 — Introduction to InnoDB</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-4-—-Advantages-of-InnoDB">4&nbsp;&nbsp;<b>Topic 1.4 — Advantages of InnoDB.</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-5-—-InnoDB-vs-MyISAM">5&nbsp;&nbsp;<b>Topic 1.5 — InnoDB vs MyISAM</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-6-—-Case-studies-Real-world-examples-and-scenarios-where-data-integrity-and-transactions-matter">6&nbsp;&nbsp;<b>Topic 1.6 — Case studies: Real-world examples and scenarios where data integrity and transactions matter</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-7-—-MySQL-Interviews-Why-are-database-transactions-important-and-why-is-InnoDB-the-default-option-in-MySQL">7&nbsp;&nbsp;<b>Topic 1.7 — MySQL Interviews: Why are database transactions important and why is InnoDB the default option in MySQL?</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-8-—-Review-and-Assessments">8&nbsp;&nbsp;<b>Topic 1.8 — Review and Assessments</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview14/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview14/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL Interviews: What are database transactions and why does MySQL use InnoDB as the default option
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            14 minutes read (About 2031 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-1-1-—-Deep-Dive-into-Transactions"><a href="#Topic-1-1-—-Deep-Dive-into-Transactions" class="headerlink" title="Topic 1.1 — Deep Dive into Transactions"></a>Topic 1.1 — Deep Dive into Transactions</h1><p>In simple terms, a transaction is a unit of work performed within a database management system (or similar system) against a database, and treated in a reliable way independent of other transactions.</p>
+<p>A transaction generally represents any change in the database. More technically, a transaction is a sequence of database operations that constitutes a logical unit of work.</p>
+<p>Consider the example of transferring funds from one bank account to another. This operation requires two steps:</p>
+<ol>
+<li>Withdrawal in one account.</li>
+<li>Deposit in another.</li>
+</ol>
+<p>Both steps must be complete for the transaction to be considered complete. If something were to happen in between these two operations, like a server failure, the transaction would be considered incomplete, and the database must be rolled back to its previous, consistent state.</p>
+<p>This way, transactions help maintain the&nbsp;<strong>Integrity</strong>&nbsp;of a database by ensuring that sets of related operations either all occur, or none occur. The concept of transactions ties in closely with the principles of ACID (Atomicity, Consistency, Isolation, Durability), providing a framework to ensure reliable processing of data.</p>
+<h1 id="Topic-1-2-—-MySQL-and-Transactions"><a href="#Topic-1-2-—-MySQL-and-Transactions" class="headerlink" title="Topic 1.2 — MySQL and Transactions"></a>Topic 1.2 — MySQL and Transactions</h1><p>MySQL is a DBMS that provides support for managing transactions. What does this mean? It means that MySQL allows you to group a certain set of actions together in such a way that either all actions are executed or none of them are. This is especially crucial in scenarios where the failure of an intermediate step might lead to database inconsistency.</p>
+<p>Consider again the example of transferring funds between two bank accounts. Let’s now say we’re working with a MySQL database that manages these transactions. Let’s go step by step:</p>
+<ol>
+<li>User A initiates a transaction by requesting to transfer $100 to User B.</li>
+<li>MySQL starts a transaction.</li>
+<li>MySQL debits $100 from User A’s account balance.</li>
+<li>MySQL attempts to credit $100 to User B’s account.</li>
+<li>Here we consider two scenarios:</li>
+</ol>
+<ul>
+<li>If the operation is successful, MySQL commits the transaction, and the database shows the updated balances for both users.</li>
+<li>If there’s a failure (maybe due to a server crash or an unforeseen issue), MySQL rolls back the transaction. The result? The database remains in its initial state, with no changes to User A or User B’s account balances. The database remains consistent.</li>
+</ul>
+<p>In this way, MySQL plays a critical role in ensuring secure and consistent transactions by adhering to the principles of ACID.</p>
+<p>Remember, MySQL’s power to handle transactions isn’t provided out of the box with every setup, but requires particular types of storage engines. We’ll explore this in more depth in the upcoming subjects.</p>
+<h1 id="Topic-1-3-—-Introduction-to-InnoDB"><a href="#Topic-1-3-—-Introduction-to-InnoDB" class="headerlink" title="Topic 1.3 — Introduction to InnoDB"></a>Topic 1.3 — Introduction to InnoDB</h1><p>Now that we understand the vital role that transactions play in maintaining database integrity and how MySQL handles transactions, it’s time to explore InnoDB.</p>
+<p>InnoDB is a storage engine for MySQL. MySQL users initially had to choose between two major types of storage engines — MyISAM and InnoDB. Each engine came with its own advantages and disadvantages. However, MyISAM, an earlier engine, did not support transactions. InnoDB, on the other hand, offers full transaction support, involving multiple statements with commit and rollback. InnoDB also provides row-level locking, which increases multi-user concurrency and performance, and features such as consistent reads, foreign key constraints, and ACID compliance, which we’ve touched on already.</p>
+<p>Since the MySQL 5.5 release, InnoDB has been the default MySQL storage engine, unless otherwise specified. This decision was made largely based on InnoDB’s robustness and full-featured design.</p>
+<p>So, InnoDB’s strong transaction support, along with its other features, makes it a powerful choice for extensive and complex database systems.</p>
+<h1 id="Topic-1-4-—-Advantages-of-InnoDB"><a href="#Topic-1-4-—-Advantages-of-InnoDB" class="headerlink" title="Topic&nbsp;1.4 — Advantages of InnoDB."></a>Topic&nbsp;<strong>1.4 — Advantages of InnoDB</strong>.</h1><p>InnoDB’s main advantage is in its robust handling of transactions alongside its row-level locking capabilities. This makes it a powerful choice for extensive and complex database systems with a high number of concurrent users.</p>
+<p>Let’s break down some of these advantages:</p>
+<ol>
+<li><strong>Reliability and Durability — ACID Compliance:</strong>&nbsp;Like I mentioned before, InnoDB’s transaction complies with the ACID model, thanks to its commit, rollback, and crash-recovery capabilities. It ensures that your transactions are reliable and your data is durable.</li>
+<li><strong>Row-level locking:</strong>&nbsp;Unlike table-level locking(MyISAM uses it), row-level locking is more efficient as it allows higher concurrency and great performance in a multi-user environment.</li>
+<li><strong>InnoDB Buffer Pool:</strong>&nbsp;The Buffer Pool is the memory space that InnoDB uses to cache data and indices of its tables. This feature reduces the I/O operations, which makes the system faster and more performant.</li>
+<li><strong>Foreign Key Constraints:</strong>&nbsp;InnoDB supports the use of foreign key constraints for referential integrity. When the data in one table relies on data from another table, you can prevent erroneously removing critical data with foreign key constraints.</li>
+<li><strong>Automatic Crash Recovery:</strong>&nbsp;InnoDB has the capability to recover from a crash automatically. Critical data being updated in a crash will not be lost, due to the engine’s automatic replay of its logs.</li>
+</ol>
+<p>These are only a few of many advantages InnoDB brings to your MySQL database. Depending on your specific needs, there may be more benefits relevant to your use case.</p>
+<h1 id="Topic-1-5-—-InnoDB-vs-MyISAM"><a href="#Topic-1-5-—-InnoDB-vs-MyISAM" class="headerlink" title="Topic 1.5 — InnoDB vs MyISAM"></a>Topic 1.5 — InnoDB vs MyISAM</h1><p>InnoDB and MyISAM are both storage engines for MySQL, but they have some significant differences. Understanding these differences is crucial when deciding which storage engine to use for your specific use-case.</p>
+<p>Let’s compare them across a few key parameters:</p>
+<ol>
+<li><strong>Transactions:</strong>&nbsp;As we’ve discussed before, InnoDB supports transactions, whereas MyISAM does not. So, if you require transactional integrity, you should opt for InnoDB.</li>
+<li><strong>Locking:</strong>&nbsp;InnoDB implements row-level locking while MyISAM implements table-level locking. Row-level locking allows higher concurrency and thus offers better performance for operations that require frequent, small data modifications.</li>
+<li><strong>Foreign Key Constraints:</strong>&nbsp;Foreign key constraints, part of referential integrity, are supported in InnoDB but not in MyISAM.</li>
+<li><strong>Full-Text Search:</strong>&nbsp;Full-text search is an operation that searches through a large collection of data and returns results that match one or more keywords. MyISAM has built-in full-text search support, which makes it a good option if this is your primary requirement.</li>
+<li><strong>Data safety:</strong>&nbsp;InnoDB uses a transaction log to ensure data safety (ACID compliance), while MyISAM does not.</li>
+<li><strong>Compression:</strong>&nbsp;InnoDB supports table compression, allowing your table data and associated indexes to be compressed to conserve disk space, which can also increase I/O efficiency and performance.</li>
+</ol>
+<p>Most importantly, remember that there’s no such thing as a universally “right” choice between InnoDB and MyISAM. The suitable engine depends on your specific situation and requirements.</p>
+<h1 id="Topic-1-6-—-Case-studies-Real-world-examples-and-scenarios-where-data-integrity-and-transactions-matter"><a href="#Topic-1-6-—-Case-studies-Real-world-examples-and-scenarios-where-data-integrity-and-transactions-matter" class="headerlink" title="Topic 1.6 — Case studies: Real-world examples and scenarios where data integrity and transactions matter"></a>Topic 1.6 — Case studies: Real-world examples and scenarios where data integrity and transactions matter</h1><p>Transactions and data integrity are critical in many real-world applications. To illustrate their importance in practical scenarios, let’s consider a few case studies.</p>
+<p><strong>Online Banking and Financial Services:</strong></p>
+<ol>
+<li>In an online banking system, suppose a customer is transferring money from their savings account to their checking account. This process comprises two separate tasks ‒ reducing the balance of the savings account and increasing the balance of the checking account. Both tasks need to happen together. If there’s a system failure after the savings account was debited but before the checking account was credited, the customer would lose money. The ACID properties of a transaction ensure that either both actions occur or neither do, maintaining the integrity of the data.</li>
+</ol>
+<p><strong>Ecommerce Platforms:</strong></p>
+<ol>
+<li>Consider a customer placing an order on an eCommerce site. The process involves checking the inventory, confirming the payment, updating the inventory, and confirming the order. Any error or failure at one stage should halt the entire process. Transactions provide a secure pathway for these operations, ensuring consistent data throughout.</li>
+</ol>
+<p><strong>Airlines Reservation System:</strong></p>
+<ol>
+<li>When a seat on a flight is booked, the system first checks the availability of seats, reserves a seat, then accepts payment. If the reservation system crashes after a seat has been reserved but before the payment confirmation, it could lead to a loss for the airline. With transactions, a failure in a later stage would automatically roll back the previous stages, freeing up the seat for a different customer.</li>
+</ol>
+<p>These are just a few scenarios where transactions, aided by the robust capabilities of InnoDB, ensure data integrity. In critical systems where data consistency is paramount, the support provided by InnoDB proves incredibly useful.</p>
+<h1 id="Topic-1-7-—-MySQL-Interviews-Why-are-database-transactions-important-and-why-is-InnoDB-the-default-option-in-MySQL"><a href="#Topic-1-7-—-MySQL-Interviews-Why-are-database-transactions-important-and-why-is-InnoDB-the-default-option-in-MySQL" class="headerlink" title="Topic 1.7 — MySQL Interviews: Why are database transactions important and why is InnoDB the default option in MySQL?"></a>Topic 1.7 — MySQL Interviews: Why are database transactions important and why is InnoDB the default option in MySQL?</h1><p>Transactions are an essential concept in database systems. They serve to protect an organization’s information in the event of system failures such as a power outage, software crash, or something more nefarious like malicious attacks.</p>
+<p>A transaction is a sequence of one or more operations performed as a single logical unit of work. The operations can include reading database records, modifying these records, or even manipulating the data within a set of parameters.</p>
+<p>Transactions in database systems are managed with the acronym ACID, which stands for Atomicity, Consistency, Isolation, and Durability.</p>
+<ul>
+<li><strong>Atomicity:</strong>&nbsp;Guarantees that either all the changes a transaction makes are committed to the database, or if an error occurs, none of the changes is committed.</li>
+<li><strong>Consistency:</strong>&nbsp;Ensures that a transaction doesn’t leave the database in an inconsistent state after it runs.</li>
+<li><strong>Isolation:</strong>&nbsp;Ensures that one transaction does not interfere with another.</li>
+<li><strong>Durability:</strong>&nbsp;Ensures that committed updates persist, even in the face of power loss or a system crash.</li>
+</ul>
+<p>Now, why is InnoDB the default option for MySQL?</p>
+<p>InnoDB storage engine provides a robust and reliable way to handle transactions. It has several features such as the support for ACID-compliant transactions, row-level locking, and real-world implementations like foreign keys that make it the default engine for MySQL.</p>
+<p>Moreover, InnoDB offers crash recovery capabilities and provides hardware acceleration using Solid State Disks (SSDs) or hard disks.</p>
+<p>In a nutshell, the strength of InnoDB lies in its broadly applicable set of features, including transactions, reliability, and performance optimizations, which are suitable for most workloads.</p>
+<h1 id="Topic-1-8-—-Review-and-Assessments"><a href="#Topic-1-8-—-Review-and-Assessments" class="headerlink" title="Topic 1.8 — Review and Assessments"></a>Topic 1.8 — Review and Assessments</h1><p>Over the course of our lessons, we’ve covered:</p>
+<ul>
+<li><strong>Transactions</strong>&nbsp;and their importance in maintaining data integrity,</li>
+<li>How MySQL supports transactions and the benefits of such support,</li>
+<li>An introduction to&nbsp;<strong>InnoDB</strong>, its advantages, and why it is the default storage engine in MySQL,</li>
+<li>The differences between InnoDB and MyISAM,</li>
+<li>Real-world instances where data integrity and transactions are crucial,</li>
+<li>And a run-through of common MySQL interview questions and responses.</li>
+</ul>
+<p>Just to recap, transactions are a critical concept in database systems. They exist to protect the integrity of data in the event of system failures.</p>
+<p>InnoDB is the default storage engine for MySQL due to its support for ACID-compliant transactions, its feature set that provides reliability and performance optimization, and its real-word implementations that further enforce data integrity. These features provide InnoDB an advantage over MyISAM, especially in the context of applications where data integrity and reliability are paramount.</p>
+<p>For this assessment, I will provide a set of questions and problems related to the topics that we covered. They will range from simple to complex, so make sure to think critically and take your time.</p>
+<p><strong>Question 1 (3/10 difficulty):</strong></p>
+<p>What are the four properties of a transaction known as ACID?</p>
+<p><strong>Question 2 (6/10 difficulty):</strong></p>
+<p>Explain the importance of transactions in maintaining data integrity within a database.</p>
+<p><strong>Question 3 (9/10 difficulty):</strong></p>
+<p>Discuss why InnoDB is the default option in MySQL compared to MyISAM. Include the benefits of InnoDB in your answer.</p>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/mysql-interview14/">https://programmerscareer.com/zh-cn/mysql-interview14/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/mysql-interview13/">MySQL interviews: What is the difference between a clustered index and a non-clustered index?</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/mysql-interview15/">MySQL interviews: What are the transaction isolation levels? What are the tradeoffs?</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/mysql-interview14/';
+        this.page.identifier = 'mysql-interview14/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL面试问题:什么时候分割数据库，什么时候分割表? - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/mysql-interview16/" rel="alternate" hreflang="en" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="让我们概述一下在MySQL中拆分数据库和表的课程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL面试问题:什么时候分割数据库，什么时候分割表?">
+<meta property="og:url" content="https://programmerscareer.com/zh-cn/mysql-interview16/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="让我们概述一下在MySQL中拆分数据库和表的课程">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://images.unsplash.com/photo-1488489153583-89ce18dd4968?crop=entropy&amp;cs=srgb&amp;fm=jpg&amp;ixid=M3wzNjM5Nzd8MHwxfHJhbmRvbXx8fHx8fHx8fDE3MTU1MDk3NTh8&amp;ixlib=rb-4.0.3&amp;q=85&amp;w=500&amp;h=500">
+<meta property="article:published_time" content="2024-05-12T18:29:00.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.unsplash.com/photo-1488489153583-89ce18dd4968?crop=entropy&amp;cs=srgb&amp;fm=jpg&amp;ixid=M3wzNjM5Nzd8MHwxfHJhbmRvbXx8fHx8fHx8fDE3MTU1MDk3NTh8&amp;ixlib=rb-4.0.3&amp;q=85&amp;w=500&amp;h=500">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/zh-cn">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/zh-cn/archives">归档</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/categories">分类</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/tags">标签</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/about">关于</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="搜索" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="目录">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#主题：了解数据分布">1&nbsp;&nbsp;<b>主题：了解数据分布</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：MySQL数据库分割（分片）">2&nbsp;&nbsp;<b>主题：MySQL数据库分割（分片）</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：MySQL中的表分割（分区）">3&nbsp;&nbsp;<b>主题：MySQL中的表分割（分区）</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：数据库和表分割的实践例">4&nbsp;&nbsp;<b>主题：数据库和表分割的实践例</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：作出明智的决定">5&nbsp;&nbsp;<b>主题：作出明智的决定</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：回顾和评估">6&nbsp;&nbsp;<b>主题：回顾和评估</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#主要点">6.1&nbsp;&nbsp;主要点</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#评估场景">6.2&nbsp;&nbsp;评估场景</a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>简体中文</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview16/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview16/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL面试问题:什么时候分割数据库，什么时候分割表?
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-05-12T18:29:00.000Z" itemprop="datePublished">5月 12 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/zh-cn/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            25 分钟 读完 (约 3727 字)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>让我们概述一下在MySQL中拆分数据库和表的课程</p>
+<p><img src="https://images.unsplash.com/photo-1488489153583-89ce18dd4968?crop=entropy&amp;cs=srgb&amp;fm=jpg&amp;ixid=M3wzNjM5Nzd8MHwxfHJhbmRvbXx8fHx8fHx8fDE3MTU1MDk3NTh8&amp;ixlib=rb-4.0.3&amp;q=85&amp;w=500&amp;h=500" alt="photo by Geranimo on Unsplash"></p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>感谢您阅读这篇文章。更多面试问题:<br><a href="https://programmerscareer.com/zh-cn/software-interview-set/">https://programmerscareer.com/zh-cn/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="主题：了解数据分布"><a href="#主题：了解数据分布" class="headerlink" title="主题：了解数据分布"></a>主题：了解数据分布</h1><p>你好，我们将在本课程中开始了解数据分布。首先，让我们确定我们所说的“数据分布”是指什么。</p>
+<p>数据分布是将数据、计算任务和应用程序分布在网络中的多个计算机上的方法。分布数据可以提高应用程序的性能、可靠性和可访问性。 😊</p>
+<p>数据分布有多种原因。请允许我为您介绍其中的一些主要优势：</p>
+<p><strong>提高性能</strong>：通过分布数据，可以提高应用程序访问数据的速度。如果有效地执行，数据分布可以确保资源位于需要它们的地方，从而降低访问延迟并提高速度。</p>
+<p><strong>冗余和可靠性</strong>：通过数据分布，可以存储多个数据副本在不同位置。这提供了冗余并增加了数据的总体可靠性。如果一个服务器失败，应用程序可以从另一个服务器访问相同的数据。</p>
+<p><strong>可伸缩性</strong>：通过数据分布，当业务或应用程序增长时，可以更轻松地扩展基础设施。新的服务器可以随时添加到网络中。</p>
+<p><strong>负载平衡</strong>：通过有效地分布数据，可以确保服务器的负载均衡。这确保了无单点瓶，影响应用程序性能的情况不会发生。</p>
+<p>数据分布可以采用多种方法，例如水平分区（也称为分片）、垂直分区和功能分区。每种方法都有其特点并适用于不同类型的应用程序。我们将在后续课程中详细探讨这些。</p>
+<h1 id="主题：MySQL数据库分割（分片）"><a href="#主题：MySQL数据库分割（分片）" class="headerlink" title="主题：MySQL数据库分割（分片）"></a>主题：MySQL数据库分割（分片）</h1><p>我很高兴看到你想深入了解！现在，让我们深入探讨数据分割，也就是<strong>分片</strong>。</p>
+<p>在 MySQL 中，分片是将一个较大的数据库分割成更小的、更易于管理的部分，称为分片。每个分片都是一个独立的数据库。</p>
+<p>想象一下，类似于将一个大书分割成多个章节，其中每个章节可以独立存储独特的信息。类似地，当我们分片数据库时，它就像将一个大数据库分割成多个“章节”，其中每个章节存储独特的数据。</p>
+<p>然而，为什么要这样做呢？ 🤔 分片通常用于以下几个原因：</p>
+<p><strong>提高性能</strong>：分片可以大大提高读/写速度。当您发出查询时，不必浏览整个数据库，只需浏览特定的分片，显著提高速度。</p>
+<p><strong>可伸缩性</strong>：分片使数据库水平可伸缩。如果您的应用程序增长并且数据库开始变得太大以适合单个服务器，您可以随时添加更多的分片。</p>
+<p><strong>可靠性</strong>：如果一个分片出现故障，它不会导致整个应用程序崩溃。其他分片将继续运行无事故。</p>
+<p>虽然分片有其多种好处，但它也有一些缺点：</p>
+<p><strong>增加复杂性</strong>：整个数据库环境变得更复杂。</p>
+<p><strong>数据分布</strong>：您必须决定如何分布数据，这可能会困难。</p>
+<p><strong>跨分片加入数据</strong>：如果您想要加入来自不同分片的表，这可能会困难或慢。</p>
+<p>在 MySQL 中，分片通常在应用程序层上进行，通过分片库或框架。其中一些流行的分片算法包括范围基础、列表基础、哈希基础和目录基础分片。</p>
+<h1 id="主题：MySQL中的表分割（分区）"><a href="#主题：MySQL中的表分割（分区）" class="headerlink" title="主题：MySQL中的表分割（分区）"></a><strong>主题：MySQL中的表分割（分区）</strong></h1><p>如果记忆中，以前我们讨论了数据分布和为什么要将数据库分割成多个小部分，这个过程称为分片。</p>
+<p>类似地，表分区是一种将大表分割成更可管理的小部分的方法，同时仍然能够访问和操作数据，就好像分区的表是一个单独的实体。换句话说，即使数据存储在分区中，从用户的角度来看，它仍然像是一个表。很酷，对吧？</p>
+<p>现在，<strong>为什么会有用处？</strong> 😊</p>
+<p>分区可能是解决方案，如果你有一个非常大的表，导致慢查询和更新，特别是如果该表预计会超过单个服务器的容量。</p>
+<p>在本质上来说，分区是关于管理和优化数据以提高性能的。在不必要的复杂性出现的情况下使用分区可能会导致问题。</p>
+<p>MySQL提供四种分区类型：</p>
+<p><strong>1. RANGE分区：</strong> 这是分区的简单类型。它最适合处理在特定范围内的数据，例如日期或量。</p>
+<p><strong>2. LIST分区：</strong> 它根据预定义的值列表进行分区。</p>
+<p><strong>3. HASH分区：</strong> 在这种情况下，MySQL应用哈希函数在分区键上进行确定。它用于确保数据均匀地分布在指定数量的分区中。</p>
+<p><strong>4. KEY分区：</strong> 它类似于哈希分区，但在这种情况下，MySQL服务器内部计算哈希值，用户不能控制。</p>
+<p>所以，这是理论，在下一课中，我们将讨论如何在 MySQL 中实现这些原理，并提供一些实际示例来帮助说明这个概念。</p>
+<h1 id="主题：数据库和表分割的实践例"><a href="#主题：数据库和表分割的实践例" class="headerlink" title="主题：数据库和表分割的实践例"></a><strong>主题：数据库和表分割的实践例</strong></h1><p>好的！现在让我们将数据库分片和表分区的理论应用到实际例子中。</p>
+<p><strong>例 1：数据库分片</strong></p>
+<p>假设我们有一个全球范围的电子商务网站，客户数据在迅速增长中。我们可以为每个地理区创建一个分片，例如北美、欧洲和亚洲等。每个区的数据库分片仅存储位于该区内的客户数据。这样，我们就可以通过局部化数据和查询来提高性能。</p>
+<p><strong>例 2：表分区</strong></p>
+<p>在我们的电子商务网站的情况下，考虑一种情况，其中我们有 millions 的订单，并且大多数查询都是对最近的订单进行的。我们可以决定按日期分区“Orders”表，并为每个月保存单独的分区。这样，对特定时期的查询只需要扫描更少的行并执行更快。</p>
+<p>但是，这些是如何在实践中进行的？</p>
+<p>对于 MySQL 中的数据库分片，有各种分片框架可用，例如 Vitess、phpMyAdmin 等。例如，在 Vitess 中，您将定义一个 VSchema，其中包含分片指令来自动分片所需的表。</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">{  </span><br><span class="line">  "sharded": true,  </span><br><span class="line">  "vindexes": {  </span><br><span class="line">    "hash": {  </span><br><span class="line">      "type": "hash"  </span><br><span class="line">    }  </span><br><span class="line">  },  </span><br><span class="line">  "tables": {  </span><br><span class="line">    "your_table": {  </span><br><span class="line">      "column_vindexes": [  </span><br><span class="line">        {  </span><br><span class="line">          "column": "your_shard_column",  </span><br><span class="line">          "name": "hash"  </span><br><span class="line">        }  </span><br><span class="line">      ]  </span><br><span class="line">    }  </span><br><span class="line">  }  </span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure>
+
+<p>对于 MySQL 中的表分区，可以使用 ALTER TABLE 命令进行分区。</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">ALTER TABLE orders  </span><br><span class="line">PARTITION BY RANGE( YEAR(order_date) )  </span><br><span class="line">(  </span><br><span class="line">  PARTITION p0 VALUES LESS THAN (1990),  </span><br><span class="line">  PARTITION p1 VALUES LESS THAN (2000),  </span><br><span class="line">  PARTITION p2 VALUES LESS THAN (2010),  </span><br><span class="line">  PARTITION p3 VALUES LESS THAN (2020),  </span><br><span class="line">  PARTITION p4 VALUES LESS THAN MAXVALUE  </span><br><span class="line">);</span><br></pre></td></tr></tbody></table></figure>
+
+<p>在这个脚本中，我们根据“order_date”列对“orders”表进行分区。</p>
+<p>请记，这些过程通常由应用程序或框架处理，因此对 SQL 有一些了解是必要的。同时，分片和分区都会带来复杂性，只有在其好处超过复杂性时才应该使用它们。</p>
+<h1 id="主题：作出明智的决定"><a href="#主题：作出明智的决定" class="headerlink" title="主题：作出明智的决定"></a><strong>主题：作出明智的决定</strong></h1><p>我们已经讨论了很多内容，最后我们将讨论如何作出一个有理由的决定，重复了前面的课程中的一些关键点，并提供了一些额外的提示。</p>
+<p>下面是要考虑的因素：</p>
+<p><strong>数据库分片（分割）决策作出：</strong></p>
+<ol>
+<li><strong>数据大小</strong>：如果数据库变得太大而难以有效处理，可能需要分割。</li>
+<li><strong>性能</strong>：如果数据库中的频繁查询因数据量而变慢，分割可以帮助提高处理速度，因为它可以减少每个查询处理的数据量。</li>
+<li><strong>可伸缩性</strong>：如果您预计数据库将超过单个服务器的容量，在早期阶段实施分割可能是一个好的预防措施。</li>
+<li><strong>数据类型</strong>：分割可能会受数据类型的影响。例如，多租户应用程序，其中来自多个客户的数据存储在同一数据库中是一个分割的好候选。</li>
+</ol>
+<p><strong>表分区决策作出：</strong></p>
+<ol>
+<li><strong>表大小</strong>：如果表在数据库中变得无限大，可能需要分区。</li>
+<li><strong>查询性能</strong>：如果大多数查询只处理表的某个部分（例如，最近的条目），分区可以大大加快这些查询的速度。</li>
+<li><strong>维护</strong>：分区也可以帮助维护表（例如，备份、更新和删除），因为这些操作可以在单个分区上执行，而不是对整个表进行线下维护。</li>
+</ol>
+<p>在决定是否要分割或分区时，应该根据需要提高性能和处理大量数据或两者都是的。然而，这是一个复杂性增加的决定，应该只有在必要时并且其他简单优化技术不足时才应用。</p>
+<h1 id="主题：回顾和评估"><a href="#主题：回顾和评估" class="headerlink" title="主题：回顾和评估"></a><strong>主题：回顾和评估</strong></h1><p>我们已经完成了数据分布的旅程，特别是MySQL中的数据库分割（分片）和表分区（分区）。现在，让我们快速回顾一下主要点，然后转到评估来巩固您的学习。</p>
+<h2 id="主要点"><a href="#主要点" class="headerlink" title="主要点"></a><strong>主要点</strong></h2><ol>
+<li>了解数据分布：数据分布具有显著的性能优势，但也会增加复杂性。了解何时和怎样使用它是至关重要的。</li>
+<li>MySQL数据库分割（分片）：MySQL数据库分割涉及将数据库分割为更小的部分，基于一个键。它可以显著提高查询响应时间，增加可靠性并支持水平缩放。</li>
+<li>MySQL表分区（分区）：MySQL表分区涉及将表分割为更小的部分，而无需更改SQL查询。分区可以根据各种策略进行，例如范围、列值、哈希值等。</li>
+<li>实际示例：我们讨论了如何为全球客户的电子商务网站实现数据库分割，并如何使用表分区来提高性能，以处理最近的数据。</li>
+<li>作出明智的决定：决定是否要实现数据库分割或表分区，或者两者都要，并为什么要考虑数据大小、查询性能、可伸缩性和数据类型。</li>
+</ol>
+<p>现在，让我们来进行评估。您将被提供一些场景，并要求决定是否要使用分割、分区、两者都要，或者不要，并为什么。</p>
+<h2 id="评估场景"><a href="#评估场景" class="headerlink" title="评估场景"></a><strong>评估场景</strong></h2><ol>
+<li>场景 1：您正在为医院设计应用程序，其中包含一个名为 <code>patients</code> 的表，用于存储患者记录。医院每年处理数千名患者，并且大多数患者只会来一次每年。大多数查询涉及访问最近的患者记录。您应该使用分割、分区、两者都要，或者不要，并为什么？</li>
+<li>场景 2：您正在为技术新闻网站开发应用程序，其中文章经常更新以进行修正，并且新信息和用户评论被不断地写入。评论被存储在一个名为 <code>comments</code> 的表中，每条评论与一个文章相关。您应该使用分割、分区、两者都要，或者不要，并为什么？</li>
+<li>场景 3：您正在为全球范围内的电子商务网站开发应用程序，其中包含一个名为 <code>transactions</code> 的表，包含网站上的所有交易的详细信息。您应该使用分割、分区、两者都要，或者不要，并为什么？</li>
+</ol>
+<hr>
+<p><strong>场景 1</strong>：根据场景，应该在 <code>patients</code> 表上实现 <strong>表分区</strong>。查询涉及访问最近的患者记录，并且分区可以为这些查询提供有效的查询性能。分割可能不是必要的，因为我们没有明确的分割键，并且管理分布式事务和维护一致性可能会增加不必要的复杂性。</p>
+<p><strong>场景 2</strong>：在这种情况下，可能的解决方案是在 <code>comments</code> 表上实现分区。基于日期的分区系统可能会很好地工作，因为旧文章的评论可能会被频繁地读取，但不太可能会更新。分割可能会对这种情况造过多的复杂性。</p>
+<p><strong>场景 3</strong>：在这种情况下，分割 <code>transactions</code> 表可能会有好处，特别是在交易的位置上。这可能会使来自同一地区的交易被分组在一起，从而可能会导致更有效的查询。此外，分割还可能会帮助平衡多个数据库的负载，并为其提供额外的规模和性能优势。此外，您可能还会考虑分区单个分片。</p>
+<p>这些是根据提供的信息而作出的推荐解决方案。然而，每个应用程序可能有独特的要求和约束，并且在作出设计决定时要考虑所有因素。记住，先测量再优化！</p>
+<blockquote class="colorquote danger"><p>English post: <a href="https://programmerscareer.com/mysql-interview16/">https://programmerscareer.com/mysql-interview16/</a><br>作者：<a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>注意：本文为作者原创，转载请注明出处。  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/zh-cn/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/zh-cn/mysql-interview17/">MySQL面试问题:MySQL MVCC的实现原理</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/zh-cn/software-interview-set/">常见(20+)软件面试问题(+答案)关于MySQL/Redis/Kafka</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">评论</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/zh-cn/mysql-interview16/';
+        this.page.identifier = 'zh-cn/mysql-interview16/';
+        
+        this.language = 'zh';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 Wesley Wei&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("zh-CN");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="站内搜索" />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: '文章',
+                PAGES: '页面',
+                CATEGORIES: '分类',
+                TAGS: '标签',
+                UNTITLED: '(无标题)',
+            },
+            CONTENT_URL: '/content.zh-cn.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

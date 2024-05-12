@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>Syntactic Sugars that You Should Know in Golang - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/golang-syntactic-sugar/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Exploring Syntactic Sugars in Go: A Comprehensive Guide">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Syntactic Sugars that You Should Know in Golang">
+<meta property="og:url" content="https://programmerscareer.com/golang-syntactic-sugar/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Exploring Syntactic Sugars in Go: A Comprehensive Guide">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-05-10T01:08:00.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.283Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="code">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Introduction-to-Syntax-Sugars-in-Go">1&nbsp;&nbsp;<b>Introduction to Syntax Sugars in Go</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Variadic-Parameters">2&nbsp;&nbsp;<b>Variadic Parameters</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Basic-Introduction">2.1&nbsp;&nbsp;Basic Introduction</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Declaration-and-Calling">2.2&nbsp;&nbsp;Declaration and Calling</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Ignoring-Unnecessary-Information">3&nbsp;&nbsp;<b>Ignoring Unnecessary Information</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Declaration-Statements">4&nbsp;&nbsp;<b>Declaration Statements</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Short-Variable-Declaration">4.1&nbsp;&nbsp;Short Variable Declaration</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Declaring-Variables-with-Unspecified-Length">4.2&nbsp;&nbsp;Declaring Variables with Unspecified Length</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Checking-logic">5&nbsp;&nbsp;<b>Checking logic</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Checking-if-a-Key-Exists-in-a-Map-in-Go">5.1&nbsp;&nbsp;Checking if a Key Exists in a Map in Go</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Type-Assertions">5.2&nbsp;&nbsp;Type Assertions</a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/golang-syntactic-sugar/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/golang-syntactic-sugar/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            Syntactic Sugars that You Should Know in Golang
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-05-10T01:08:00.000Z" itemprop="datePublished">May 10 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/golang/">golang</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            10 minutes read (About 1450 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Exploring Syntactic Sugars in Go: A Comprehensive Guide</p>
+<span id="more"></span>
+
+<blockquote class="colorquote success"><p>Walking with a friend in the dark is better than walking alone in the light.<br> — Helen Keller  </p>
+</blockquote>  
+
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/golang-syntactic-sugar/">https://programmerscareer.com/zh-cn/golang-syntactic-sugar/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote>
+
+<!-- -->
+
+<h2 id="Introduction-to-Syntax-Sugars-in-Go"><a href="#Introduction-to-Syntax-Sugars-in-Go" class="headerlink" title="Introduction to Syntax Sugars in Go"></a>Introduction to Syntax Sugars in Go</h2><p>Before I get into the specifics of syntactic sugar, let me explain to you what syntactic sugar is.</p>
+<p>In computer science, “syntactic sugar” refers to a programming syntax that is internally transformed into a base syntax in order to make a program easier to read or express. In other words, this syntax does not introduce new features, but rather provides a more convenient way of programming.</p>
+<p><strong>Golang</strong>, being a modern language, contains a lot of syntactic sugar to ease the programmer’s burden and make the code more readable.</p>
+<p>For example, many high-level programming languages have the <code>++</code> operator, which is syntactic sugar used to increment the value of a variable by 1. Thus, instead of <code>i = i + 1</code>, we can type <code>i++</code>, which is shorter and faster to type, and which expresses the same incremental operation.</p>
+<p>Next we’ll go through the common syntactic sugars in Golang, detailing each one. This will help you understand and use Golang better and write more compact and readable code.</p>
+<p>Of course, the goal is not only to learn these features, but also to understand when and why to use them. A responsible Go developer knows not only how to utilize these syntactic sugars, but also when it is appropriate to use them.</p>
+<h2 id="Variadic-Parameters"><a href="#Variadic-Parameters" class="headerlink" title="Variadic Parameters"></a>Variadic Parameters</h2><h3 id="Basic-Introduction"><a href="#Basic-Introduction" class="headerlink" title="Basic Introduction"></a>Basic Introduction</h3><p>Go allows a function to take any number of values as arguments, and Go provides the … operator to be used only at the end of a function’s parameter list. When using this operator, you should be aware of the following points:</p>
+<ul>
+<li>A function can have at most one variadic parameter;</li>
+<li>The type of a variadic parameter is always a slice type;</li>
+<li>The last parameter of a function can be a variadic parameter.</li>
+</ul>
+<h3 id="Declaration-and-Calling"><a href="#Declaration-and-Calling" class="headerlink" title="Declaration and Calling"></a>Declaration and Calling</h3><p>The declaration of a variadic function is similar to that of a regular function, except that the last parameter must be a variadic parameter. <strong>In the function body, a variadic parameter is treated as a slice.</strong></p>
+<figure class="highlight go hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">SumData</span><span class="hljs-params">(values …<span class="hljs-type">int64</span>)</span></span> (sum <span class="hljs-type">int64</span>) {</span><br><span class="line">	<span class="hljs-comment">// Type of values is []int64.</span></span><br><span class="line">	sum = <span class="hljs-number">0</span></span><br><span class="line">	<span class="hljs-keyword">for</span> _, v := <span class="hljs-keyword">range</span> values {</span><br><span class="line">		sum += v</span><br><span class="line">	}</span><br><span class="line">	<span class="hljs-keyword">return</span></span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure>
+
+<p>When calling a variadic function, you can use two styles to pass arguments to a variadic parameter of type <code>[]T</code>:</p>
+<blockquote>
+<p><strong>1. Pass a slice as an argument</strong>. This slice must be assignable to a value of type <code>[]T</code> (or can be implicitly converted to type <code>[]T</code>). <strong>Following this argument, there must be three dots ‘…’</strong>.<br><strong>2. Pass zero or more arguments that can be implicitly converted to type T</strong> (or can be assigned to a value of type T). <strong>These arguments will be added to an anonymous slice of type <code>[]T</code> that is created at runtime, and then this slice will be passed as an argument to the function call</strong>.</p>
+</blockquote>
+<p>Note that you cannot mix these two styles of argument passing in the same variadic function call.</p>
+<p>Note that you cannot mix these two styles of argument passing in the same variadic function call.</p>
+<figure class="highlight go hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {</span><br><span class="line">	a0 := SumData()</span><br><span class="line">	a1 := SumData(<span class="hljs-number">3</span>)</span><br><span class="line">	a3 := SumData(<span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">8</span>)</span><br><span class="line">	<span class="hljs-comment">// The top three lines are equivalent to the bottom three lines.</span></span><br><span class="line">	b0 := SumData([]<span class="hljs-type">int64</span>{})…</span><br><span class="line">	b1 := SumData([]<span class="hljs-type">int64</span>{<span class="hljs-number">2</span>})…</span><br><span class="line">	b3 := SumData([]<span class="hljs-type">int64</span>{<span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">5</span>})…</span><br><span class="line">	fmt.Println(a0, a1, a3)</span><br><span class="line">	fmt.Println(b0, b1, b3)</span><br><span class="line">}</span><br><span class="line"><span class="hljs-comment">// print</span></span><br><span class="line"><span class="hljs-comment">// 0 3 15</span></span><br><span class="line"><span class="hljs-comment">// 0 3 15</span></span><br></pre></td></tr></tbody></table></figure>
+
+<p>The <code>Print</code>、<code>Println</code> and <code>Printf</code> functions in the <code>fmt</code> standard library package are all variadic functions. Their declarations are roughly as follows:</p>
+<figure class="highlight go hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Print</span><span class="hljs-params">(a …<span class="hljs-keyword">interface</span>{})</span></span> (n <span class="hljs-type">int</span>, err <span class="hljs-type">error</span>)  </span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Printf</span><span class="hljs-params">(format <span class="hljs-type">string</span>, a …<span class="hljs-keyword">interface</span>{})</span></span> (n <span class="hljs-type">int</span>, err <span class="hljs-type">error</span>)  </span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Println</span><span class="hljs-params">(a …<span class="hljs-keyword">interface</span>{})</span></span> (n <span class="hljs-type">int</span>, err <span class="hljs-type">error</span>)</span><br></pre></td></tr></tbody></table></figure>
+
+<h2 id="Ignoring-Unnecessary-Information"><a href="#Ignoring-Unnecessary-Information" class="headerlink" title="Ignoring Unnecessary Information"></a>Ignoring Unnecessary Information</h2><p>We want to initialize the <code>init</code> function in a package but do not want to use any of the methods in the package. In this case, we can use the <code>_</code> operator to rename the import of an unused package:</p>
+<figure class="highlight go hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">import</span> _ <span class="hljs-string">"github.com/tfrain"</span></span><br></pre></td></tr></tbody></table></figure>
+
+<p>Sometimes we don’t necessarily use the return values of a function, and we have to come up with a creative name for it. Is there a way to handle unnecessary return values? Of course, we can use the <code>_</code> operator to assign the unwanted values to a blank identifier, which allows us to ignore them:</p>
+<figure class="highlight go hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">_, ok := test(a, b <span class="hljs-type">int</span>)</span><br></pre></td></tr></tbody></table></figure>
+
+<ol>
+<li>Sometimes we want to exclude certain fields from serialization in JSON. The <code>-</code> operator can help us with this. Go structures provide a labeling feature, and in the structure tag, we can use the <code>-</code> operator to perform special handling on fields that we don’t want to serialize:</li>
+</ol>
+<figure class="highlight go hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">type</span> Person <span class="hljs-keyword">struct</span> {</span><br><span class="line">	Name <span class="hljs-type">string</span> <span class="hljs-string">`json:"-"`</span></span><br><span class="line">	Age <span class="hljs-type">string</span> <span class="hljs-string">`json:"age"`</span></span><br><span class="line">	Email <span class="hljs-type">string</span> <span class="hljs-string">`json:"email,omitempty"`</span></span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure>
+
+<ol start="2">
+<li>When we use <code>json.Marshal</code> to serialize a structure, it does not ignore empty values by default. Instead, it outputs the zero value of the field’s type (the zero value of a <code>string</code> type is “”, and the zero value of an object type is <code>nil</code>). If we want to ignore empty fields during serialization, we can add the <code>omitempty</code> attribute to the structure tag:</li>
+</ol>
+<figure class="highlight go hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">type</span> Person <span class="hljs-keyword">struct</span> {</span><br><span class="line">	Name <span class="hljs-type">string</span> <span class="hljs-string">`json:"name"`</span></span><br><span class="line">	Age <span class="hljs-type">string</span> <span class="hljs-string">`json:"age"`</span></span><br><span class="line">	Email <span class="hljs-type">string</span> <span class="hljs-string">`json:"email,omitempty"`</span></span><br><span class="line">	Active <span class="hljs-type">bool</span> <span class="hljs-string">`json:"active,omitempty"`</span></span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure>
+
+<h2 id="Declaration-Statements"><a href="#Declaration-Statements" class="headerlink" title="Declaration Statements"></a>Declaration Statements</h2><h3 id="Short-Variable-Declaration"><a href="#Short-Variable-Declaration" class="headerlink" title="Short Variable Declaration"></a>Short Variable Declaration</h3><p>In some other programming languages, it’s not common to declare variables every time they’re used. In Go, you can declare and initialize local variables using the syntax <code>name := expression</code> instead of using the <code>var</code> statement for declaration. This can reduce the number of steps required for declaration:</p>
+<figure class="highlight go hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">var</span> a <span class="hljs-type">int</span> = <span class="hljs-number">10</span></span><br><span class="line">same as</span><br><span class="line">a := <span class="hljs-number">10</span></span><br></pre></td></tr></tbody></table></figure>
+
+<p>When using short variable declaration, there are two things to note:</p>
+<ul>
+<li>Short variable declaration can only be used inside functions, not for initializing global variables.</li>
+<li>Short variable declaration introduces a new variable, so you can’t declare the same variable again in the same scope.</li>
+<li>When declaring multiple variables using short variable declaration, if one variable is new, you can use short variable declaration, but if all variables are already declared, you can’t declare them again.</li>
+</ul>
+<h3 id="Declaring-Variables-with-Unspecified-Length"><a href="#Declaring-Variables-with-Unspecified-Length" class="headerlink" title="Declaring Variables with Unspecified Length"></a>Declaring Variables with Unspecified Length</h3><p>In Go, arrays usually have a fixed length, and you have to specify the length when declaring the array. However, you can also omit the length and use the <code>…</code> operator to declare arrays. In this case, you just need to fill in the element values, and the compiler will handle the length:</p>
+<figure class="highlight go hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">a := […]<span class="hljs-type">int</span>{<span class="hljs-number">1</span>, <span class="hljs-number">3</span>, <span class="hljs-number">5</span>} <span class="hljs-comment">// same as a := [3]int{1, 3, 5}</span></span><br></pre></td></tr></tbody></table></figure>
+
+<p>When declaring a large array, you can use the <code>…</code> operator to set specific values for some indices:</p>
+<figure class="highlight go hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">a := […]<span class="hljs-type">int</span>{<span class="hljs-number">1</span>: <span class="hljs-number">20</span>, <span class="hljs-number">999</span>: <span class="hljs-number">10</span>} <span class="hljs-comment">// array length is 1000, index 1 has value 20, index 999 has value 10, other indices have value 0</span></span><br></pre></td></tr></tbody></table></figure>
+
+<h2 id="Checking-logic"><a href="#Checking-logic" class="headerlink" title="Checking logic"></a>Checking logic</h2><h3 id="Checking-if-a-Key-Exists-in-a-Map-in-Go"><a href="#Checking-if-a-Key-Exists-in-a-Map-in-Go" class="headerlink" title="Checking if a Key Exists in a Map in Go"></a>Checking if a Key Exists in a Map in Go</h3><p>Go provides the syntax <code>value, ok := m[key]</code> to check if a key exists in a map. This syntax is commonly used to only check the <code>ok</code> value. If the key exists, it returns the value associated with the key; otherwise, it returns an empty value:</p>
+<figure class="highlight go hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">import</span> <span class="hljs-string">"fmt"</span></span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {</span><br><span class="line">	dict := <span class="hljs-keyword">map</span>[<span class="hljs-type">string</span>]<span class="hljs-type">int</span>{<span class="hljs-string">"tfrain"</span>: <span class="hljs-number">1</span>}</span><br><span class="line">	<span class="hljs-keyword">if</span> value, ok := dict[<span class="hljs-string">"tfrain"</span>]; ok {</span><br><span class="line">		fmt.Println(value)</span><br><span class="line">	} <span class="hljs-keyword">else</span> {</span><br><span class="line">		fmt.Println(<span class="hljs-string">"Key:tfrain not exist"</span>)</span><br><span class="line">	}</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure>
+
+<h3 id="Type-Assertions"><a href="#Type-Assertions" class="headerlink" title="Type Assertions"></a>Type Assertions</h3><p>We often use <code>interface</code> in Go, where there are two types: interfaces with methods and empty interfaces. Since Go 1.18 does not have generics, we can use empty interfaces as a pseudo-generic type. When we use empty interfaces as input parameters or output values, we need to use type assertions to obtain the type we need. In Go, the syntax for type assertions is as follows:</p>
+<figure class="highlight go hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">value, ok := x.(T)</span><br></pre></td></tr></tbody></table></figure>
+
+<p>Here, <code>x</code> is an <code>interface</code> type, and <code>T</code> is a specific type. This syntax requires distinguishing the type of <code>x</code>. If <code>x</code> is an empty interface type:</p>
+<p><strong>The type assertion for empty interface types is essentially a comparison of <code>_type</code> and the type to be matched in <code>eface</code>. If the comparison is successful, the value is assembled in memory and returned. If the comparison fails, the register is cleared, and the default value is returned.</strong></p>
+<p>If <code>x</code> is a non-empty interface type:</p>
+<p><strong>The type assertion for non-empty interface types is essentially a comparison of <code>*itab</code> in <code>iface</code>. If the comparison is successful, the value is assembled in memory and returned. If the comparison fails, the register is cleared, and the default value is returned.</strong></p>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/code/">#code</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/software-interview-set/">Common(20+) Software Interview Questions(+ Answers) about MySQL/Redis/Kafka</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/kafka-interview1/">Kafka interviews: How does Kafka send messages reliably?</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/golang-syntactic-sugar/';
+        this.page.identifier = 'golang-syntactic-sugar/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 Wesley Wei&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

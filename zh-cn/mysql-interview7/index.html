@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL 面试：什么是 SQL 注入攻击？如何防止这类攻击？ - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/mysql-interview7/" rel="alternate" hreflang="en" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="下面是学习 MySQL 中的 SQL 注入攻击的提议课程：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL 面试：什么是 SQL 注入攻击？如何防止这类攻击？">
+<meta property="og:url" content="https://programmerscareer.com/zh-cn/mysql-interview7/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="下面是学习 MySQL 中的 SQL 注入攻击的提议课程：">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/zh-cn">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/zh-cn/archives">归档</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/categories">分类</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/tags">标签</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/about">关于</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="搜索" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="目录">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#主题：SQL-注入攻击简介">1&nbsp;&nbsp;<b>主题：SQL 注入攻击简介</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：SQL注入攻击的示例">2&nbsp;&nbsp;<b>主题：SQL注入攻击的示例</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：了解-SQL-注入的影响">3&nbsp;&nbsp;<b>主题：了解 SQL 注入的影响</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：防止-SQL-注入攻击">4&nbsp;&nbsp;<b>主题：防止 SQL 注入攻击</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：防止-SQL-注入的最佳实践">5&nbsp;&nbsp;<b>主题：防止 SQL 注入的最佳实践</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：测试-SQL-注入漏洞">6&nbsp;&nbsp;<b>主题：测试 SQL 注入漏洞</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：SQL-注入的审查和评估">7&nbsp;&nbsp;<b>主题：SQL 注入的审查和评估</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#审查：">7.1&nbsp;&nbsp;审查：</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#评估：">7.2&nbsp;&nbsp;评估：</a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>简体中文</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview7/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview7/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL 面试：什么是 SQL 注入攻击？如何防止这类攻击？
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">1月 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/zh-cn/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            25 分钟 读完 (约 3684 字)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>下面是学习 MySQL 中的 SQL 注入攻击的提议课程：</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>感谢您阅读这篇文章。更多面试问题:<br><a href="https://programmerscareer.com/zh-cn/software-interview-set/">https://programmerscareer.com/zh-cn/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="主题：SQL-注入攻击简介"><a href="#主题：SQL-注入攻击简介" class="headerlink" title="主题：SQL 注入攻击简介"></a>主题：SQL 注入攻击简介</h1><p>SQL 注入（SQLi）是网站应用安全性漏洞中最著名的类别之一。它发生在攻击者可以在输入字段中插入恶意 SQL 语句以执行或修改时。简单来说，SQLi 攻击利用网站的弱输入验证，其中 SQL 命令被解析。</p>
+<p>这种攻击可能导致未经授权的用户列表查看、整个表的删除以及在某些情况下，攻击者可能会获得管理员权限，全部通过在数据库上运行恶意 SQL 语句来完成。SQLi 相对容易防止，但仍然发生非常频繁，并且具有令人惊讶的后果。</p>
+<p>攻击者可以通过在被包含在 SQL 语句中的字段中插入自己的命令来操纵您的 SQL 查询。这些攻击成功时，网站应用程序未能正确验证输入之前将其包含在 SQL 查询中。</p>
+<p>例如，想象一下一个简单的登录功能，其中用户必须输入用户名和密码。与此功能相关的 SQL 查询可能会像这样看起来：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM users WHERE username = '[username]' AND password = '[password]';</span><br></pre></td></tr></tbody></table></figure>
+
+<p>在这种情况下，攻击者可能会提交“<code>admin'; --</code>”作为他们的用户名。您的查询将然后看起来像这样：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM users WHERE username = 'admin'; --' AND password = '[password]';</span><br></pre></td></tr></tbody></table></figure>
+
+<p>在 SQL 中，从&nbsp;<code>--</code>&nbsp;开始的任何内容都被视为注释并被忽略。因此，攻击者已经成功地绕过了密码检查并可以以&nbsp;<code>admin</code>&nbsp;身份登录。</p>
+<p>请记，这是 SQLi 的最简单形式——存在更复杂的 SQLi 方法，它们可能会有更为严重的后果。</p>
+<h1 id="主题：SQL注入攻击的示例"><a href="#主题：SQL注入攻击的示例" class="headerlink" title="主题：SQL注入攻击的示例"></a>主题：SQL注入攻击的示例</h1><p>SQL注入攻击的形态很多种。下面是一些常见的例子：</p>
+<p><strong>1. 显示隐藏数据：</strong><br>假设我们有一个显示过滤后的产品的页面：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://example.com/products?category=Books</span><br></pre></td></tr></tbody></table></figure>
+
+<p>它可能使用以下 SQL 查询：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM products WHERE category = 'Books'</span><br></pre></td></tr></tbody></table></figure>
+
+<p>攻击者可以更改 URL 到：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://example.com/products?category=Books' OR '1'='1</span><br></pre></td></tr></tbody></table></figure>
+
+<p>这可能会修改 SQL 查询为：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM products WHERE category = 'Books' OR '1'='1'</span><br></pre></td></tr></tbody></table></figure>
+
+<p>由于 ‘1’=’1’ 总是真的，它会显示所有的产品，不仅仅是书籍。</p>
+<p><strong>2. 绕过应用程序逻辑：</strong></p>
+<p>考虑另一种情况，其中应用程序检查用户的登录凭证使用以下代码：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM users WHERE username = '$username' AND password = '$password'</span><br></pre></td></tr></tbody></table></figure>
+
+<p>攻击者可以使用 SQLi 绕过密码检查使用以下输入：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">' OR '1'='1' -- 对于用户名</span><br><span class="line">randompassword 对于密码</span><br></pre></td></tr></tbody></table></figure>
+
+<p>这将看起来像：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM users WHERE username = '' OR '1'='1' --' AND password = 'randompassword'</span><br></pre></td></tr></tbody></table></figure>
+
+<p>注释掉密码检查的 SQL 查询的部分，导致非授权的登录。</p>
+<p><strong>3. UNION 攻击：</strong></p>
+<p>UNION 操作可以用于从数据库的其他表中检索数据。例如，URL：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://example.com/products?category=Books</span><br></pre></td></tr></tbody></table></figure>
+
+<p>如果查询是：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT price, name, description FROM products WHERE category = 'Books'</span><br></pre></td></tr></tbody></table></figure>
+
+<p>攻击者可能会试：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://example.com/products?category=Books' UNION SELECT username, password FROM users --</span><br></pre></td></tr></tbody></table></figure>
+
+<p>这可能会导致泄露用户凭证。</p>
+<p>请记住，这些攻击大量依赖于后端查询结构和保护机制的存在。不是所有的网站或数据库都会受到这些精确的攻击。然而，这些示例应该能够给你一个想法，说明 SQLi 利用了不正确处理用户提供的数据来操纵 SQL 查询。</p>
+<h1 id="主题：了解-SQL-注入的影响"><a href="#主题：了解-SQL-注入的影响" class="headerlink" title="主题：了解 SQL 注入的影响"></a>主题：了解 SQL 注入的影响</h1><p>SQL 注入可能导致各种危险后果，其严重程度大量取决于攻击者侵害的用户帐户的权限和数据库的用途。下面是 SQL 注入攻击的可能影响：</p>
+<p><strong>1. 数据泄露：</strong></p>
+<p>SQL 注入攻击的最直接和危险的后果是数据泄露。如果攻击者成功利用了 SQL 注入漏洞，他们可能会获取存储在数据库中的敏感数据。这可能包括个人身份信息（PII）、财务数据、商业秘密、密码或更多内容。</p>
+<p><strong>2. 数据修改：</strong></p>
+<p>SQL 注入不仅仅是关于查看数据的事情。攻击者可能会使用它来修改或删除数据库中的数据——这可能范围从更改价格或平衡到删除整个表。</p>
+<p><strong>3. 丢失的可追溯性和非否认性：</strong></p>
+<p>SQL 注入可能会导致丢失的可追溯性和非否认性。攻击者可能会在数据库上执行操作，并以其他用户（或者管理员）的身份进行。这可能会使追踪操作的过程变得困难，创造了非否认性问题。</p>
+<p><strong>4. 损害商业的声誉：</strong></p>
+<p>成功的 SQL 注入攻击可能会严重损害业务的声誉。客户信任商业处理其数据，并且一旦发生数据泄露，可能会损失这种信任。</p>
+<p><strong>5. 法律后果：</strong></p>
+<p>根据侵害的数据和司法管辖区，SQL 注入攻击可能会导致法律后果，例如罚金、诉讼或两项都有。</p>
+<p>这些后果显示了 SQL 注入攻击的重要性，并且在接下来的课程中，我们将深入探讨如何防止它们。</p>
+<h1 id="主题：防止-SQL-注入攻击"><a href="#主题：防止-SQL-注入攻击" class="headerlink" title="主题：防止 SQL 注入攻击"></a>主题：防止 SQL 注入攻击</h1><p>防止 SQL 注入攻击的关键是确保应用程序和数据库之间的数据流是安全和有保证的。下面是可以用来帮助防止 SQL 注入攻击的技术：</p>
+<p><strong>1. 使用准备好的语句（参数化查询）：</strong></p>
+<p>最有效的方法是使用准备好的语句。定义了参数的准备好的语句确保参数被绑定到查询中，并且不是查询的一部分，这意味着攻击者不能影响查询结构。这有效地消除了所有的 SQL 注入攻击。大多数网络语言现在都支持准备好的语句。</p>
+<p><strong>2. 使用存储过程：</strong></p>
+<p>与准备好的语句类似，存储过程也分离了数据和命令和查询。然而，存储过程还具有额外的好处，例如提高性能和可重用的代码。</p>
+<p><strong>3. 输入验证：</strong></p>
+<p>虽然这种方法自身不足以防止 SQL 注入攻击，但它仍然是必要的步骤。通过验证用户输入，我们确保它符合长度、类型、语法和业务规则的特性。</p>
+<p><strong>4. 最小权限原则：</strong></p>
+<p>不要为用户帐户提供更多的权限，它们所需要的。例如，如果帐户仅用于在应用程序中执行选择语句，就不要为其提供删除表的能力。如果攻击者侵害了有限的帐户，则可能会限制其造成的损害。</p>
+<p><strong>5. 定期更新和补丁：</strong></p>
+<p>保持数据库管理系统（DBMS）和所有软件的更新和补丁，并使用最新的安全修复。</p>
+<p>这些是可以用来确保数据库的安全性并防止 SQL 注入攻击的几个防护技术。</p>
+<p>中文翻译:</p>
+<h1 id="主题：防止-SQL-注入的最佳实践"><a href="#主题：防止-SQL-注入的最佳实践" class="headerlink" title="主题：防止 SQL 注入的最佳实践"></a>主题：防止 SQL 注入的最佳实践</h1><p>除了上述防止措施外，下面是更多的最佳实践，可帮助避免 SQL 注入漏洞：</p>
+<p><strong>1. 数据转义：</strong></p>
+<p>数据转义是指将数据处理为原始数据，而不是作为 SQL 查询的一部分。这可以通过使用特定的函数来转义特殊字符，例如引号，或者通过使用预编译语句来隐式处理。</p>
+<p><strong>2. 详细错误处理：</strong></p>
+<p>黑客经常依赖数据库的错误消息来获取数据库的结构信息。最佳实践是避免直接向终端用户暴露这些错误，相反，使用通用错误消息并将详细错误信息记录到一个安全的文件中，开发人员可以参考这些详细信息。</p>
+<p><strong>3. 使用 Web 应用程序防火墙 (WAF)：</strong></p>
+<p>Web 应用程序防火墙可以检查进入数据的数据并识别恶意 SQL 代码。它们不能替代良好的编码实践，但它们可以作为额外的防线。</p>
+<p><strong>4. 定期代码审查：</strong></p>
+<p>定期进行代码审查，其中安全是其中一个主题。这可以帮助确保安全编码实践被遵循并捕获潜在的问题。</p>
+<p><strong>5. 进行测试并使用安全工具：</strong></p>
+<p>定期测试应用、数据库和基础设施的安全性。有许多自动化工具可用，可以扫描 SQL 注入和其他漏洞。</p>
+<p>记住，安全是一个过程，不是一个状态。定期更新技能和知识，了解新的漏洞和攻击技术，并定期审核和改进应用是维护强大安全性的一部分。</p>
+<h1 id="主题：测试-SQL-注入漏洞"><a href="#主题：测试-SQL-注入漏洞" class="headerlink" title="主题：测试 SQL 注入漏洞"></a>主题：测试 SQL 注入漏洞</h1><p>测试 SQL 注入漏洞是确保应用和数据库的安全性的关键部分。它可以手动进行或者使用自动化工具进行。下面是详细说明：</p>
+<p><strong>1. 手动测试：</strong></p>
+<p>手动测试涉及使用技术来注入特殊字符到应用的输入中并观察应用的反应。例如，输入单引号 <code>'</code> 到文本字段中。如果应用抛出 SQL 错误，这可能表明应用受 SQL 注入攻击的影响。另一方面，如果应用运行良好并显示输入的字符，这可能表明应用正确处理输入。</p>
+<p>记住，SQL 注入可能会以多种形式出现，并且详尽的手动测试可能涉及试验许多输入。</p>
+<p><strong>2. 自动测试与安全工具：</strong></p>
+<p>还有许多自动化工具可用，用于帮助检测 SQL 注入漏洞。这些工具可以爬行应用并测试各种输入，节省时间并提供详细的评估。它们可以测试已知的 SQL 注入技术并生成报告，显示可能的漏洞。</p>
+<p>例如，SQLMap、Havij 和 Netsparker。</p>
+<p>虽然测试和自动化工具可能非常有用，但它们并不完全可靠。即使工具未发现任何漏洞，这并不意味着应用是安全的。建议结合这些方法与上述防止技术和最佳实践。</p>
+<h1 id="主题：SQL-注入的审查和评估"><a href="#主题：SQL-注入的审查和评估" class="headerlink" title="主题：SQL 注入的审查和评估"></a>主题：SQL 注入的审查和评估</h1><h2 id="审查："><a href="#审查：" class="headerlink" title="审查："></a>审查：</h2><ol>
+<li><strong>SQL 注入攻击：</strong> 这是一种攻击方法，攻击者通过注入恶意 SQL 代码来操纵 SQL 查询，通过用户输入进行。</li>
+<li><strong>防范措施：</strong> 主要手段包括预编译语句、存储过程、输入验证和强制最小特权，并定期更新系统。</li>
+<li><strong>最佳实践：</strong> 这包括数据转义、详细错误处理、使用 Web 应用程序防火墙 (WAF)、定期代码审查和使用安全工具。</li>
+<li><strong>检测漏洞：</strong> 手动测试可能会涉及试验许多输入。自动化工具如 SQLMap 也可以帮助检测可能的漏洞。</li>
+</ol>
+<p>现在，让我们进行评估。</p>
+<h2 id="评估："><a href="#评估：" class="headerlink" title="评估："></a>评估：</h2><p>下面是一些简短的问题。这些问题是为了测试我们讨论的概念的理解和应用。</p>
+<ol>
+<li><strong>系统可能会显示 SQL 注入攻击的特征是哪些？</strong></li>
+<li><strong>如何使用预编译语句来防范 SQL 注入攻击？</strong></li>
+<li><strong>为什么详细错误处理和不向终端用户暴露数据库错误是重要的？</strong></li>
+<li><strong>描述至少两种应该遵循的最佳实践来保护自身免受 SQL 注入攻击的。</strong></li>
+</ol>
+<hr>
+<ol>
+<li><strong>系统可能会显示 SQL 注入攻击的特征是哪些？</strong><br>答：系统可能会对 SQL 注入攻击感兴趣，如果它们直接使用未经过清理或验证的用户输入来构建 SQL 查询，或者如果它们向终端用户暴露数据库错误，或者如果它们不使用参数化查询或预编译语句。可能的征兆包括用户输入中的单引号导致错误，或者特定的输入提供了访问或数据检索，该访问或数据检索不应该可能。</li>
+<li><strong>如何使用预编译语句来防范 SQL 注入攻击？</strong><br>答：预编译语句分离 SQL 查询结构和用户提供的数据。这阻止攻击者通过更改查询结构来操纵查询，因为用户输入不被视为 SQL 命令的一部分，使 SQL 注入攻击无效。</li>
+<li><strong>为什么详细错误处理和不向终端用户暴露数据库错误是重要的？</strong><br>答：向终端用户暴露数据库错误可以为攻击者提供有用的信息关于数据库结构或应用设计，这可以用于攻击。另外，详细错误处理是防范 SQL 注入攻击的重要部分，因为它们允许系统友好地处理问题并可能提供日志或其他机制来警告可能的攻击。</li>
+<li><strong>描述至少两种应该遵循的最佳实践来保护自身免受 SQL 注入攻击的。</strong><br>答：其中包括：</li>
+</ol>
+<ul>
+<li>使用预编译语句或参数化查询：这确保用户提供的输入不会更改 SQL 查询的结构不利地。</li>
+<li>输入验证：输入应该被验证为具有正确的形式之前使用。例如，如果系统期望整数，它应该确认输入确实是整数。</li>
+<li>其他最佳实践包括详细错误处理、定期系统更新、强制最小特权原则和更多。</li>
+</ul>
+<blockquote class="colorquote danger"><p>English post: <a href="https://programmerscareer.com/mysql-interview7/">https://programmerscareer.com/mysql-interview7/</a><br>作者：<a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>注意：本文为作者原创，转载请注明出处。  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/zh-cn/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/zh-cn/mysql-interview6/">MySQL 面试：产生死锁的必要条件有哪些？如何解决死锁？</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/zh-cn/mysql-interview8/">MySQL 面试：MySQL 的索引什么情况下会失效？</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">评论</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/zh-cn/mysql-interview7/';
+        this.page.identifier = 'zh-cn/mysql-interview7/';
+        
+        this.language = 'zh';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("zh-CN");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="站内搜索" />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: '文章',
+                PAGES: '页面',
+                CATEGORIES: '分类',
+                TAGS: '标签',
+                UNTITLED: '(无标题)',
+            },
+            CONTENT_URL: '/content.zh-cn.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

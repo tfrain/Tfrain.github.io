@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL interviews: How does MySQL design indexes and optimize queries? - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/mysql-interview3/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="let’s sketch out a thorough curriculum for gaining a deep understanding of MySQL, focusing specifically on index design and query optimization">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL interviews: How does MySQL design indexes and optimize queries?">
+<meta property="og:url" content="https://programmerscareer.com/mysql-interview3/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="let’s sketch out a thorough curriculum for gaining a deep understanding of MySQL, focusing specifically on index design and query optimization">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.283Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-MySQL-Overview">1&nbsp;&nbsp;<b>Topic: MySQL Overview</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-SQL-in-MySQL-Basics">2&nbsp;&nbsp;<b>Topic: SQL in MySQL (Basics)</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-SQL-in-MySQL-Advanced">3&nbsp;&nbsp;<b>Topic: SQL in MySQL (Advanced)</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Database-Schemas-in-MySQL">4&nbsp;&nbsp;<b>Topic: Database Schemas in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Principles-of-Database-Design">5&nbsp;&nbsp;<b>Topic: Principles of Database Design</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-MySQL-Indexes">6&nbsp;&nbsp;<b>Topic: MySQL Indexes</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Designing-Indexes-in-MySQL">7&nbsp;&nbsp;<b>Topic: Designing Indexes in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-MySQL-Query-Optimization">8&nbsp;&nbsp;<b>Topic: MySQL Query Optimization</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Review-and-Assessments">9&nbsp;&nbsp;<b>Topic: Review and Assessments</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Question-1">9.1&nbsp;&nbsp;Question 1:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Question-2">9.2&nbsp;&nbsp;Question 2:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Question-3">9.3&nbsp;&nbsp;Question 3:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Answer-1">9.4&nbsp;&nbsp;Answer 1:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Answer-2">9.5&nbsp;&nbsp;Answer 2:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Answer-3">9.6&nbsp;&nbsp;Answer 3:</a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview3/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview3/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL interviews: How does MySQL design indexes and optimize queries?
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            19 minutes read (About 2864 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>let’s sketch out a thorough curriculum for gaining a deep understanding of MySQL, focusing specifically on index design and query optimization</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-MySQL-Overview"><a href="#Topic-MySQL-Overview" class="headerlink" title="Topic: MySQL Overview"></a><strong>Topic</strong>: MySQL Overview</h1><p>A major part of the digital world consists of databases, and MySQL is one of the premiere players in this realm. So, what really is MySQL?</p>
+<p>MySQL is a relational database management system. But what separates MySQL from the others? It is open-source, meaning it is free for anyone to use and modify. This has led to its widespread adoption across the globe by developers and organizations alike.</p>
+<p>You’ll often find MySQL backing up the data necessities of websites, applications, and even aiding in scientific research. Its flexibility in supporting a range of data types, offering a surfeit of functions that manipulate and extract data, and having a robust security system has solidified its importance in the world of databases.</p>
+<p>Most importantly, MySQL has a reputation for being extremely reliable and fast when it comes to data retrieval and management, making it a favourite among many.</p>
+<p>In the heart of MySQL is the Structured Query Language, SQL, giving users the power to manipulate databases effectively. We can create, retrieve, update, delete data, and perform other intricate analyses through SQL commands.</p>
+<p>The upcoming topics will help familiarize you with SQL, both the basics and more complex commands, in MySQL as we progress in our curriculum.</p>
+<p>Understanding MySQL is fundamental to grasping future topics like database schemas, principles of database design, and specific topics like designing indexes and query optimization in MySQL.</p>
+<h1 id="Topic-SQL-in-MySQL-Basics"><a href="#Topic-SQL-in-MySQL-Basics" class="headerlink" title="Topic: SQL in MySQL (Basics)"></a><strong>Topic</strong>: SQL in MySQL (Basics)</h1><p>SQL, or Structured Query Language, is the backbone of all relational database management systems, including MySQL. It is the language we use to communicate and interact with databases. Let’s take a look at some of the fundamental SQL commands that you will need to work with MySQL databases.</p>
+<ul>
+<li><strong>SELECT</strong>: This command is the one we use the most — it allows us to select data from the database. It can be as simple as&nbsp;<code>SELECT * FROM people;</code>, which would select and display all the data from the “people” table. Alternatively, you might choose to select only certain columns, say, first names and lastnames:&nbsp;<code>SELECT firstname, lastname FROM people;</code>.</li>
+<li><strong>INSERT INTO</strong>: This command allows us to insert new data into our database. For example,&nbsp;<code>INSERT INTO people (firstname, lastname) VALUES('John', 'Doe');</code>, would insert a new person with the first name of John and the last name of Doe.</li>
+<li><strong>UPDATE</strong>: As the name suggests, with this command, we can update existing data. For instance,&nbsp;<code>UPDATE people SET age=30 WHERE firstname='John' AND lastname='Doe';</code>, would update the age of all people named John Doe to 30.</li>
+<li><strong>DELETE</strong>: A word of caution, this command deletes data! Its use should not be taken lightly. An example usage:&nbsp;<code>DELETE FROM people WHERE firstname='John' AND lastname='Doe';</code>, would delete all the records for people named John Doe.</li>
+<li><strong>CREATE</strong>,&nbsp;<strong>ALTER</strong>, and&nbsp;<strong>DROP</strong>: These commands are used to manipulate the schema or structure of the database itself, and not the stored data. CREATE lets us make new tables, ALTER allows changing table structures, and DROP deletes tables.</li>
+</ul>
+<p>Getting well-versed with these commands will provide a strong foundation to dive deeper into more advanced commands of SQL in MySQL.</p>
+<p>Remember, practice makes perfect. Try running these commands and understanding their outcomes.</p>
+<h1 id="Topic-SQL-in-MySQL-Advanced"><a href="#Topic-SQL-in-MySQL-Advanced" class="headerlink" title="Topic: SQL in MySQL (Advanced)"></a><strong>Topic</strong>: SQL in MySQL (Advanced)</h1><p>While the basic SQL commands provide a solid foundation, mastering MySQL truly comes through understanding and utilizing its more advanced tools. Here are a few advanced MySQL commands that will let you manipulate your databases more effectively:</p>
+<ul>
+<li><strong>JOIN</strong>: SQL’s JOIN clause allows you to combine rows from two or more tables based on a common field. There are several types of JOIN commands — INNER JOIN, LEFT JOIN, RIGHT JOIN, FULL OUTER JOIN, etc. An example of a JOIN command:&nbsp;<code>SELECT Orders.OrderID, Customers.CustomerName FROM Orders INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID;</code>. This command will combine and display order IDs and customer names from the Orders and Customers tables where the customerIDs match.</li>
+<li><strong>GROUP BY</strong>: This command is used with the aggregate functions COUNT, MAX, MIN, SUM, and AVG to group the result set by one or more columns. An example:&nbsp;<code>SELECT COUNT(animal_type), animal_type FROM animal GROUP BY animal_type;</code>&nbsp;will show the number of each type of animal in the ‘animal’ table.</li>
+<li><strong>HAVING</strong>: This acts like a WHERE clause, but for aggregate functions. A basic example:&nbsp;<code>SELECT COUNT(product_id), product_name FROM products GROUP BY product_name HAVING COUNT(product_id) &gt; 5;</code>&nbsp;will show the product names and their quantities from the ‘products’ table, but only for those where the count of the product_id is greater than 5</li>
+<li><strong>UNION</strong>: The UNION operator is used to combine the result-set of two or more SELECT statements. Each SELECT statement within the UNION must have the same number of columns, and the columns must also have similar data types. Also, the columns in each SELECT statement must be ordered in the exact same way. For example:&nbsp;<code>SELECT column_name(s) FROM table1 UNION SELECT column_name(s) FROM table2;</code>.</li>
+<li><strong>CASE</strong>: This allows for conditional statements in SQL. For example:&nbsp;<code>SELECT CASE WHEN age &lt; 18 THEN 'Children' WHEN age BETWEEN 18 AND 65 THEN 'Adults' ELSE 'Seniors' END AS age_group FROM people;</code>&nbsp;will categorize people in the ‘people’ table into age groups based on their age.</li>
+</ul>
+<p>Mastering these commands will take you a long way in harnessing the full power of MySQL.</p>
+<p>Remember, to master these, hands-on practice is key.</p>
+<h1 id="Topic-Database-Schemas-in-MySQL"><a href="#Topic-Database-Schemas-in-MySQL" class="headerlink" title="Topic: Database Schemas in MySQL"></a><strong>Topic</strong>: Database Schemas in MySQL</h1><p>Behind every efficient database is a well-crafted schema. A database schema is an abstract blueprint of your database structure — it demonstrates how data is organized and accessed. So let’s get into it!</p>
+<p>When you think of a database, visualize it as a whole chest of drawers. In MySQL terminology, tables within that chest become a part of our database schema. They bear the actual data that we interact with via SQL commands.</p>
+<p>Now each drawer, or table, further contains divisions, referred to as columns or fields in MySQL. Each column represents a type of data within a table. For example, in a table (or drawer) storing employee information, different categories of information like Employee ID, Name, Job Position, etc., become different columns.</p>
+<p>Finally, the actual individual pieces of data stored in each ‘division’ are called records or rows. For instance, the information related to a specific employee (John Doe, ID 12345, Position Manager) becomes a row in the Employee table.</p>
+<p>Designing database schemas may sound straightforward enough — make a table for each type of data, right? Unfortunately, not! An efficiently designed schema mitigates redundancy, prevents data anomalies, and optimizes resource usage.</p>
+<p>MySQL strongly implements the principles of the relational database, arranging data in tables that are inter-linked. This brings us to concepts like Primary Keys and Foreign Keys which help establish connections between tables (we will get in detail during the Database Design lesson).</p>
+<p>Today’s lesson provides a foundation for the following ones where we will discuss principles of database design, indexes, and query optimization.</p>
+<h1 id="Topic-Principles-of-Database-Design"><a href="#Topic-Principles-of-Database-Design" class="headerlink" title="Topic: Principles of Database Design"></a><strong>Topic</strong>: Principles of Database Design</h1><p>Designing a database goes beyond just deciding tables, columns, and using SQL commands. A well-designed database ensures efficient and reliable data storage and retrieval. Let’s go through some of the fundamental principles of database design:</p>
+<ul>
+<li><strong>Entity-Relationship (ER) Model</strong>: Think of entities as ‘things’ or ‘objects’ that are relevant to your database (like employees in a company database). Relationships define how these entities interact with each other. Diagrammatically representing these entities and their relationships gives us an ER model, a foundational step in database design.</li>
+<li><strong>Normalization</strong>: This is the process of organizing a database to eliminate redundancy and improve data integrity. There are several normal forms (first, second, third, BCNF), each with prerequisites that must be met.</li>
+<li><strong>Primary Key</strong>: Every table must have a column (or a set of columns), known as the Primary Key, that uniquely identifies every record in the table.</li>
+<li><strong>Foreign Key</strong>: This is a field (or collection of fields) in one table, that is a primary key in another table. The foreign key is used to prevent actions that would destroy the links between tables.</li>
+<li><strong>Atomicity</strong>: It’s the idea that an operation either completely succeeds or fails. You don’t want a database update to be ‘partially’ done — it either does fully or not at all.</li>
+<li><strong>Security</strong>: Databases often hold sensitive data. Properly designed databases have multiple layers of security including authorization, access control, and encryption.</li>
+<li><strong>Backup and Recovery</strong>: Data is valuable. A well-designed database includes strategies for regular backup and efficient recovery in case of data loss.</li>
+<li><strong>Scalability and Performance</strong>: A good database design also takes into consideration scalability (will the database handle growth in data volume?) and performance (how quickly can the system respond to queries?).</li>
+</ul>
+<p>Understanding these principles will go a long way in being able to design a database that is robust, reliable, and efficient.</p>
+<h1 id="Topic-MySQL-Indexes"><a href="#Topic-MySQL-Indexes" class="headerlink" title="Topic: MySQL Indexes"></a><strong>Topic</strong>: MySQL Indexes</h1><p>Indexes are a critical aspect of database design that boost the speed of data retrieval operations on a database table. Similar to the index in a book, an index in MySQL allows the database system to find the data without having to scan every row in the database table.</p>
+<p>Here are some key points to remember about indexes in MySQL:</p>
+<ul>
+<li>Indexes are used to find rows with specific column values faster. Without an index, MySQL must begin with the first row and then read through the entire table to find the relevant rows.</li>
+<li>Indexes are also used to enforce UNIQUEness constraints, and to aid efficient sorting and grouping.</li>
+<li>Indexes can be classified based on their structure: B-Tree, Hash, RTree, and Full-text.</li>
+<li>The most commonly used index structure is the BTree (Balanced Tree), which sorts the data for fast retrieval in a way that ensures the tree remains balanced, hence optimizing search times.</li>
+<li>Indexing comes at a cost: although data retrieval is faster, data modification operations (such as INSERT, UPDATE, DELETE) will become slower due to the additional operations required to maintain the index.</li>
+<li>Not all fields need an index. Only fields that you are likely to use in a WHERE, ORDER BY, GROUP BY, or JOIN clause will benefit from an index.</li>
+</ul>
+<p>Understanding and properly implementing indexes can greatly improve the performance of your database operations.</p>
+<h1 id="Topic-Designing-Indexes-in-MySQL"><a href="#Topic-Designing-Indexes-in-MySQL" class="headerlink" title="Topic: Designing Indexes in MySQL"></a><strong>Topic</strong>: Designing Indexes in MySQL</h1><p>Designing indexes is a vital aspect of efficient database management. Here we’re going to talk about how MySQL designs indexes and what strategies it employs to improve overall performance.</p>
+<p>Creating the right index is more of an art than a science, and it usually involves a trade-off between query speed and write speed.</p>
+<p>Steps to consider while designing indexes:</p>
+<p><strong>Choosing the right columns:</strong>&nbsp;An index can include multiple columns, but it’s essential to consider the column order. MySQL can only use an index if the query involves the leftmost column of the index.</p>
+<p><strong>Considering the data type:</strong>&nbsp;The smaller the data type, in terms of storage, the smaller the index, and therefore, the faster the queries.</p>
+<p><strong>Consider the cardinality:</strong>&nbsp;High cardinality columns, meaning columns that contain many unique values, tend to have more efficient indexes.</p>
+<p><strong>Understanding your workload:</strong>&nbsp;If your application performs lots of SELECT queries, more indexes can be beneficial. On the other hand, if your application does more INSERT, UPDATE, and DELETE operations, more indexes could slow it down.</p>
+<p><strong>Analyzing your queries:</strong>&nbsp;Use MySQL’s EXPLAIN statement to understand how your indexes are being used and where improvements can be made.</p>
+<p>Remember that indexes are a vital part of database design. They can significantly increase the performance of your database, so it’s definitely worth considering whenever you’re querying large amounts of data.</p>
+<h1 id="Topic-MySQL-Query-Optimization"><a href="#Topic-MySQL-Query-Optimization" class="headerlink" title="Topic: MySQL Query Optimization"></a><strong>Topic</strong>: MySQL Query Optimization</h1><p>An essential part of managing any database is ensuring that it functions efficiently. When dealing with significant amounts of data, queries can become time-consuming. Therefore, optimizing these queries in MySQL is crucial to improving the overall performance of your database system.</p>
+<p>In MySQL, query optimization involves multiple steps:</p>
+<ol>
+<li><strong>Parsing</strong>: MySQL starts by parsing the SQL query to ensure its syntax is correct, and the database objects exist.</li>
+<li><strong>Pre-processing</strong>: Next, MySQL decides the order of table reads, which is vital for multi-table queries. It also determines the indexes to use.</li>
+<li><strong>Optimization</strong>: MySQL then applies various optimization strategies to make the query more efficient. The most notable is the use of indexes, but MySQL also leverages other techniques like merging multiple similar queries into one, reducing temporary tables, and choosing efficient routes for joining tables.</li>
+<li><strong>Execution</strong>: Finally, MySQL executes the query and returns the result. The actual execution is a balance between fetching the data from the storage engine and processing the SQL command.</li>
+</ol>
+<p>Understanding how MySQL optimizes queries helps in writing efficient SQL code and designing better database schemas. It can significantly reduce query execution time, especially for complex queries and large databases.</p>
+<p>Remember to use the&nbsp;<strong>EXPLAIN</strong>&nbsp;statement in MySQL, which can provide insights on how to optimize your queries better. It shows how MySQL plans to execute a query, which can help identify bottlenecks or areas for improvement.</p>
+<h1 id="Topic-Review-and-Assessments"><a href="#Topic-Review-and-Assessments" class="headerlink" title="Topic: Review and Assessments"></a><strong>Topic</strong>: Review and Assessments</h1><p>After journeying through the intricate landscape of MySQL, it’s a good time for a thorough revision of every topic covered, and subsequently, evaluating your practical knowledge through assessments.</p>
+<p>To recap:</p>
+<ol>
+<li>We started with&nbsp;<strong>1.1 MySQL Overview</strong>, understanding MySQL role as a robust database management system.</li>
+<li>We then moved into the essence of MySQL,&nbsp;<strong>1.2 SQL in MySQL (Basics)</strong>&nbsp;and&nbsp;<strong>1.3 SQL in MySQL (Advanced)</strong>, mastering the rudimentary and the more complex SQL commands used in MySQL.</li>
+<li>We studied the structure of databases through the concept of&nbsp;<strong>1.4 Database Schemas in MySQL</strong>.</li>
+<li>Understanding the&nbsp;<strong>1.5 Principles of Database Design</strong>&nbsp;helped us grasp the structure ensuring databases function effectively.</li>
+<li>With&nbsp;<strong>1.6 MySQL Indexes</strong>&nbsp;we comprehended the significance of indexes in speeding up data retrieval.</li>
+<li>Then we learned how to enhance performance by&nbsp;<strong>1.7 Designing Indexes in MySQL</strong>.</li>
+<li>Lastly, we explored how MySQL optimises queries to improve database performance in&nbsp;<strong>1.8 MySQL Query Optimization</strong>.</li>
+</ol>
+<p>Now, if you’d like to test your understanding, you can say&nbsp;<strong>“/test”</strong>&nbsp;to undertake an assessment. Remember, this assessment is designed to help solidify your knowledge and identify areas that might need a bit more attention. Don’t stress about it — it’s a tool for learning, not a final exam.</p>
+<p>Let’s proceed with the assessment.</p>
+<h2 id="Question-1"><a href="#Question-1" class="headerlink" title="Question 1:"></a>Question 1:</h2><p>State the difference between&nbsp;<code>CHAR</code>,&nbsp;<code>VARCHAR</code>, and&nbsp;<code>TEXT</code>&nbsp;data types in MySQL?</p>
+<h2 id="Question-2"><a href="#Question-2" class="headerlink" title="Question 2:"></a>Question 2:</h2><p>Explain what a&nbsp;<code>JOIN</code>&nbsp;operation is in MySQL, and list its different types.</p>
+<h2 id="Question-3"><a href="#Question-3" class="headerlink" title="Question 3:"></a>Question 3:</h2><p>What are&nbsp;<code>NULL</code>&nbsp;values in MySQL, and how can you check for such values in a database table?</p>
+<hr>
+<h2 id="Answer-1"><a href="#Answer-1" class="headerlink" title="Answer 1:"></a>Answer 1:</h2><p><code>CHAR</code>&nbsp;and&nbsp;<code>VARCHAR</code>&nbsp;are both used to store string values in MySQL, with main differences being:</p>
+<ul>
+<li><code>CHAR</code>&nbsp;is a fixed length data type, meaning that it reserves the specified amount of space regardless of the actual size of the data. It’s faster for read operations because MySQL knows exactly where to find the value of a&nbsp;<code>CHAR</code>&nbsp;column.</li>
+<li><code>VARCHAR</code>&nbsp;is a variable length data type. It consumes space proportional to the size of the data stored. It saves on storage if you’re dealing with strings of varying lengths.</li>
+<li><code>TEXT</code>&nbsp;is also a data type for storing strings, but it’s meant for storing large amounts of text. The length of the string is not fixed, similar to&nbsp;<code>VARCHAR</code>.</li>
+</ul>
+<h2 id="Answer-2"><a href="#Answer-2" class="headerlink" title="Answer 2:"></a>Answer 2:</h2><p>A&nbsp;<code>JOIN</code>&nbsp;operation in MySQL combines rows from two or more tables based on a related column between them. Types of&nbsp;<code>JOIN</code>&nbsp;include:</p>
+<ul>
+<li><code>INNER JOIN</code>: Returns records that have matching values in both tables being joined.</li>
+<li><code>LEFT JOIN</code>&nbsp;(or&nbsp;<code>LEFT OUTER JOIN</code>): Returns all records from the left table and the matched records from the right table. If no match is found, the result is&nbsp;<code>NULL</code>&nbsp;on the right side.</li>
+<li><code>RIGHT JOIN</code>&nbsp;(or&nbsp;<code>RIGHT OUTER JOIN</code>): Returns all records from the right table and the matched records from the left table. If no match is found, the result is&nbsp;<code>NULL</code>&nbsp;on the left side.</li>
+<li><code>FULL JOIN</code>&nbsp;(or&nbsp;<code>FULL OUTER JOIN</code>): Returns all records when there is a match in the left table or the right table records.</li>
+</ul>
+<h2 id="Answer-3"><a href="#Answer-3" class="headerlink" title="Answer 3:"></a>Answer 3:</h2><p><code>NULL</code>&nbsp;values in MySQL represent missing or unknown data. You can check for&nbsp;<code>NULL</code>&nbsp;values in a database table using the&nbsp;<code>IS NULL</code>&nbsp;or&nbsp;<code>IS NOT NULL</code>&nbsp;clauses in your SQL statement.</p>
+<p>Remember, when dealing with&nbsp;<code>NULL</code>, it’s not a value; it’s a state indicating that the value is unknown or missing, so&nbsp;<code>NULL</code>&nbsp;does not equal&nbsp;<code>NULL</code>.</p>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/mysql-interview3/">https://programmerscareer.com/zh-cn/mysql-interview3/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote></body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/mysql-interview2/">MySQL interviews: What are ACID in a database?</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/mysql-interview4/">MySQL Interviews: Why does MySQL use B+ trees for indexing</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/mysql-interview3/';
+        this.page.identifier = 'mysql-interview3/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

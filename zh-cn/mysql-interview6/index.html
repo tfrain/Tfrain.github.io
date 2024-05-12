@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL 面试：产生死锁的必要条件有哪些？如何解决死锁？ - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/mysql-interview6/" rel="alternate" hreflang="en" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="我们先来了解死锁是什么，并了解它们在事务中是如何发生的。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL 面试：产生死锁的必要条件有哪些？如何解决死锁？">
+<meta property="og:url" content="https://programmerscareer.com/zh-cn/mysql-interview6/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="我们先来了解死锁是什么，并了解它们在事务中是如何发生的。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/zh-cn">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/zh-cn/archives">归档</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/categories">分类</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/tags">标签</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/about">关于</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="搜索" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="目录">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#主题1-1：死锁的介绍">1&nbsp;&nbsp;<b>主题1.1：死锁的介绍</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题1-2：了解必要条件以创造死锁">2&nbsp;&nbsp;<b>主题1.2：了解必要条件以创造死锁</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题1-3：在-MySQL-中检测死锁">3&nbsp;&nbsp;<b>主题1.3：在 MySQL 中检测死锁</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题1-4：避免死锁">4&nbsp;&nbsp;<b>主题1.4：避免死锁</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题1-5：解决死锁">5&nbsp;&nbsp;<b>主题1.5：解决死锁</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题1-6：诊断死锁">6&nbsp;&nbsp;<b>主题1.6：诊断死锁</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题1-7：-复习和评估">7&nbsp;&nbsp;<b>主题1.7： 复习和评估</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>简体中文</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview6/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview6/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL 面试：产生死锁的必要条件有哪些？如何解决死锁？
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">1月 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/zh-cn/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            21 分钟 读完 (约 3173 字)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>我们先来了解死锁是什么，并了解它们在事务中是如何发生的。</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>感谢您阅读这篇文章。更多面试问题:<br><a href="https://programmerscareer.com/zh-cn/software-interview-set/">https://programmerscareer.com/zh-cn/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="主题1-1：死锁的介绍"><a href="#主题1-1：死锁的介绍" class="headerlink" title="主题1.1：死锁的介绍"></a><strong>主题1.1：死锁的介绍</strong></h1><p>在多线程环境中，当两个或多个线程因为彼此持有并请求资源而无法进行时，就会出现死锁。在 MySQL 数据库的上下文中，死锁发生在两个或多个事务中，它们相互持有并请求锁，形成了资源的循环依赖。</p>
+<p>在事务中，线程可能需要锁定多张表或行，这可能会导致线程需要一个已经被另一个线程锁定的资源的情况。同时，该线程可能正在等待另一个线程锁定的资源。这就是所谓的死锁。</p>
+<p>让我们用一个简单的故事来说明：</p>
+<p>想象两名漫画爱好者，Alice 和 Bob。Alice 现在持有最新的《超人》漫画，Bob 也想要它。同时，Bob 持有最新的《巧女》漫画，Alice 也想要它。现在，Alice 不想放弃她的《超人》漫画，直到她得到了《巧女》漫画。同时，Bob 也不想放弃他的《巧女》漫画，直到他得到了《超人》漫画。因此，两人都在等待对方释放他们的漫画，这就是死锁。</p>
+<p>在数据库事务中，Alice 和 Bob 可能是事务，并且漫画可能是被锁定的资源。</p>
+<h1 id="主题1-2：了解必要条件以创造死锁"><a href="#主题1-2：了解必要条件以创造死锁" class="headerlink" title="主题1.2：了解必要条件以创造死锁"></a><strong>主题1.2：了解必要条件以创造死锁</strong></h1><p>要了解死锁是如何发生的，我们需要熟悉 Coffman 条件，这是一组四个条件，它们必须全部满足才能发生死锁。这些条件被 Edward G. Coffman， Jr. 提出并命名。条件是：</p>
+<ol>
+<li><strong>互斥</strong>：至少一个资源必须以非共享模式持有。这意味着只有一个进程（或线程）可以使用资源在任何给定时间内。如果另一个进程请求资源，请求进程必须被延迟，直到资源被释放。</li>
+<li><strong>持有和等待（资源持有）</strong>：一个进程至少持有一个资源并等待其他资源，这些资源目前被其他进程持有。</li>
+<li><strong>不可抢占</strong>：资源不能被强行从持有它们的进程处除，直到资源被使用完成。资源只能在持有它们的进程释放它们时释放。</li>
+<li><strong>环形等待</strong>：存在一个环形链条中的进程，其中每个进程持有一个资源并请求另一个资源，被另一个进程在链条中持有。基本上，存在一个进程 P1，它在等待一个由进程 P2 持有的资源，并且 P2 在等待由 P1 持有的资源。这就形成了一个环形链条中的等待进程。</li>
+</ol>
+<p>这四个条件 inherently 提供了一个逻辑结构来了解和结构防止策略。通过确保至少一个上述条件不会发生，我们可以防止死锁的形成。</p>
+<h1 id="主题1-3：在-MySQL-中检测死锁"><a href="#主题1-3：在-MySQL-中检测死锁" class="headerlink" title="主题1.3：在 MySQL 中检测死锁"></a><strong>主题1.3：在 MySQL 中检测死锁</strong></h1><p>在 MySQL 中，InnoDB 存储引擎自动检测并解决死锁，通过回滚与其中一笔交易。因此，您的应用应该总是准备好重新发出交易，因为它被回滚了，因为发生了死锁。</p>
+<p>当在 MySQL 中发生死锁时，它会立即被检测和解决。这是通过维护哪些事务正在等待哪些其他事务持有的锁的 <em>wait-for 图</em> 来实现的。通过这种方法，MySQL 可以检查等待图中是否存在循环。如果它检测到循环，这意味着死锁，并且它会回滚一笔交易来解决死锁。</p>
+<p>为了提供更多的见解，MySQL 还提供了诊断信息，当它检测和解决死锁时。这些信息可以从 <code>SHOW ENGINE INNODB STATUS</code> 命令获取，它会显示最新的死锁错误。</p>
+<p>但是，需要注意的是，死锁并不总是表明设计错误或错误。在高并发系统中，死锁可能会偶然发生，并且可以被视为做生意的成本。然而，如果您经常遇到它们，可能值得进一步调查，以看看是否可以进行交易处理的改进。</p>
+<h1 id="主题1-4：避免死锁"><a href="#主题1-4：避免死锁" class="headerlink" title="主题1.4：避免死锁"></a><strong>主题1.4：避免死锁</strong></h1><p>下面是避免死锁的几个策略：</p>
+<ol>
+<li><strong>锁定表的顺序保持一致</strong>：总是锁定表以相同的顺序。例如，如果所有的事务都先锁定“orders”表，就不会有一个事务锁定“orders”表，另一个事务锁定“products”表并等待“orders”表。</li>
+<li><strong>快速和短的事务</strong>：短的事务更少可能会锁定需要的行，因为它们更少可能会锁定需要的行。</li>
+<li><strong>错误处理</strong>：由于 InnoDB 自动检测死锁并回滚一笔交易，因此您需要准备好在代码中捕捉该错误并重新发出交易。</li>
+<li><strong>使用较低的隔离级别</strong>：如果可能，请使用读提交隔离级别而不是重复读来减少死锁的可能性。</li>
+<li><strong>避免热点</strong>：如果可能，请避免频繁更新的行，以减少死锁的可能性。例如，如果可能，请考虑使用不同的策略来计数操作，而不是使用计数表，每次操作时更新。</li>
+</ol>
+<h1 id="主题1-5：解决死锁"><a href="#主题1-5：解决死锁" class="headerlink" title="主题1.5：解决死锁"></a><strong>主题1.5：解决死锁</strong></h1><p>在解决死锁方面，理想情况是MySQL的InnoDB存储引擎自动检测和处理死锁。 InnoDB 使用一种称为 <em>wait-for graph</em> 的机制来检测死锁。当发生死锁时，InnoDB 选择一个事务并杀死它，从而解决死锁。</p>
+<p>虽然这样解决了死锁，但对应用程序开发者来说，应该在应用程序中处理这些场景。当 InnoDB 因为死锁而杀死事务时，它会引发一个错误，需要在应用程序中捕捉。通常情况下，被终止的事务应该重试。</p>
+<p>InnoDB 的自动死锁检测可以解决死锁，但在某些情况下，检测和杀死事务可能会花费较长的时间，影响应用程序的性能。因此，还要为避免死锁而设计应用程序。</p>
+<p>虽然完全避免死锁在高并发系统中困难，但尽量避免它们会使数据库系统的操作更加稳定和高效。良好的编码习惯、有效地设计表格、正确地应用事务和锁控制可帮助避免大多数死锁。</p>
+<h1 id="主题1-6：诊断死锁"><a href="#主题1-6：诊断死锁" class="headerlink" title="主题1.6：诊断死锁"></a><strong>主题1.6：诊断死锁</strong></h1><p>调查和诊断死锁可以提供有价值的见解，帮助防止它们或提高响应时间。MySQL 包含多种工具可帮助这个过程。</p>
+<ol>
+<li><strong>SHOW ENGINE INNODB STATUS</strong>：这条命令输出了一段文本报告，包含最近的死锁的信息，如果发生了死锁。它是在死锁发生后立即运行的，因为其信息会在下一个死锁中丢失。</li>
+<li><strong>InnoDB 监视器</strong>：这些是更详细和更广泛的报告，包含 InnoDB 内部的详细信息，包括死锁。它们分为标准、锁和互斥监视器。</li>
+<li><strong>性能架构</strong>：MySQL 的性能架构可以配置为捕获详细数据事件，包括事务事件。这些数据存储在表中并可以像其他 MySQL 数据一样查询。</li>
+<li><strong>二进制日志</strong>：MySQL 的二进制日志可帮助确定导致死锁的查询序列。这需要启用二进制日志并以行格式进行日志。</li>
+<li><strong>错误日志</strong>：死锁会在这里记录下来，如果启用了 innodb_print_all_deadlocks 配置选项。</li>
+</ol>
+<p>通过分析这些来源，可以确定参与死锁的事务并了解它们试图访问的资源。在许多情况下，详细分析可能会指出更好的锁序或更好的事务大小来避免预见的死锁。</p>
+<h1 id="主题1-7：-复习和评估"><a href="#主题1-7：-复习和评估" class="headerlink" title="主题1.7： 复习和评估"></a>主题1.7： <strong>复习和评估</strong></h1><p><strong>示例问题：</strong> 假设您在 MySQL 数据库中遇到了死锁。您决定运行命令 <code>SHOW ENGINE INNODB STATUS</code> 获取更多信息。</p>
+<p><code>LATEST DETECTED DEADLOCK</code> 部分给出了以下输出：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">LATEST DETECTED DEADLOCK  </span><br><span class="line">------------------------  </span><br><span class="line"></span><br><span class="line">2022-08-24 23:08:02 7f3e6e2fd700  </span><br><span class="line">*** (1) TRANSACTION:  </span><br><span class="line">TRANSACTION 118945420, ACTIVE 22 sec inserting  </span><br><span class="line">mysql tables in use 1, locked 1  </span><br><span class="line">1700 lock struct(s), heap size 187648, 1249789 row lock(s), undo log entries 1  </span><br><span class="line">MySQL thread id 155, OS thread handle 0x7f3e6e3e7700, query id 25749768 localhost user  </span><br><span class="line">INSERT INTO customer (id, name, address) VALUES (3, 'John Doe', '123 Main St')  </span><br><span class="line">*** (1) WAITING FOR THIS LOCK TO BE GRANTED:  </span><br><span class="line">RECORD LOCKS space id 66873 page no 70541 n bits 600 index `id` of table `test`.`customer` trx id 118945420 lock mode S waiting up to 3 years total: 47.56T, and currently at 47.68T to rise above: 47.68T  </span><br><span class="line">*** (2) TRANSACTION:  </span><br><span class="line">TRANSACTION 118945416, ACTIVE (PREPARED) 13 sec committing, thread declared inside InnoDB 476  </span><br><span class="line">mysql tables in use 1, locked 1  </span><br><span class="line">1 lock struct(s), heap size 368, 0 row lock(s)  </span><br><span class="line">MySQL thread id 117, OS thread handle 0x7f3e6e2fd700, query id 25749765 localhost user  </span><br><span class="line">COMMIT  </span><br><span class="line">*** (2) HOLDS THE LOCK(S):  </span><br><span class="line">RECORD LOCKS space id 66873 page no 70541 n bits 600 index `id` of table `test`.`customer` trx id 118945416 lock mode S  </span><br><span class="line">*** (2) WAITING FOR THIS LOCK TO BE GRANTED:  </span><br><span class="line">RECORD LOCKS space id 66873 page no 70541 n bits 600 index `id` of table `test`.`customer` trx id 118945416 lock_mode X waiting up to 3 years total: 47.68T to rise above: 47.56T  </span><br><span class="line">*** WE ROLL BACK TRANSACTION (1)</span><br></pre></td></tr></tbody></table></figure>
+
+<p>根据此信息，什么是导致死锁的原因，并可能解决它？</p>
+<p><strong>问题 1 — 简单熟练问题（难度 3/10）：</strong></p>
+<p>Coffman 条件中的四个条件是什么？请提供每个条件的简要说明。</p>
+<p><strong>问题 2 — 复杂熟练问题（难度 6/10）：</strong></p>
+<p>为了预防或最小化死锁发生，您将执行哪些步骤？</p>
+<p><strong>问题 3 — 复杂问题（难度 9/10）：</strong></p>
+<p>MySQL InnoDB 引擎为什么会自动解决死锁？什么是其优势和潜在的缺点？</p>
+<p><strong>请先自己试图找到答案，再问助。</strong>  </p>
+<p><strong>解决示例问题的方法：</strong> 两个事务同时等待资源，其中事务（1）正在等待 <code>id</code> 索引的 <code>S</code> 模式（读）锁，该锁被事务（2）所持有。同时，事务（2）正在等待同一资源的 <code>X</code> 模式（写）锁，并持有 <code>S</code> 模式（读）锁。</p>
+<p>这种情况意味着两个事务都无法进行，导致死锁。解决方法是确保事务请求锁的顺序，这是避免死锁的一种常见技术。</p>
+<p><strong>回答问题 1 的方法：</strong> Coffman 条件如下：</p>
+<ol>
+<li><strong>互斥：</strong> 资源只能由一个进程所持有。</li>
+<li><strong>保持和等待：</strong> 已经持有资源的进程可以请求新资源。</li>
+<li><strong>不可抢：</strong> 只有持有资源的进程才能释放它。</li>
+<li><strong>环形等待：</strong> 存在一个环形链条，其中每个进程持有下一个进程所需的资源。</li>
+</ol>
+<p><strong>回答问题 2 的方法：</strong> 多种方法可以防止或最小化死锁：</p>
+<ol>
+<li><strong>锁超时设置：</strong> 限制事务等待获取锁的时间，可以减少等待时间并可能解决死锁。</li>
+<li><strong>锁顺序：</strong> 按特定顺序请求锁可以避免环形等待条件。</li>
+<li><strong>频繁提交：</strong> 较小的事务更可能与其他事务不发生冲突。</li>
+<li><strong>死锁检测工具：</strong> 使用内置或第三方工具确定死锁发生的时间和原因，以便编程解决方案可以应用。</li>
+</ol>
+<p><strong>回答问题 3 的方法：</strong> 当 MySQL 发生死锁时，InnoDB 引擎会自动选择具有最少行锁的事务并回滚它来解决死锁。</p>
+<p><strong>优势：</strong></p>
+<ol>
+<li>这种自动解决可以帮助保持数据库运行良好，无需手动干预。</li>
+</ol>
+<p><strong>潜在的缺点：</strong></p>
+<ol>
+<li>如果事务较大或重要，则回滚可能会导致数据不被更新或保存正确。</li>
+<li>持续回滚可能会影响性能。</li>
+<li>不是所有的业务逻辑场景适合自动回滚。</li>
+</ol>
+<blockquote class="colorquote danger"><p>English post: <a href="https://programmerscareer.com/mysql-interview6/">https://programmerscareer.com/mysql-interview6/</a><br>作者：<a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>注意：本文为作者原创，转载请注明出处。  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/zh-cn/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/zh-cn/mysql-interview5/">MySQL 面试：简述乐观锁以及悲观锁的区别以及使用场景</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/zh-cn/mysql-interview7/">MySQL 面试：什么是 SQL 注入攻击？如何防止这类攻击？</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">评论</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/zh-cn/mysql-interview6/';
+        this.page.identifier = 'zh-cn/mysql-interview6/';
+        
+        this.language = 'zh';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("zh-CN");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="站内搜索" />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: '文章',
+                PAGES: '页面',
+                CATEGORIES: '分类',
+                TAGS: '标签',
+                UNTITLED: '(无标题)',
+            },
+            CONTENT_URL: '/content.zh-cn.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

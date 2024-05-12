@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL Interview Question: When to split databases and when to split tables? - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/mysql-interview16/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Let’s outline a curriculum for splitting databases and tables in MySQL">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL Interview Question: When to split databases and when to split tables?">
+<meta property="og:url" content="https://programmerscareer.com/mysql-interview16/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Let’s outline a curriculum for splitting databases and tables in MySQL">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-05-12T18:09:00.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.283Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Understanding-Data-Distribution">1&nbsp;&nbsp;<b>Topic: Understanding Data Distribution</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Database-Splitting-Sharding-in-MySQL">2&nbsp;&nbsp;<b>Topic: Database Splitting (Sharding) in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Table-Splitting-Partitioning-in-MySQL">3&nbsp;&nbsp;<b>Topic: Table Splitting (Partitioning) in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Practical-Examples-in-Database-and-Table-Splitting">4&nbsp;&nbsp;<b>Topic: Practical Examples in Database and Table Splitting</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Making-an-Informed-Decision">5&nbsp;&nbsp;<b>Topic: Making an Informed Decision</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Review-and-Assessments">6&nbsp;&nbsp;<b>Topic: Review and Assessments</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview16/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview16/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL Interview Question: When to split databases and when to split tables?
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-05-12T18:09:00.000Z" itemprop="datePublished">May 12 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            15 minutes read (About 2279 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Let’s outline a curriculum for splitting databases and tables in MySQL</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-Understanding-Data-Distribution"><a href="#Topic-Understanding-Data-Distribution" class="headerlink" title="Topic: Understanding Data Distribution"></a>Topic: Understanding Data Distribution</h1><p>Hi, we’ll be starting our understanding of data distribution in this lesson. First and foremost, let’s get clarified about what we mean by ‘data distribution’.</p>
+<p>Data distribution is the method of allocating data, computational tasks, and applications across multiple computers in a network. Distributing the data across multiple servers can improve the performance, reliability, and accessibility of applications. 😊</p>
+<p>There are various reasons behind data distribution. Let me take you through some of the key advantages of it:</p>
+<p><strong>Improved Performance:</strong>&nbsp;By distributing your data, you can improve the speed at which your application accesses this data. If done efficiently, data distribution can ensure that the resources are located close to where they are needed most, thereby reducing access latency and improving speed.</p>
+<p><strong>Redundancy and Reliability:</strong>&nbsp;Through data distribution, multiple copies of the same data can be stored in different locations. This provides redundancy and increases the overall reliability of your data. If one server fails, your application can access the same data from a different server.</p>
+<p><strong>Scalability:</strong>&nbsp;As your business or application grows, data distribution can make it easier to scale up your infrastructure. New servers can be added to the network as and when required.</p>
+<p><strong>Load Balancing:</strong>&nbsp;Properly distributing data can help maintain a balanced load across servers. This ensures no single server becomes a bottleneck, affecting the performance of your applications.</p>
+<p>There are many ways to distribute data, such as horizontal partitioning (also known as sharding), vertical partitioning, and functional partitioning. Each method has its own pros and cons and is suitable for different types of applications. We will be exploring these in depth in the upcoming lessons.</p>
+<h1 id="Topic-Database-Splitting-Sharding-in-MySQL"><a href="#Topic-Database-Splitting-Sharding-in-MySQL" class="headerlink" title="Topic: Database Splitting (Sharding) in MySQL"></a>Topic: Database Splitting (Sharding) in MySQL</h1><p>I’m glad to see you’re eager to learn more! Now that we’ve explored the concept of data distribution, let’s delve into the fascinating process of database splitting, more commonly known as&nbsp;<strong>Sharding</strong>.</p>
+<p>Sharding in MySQL is a process in which we break down a larger database into smaller, more manageable parts, called shards. Each shard holds a portion of the total data and functions as a separate database.</p>
+<p>To illustrate, visualize a big book split into separate chapters, where each chapter can stand on its own and store unique information. Similarly, when we shard a database, it’s like splitting a huge database into ‘chapters,’ with each one housing unique data.</p>
+<p>Now, why would we do that? 🤔 Sharding is generally implemented for a few reasons:</p>
+<p><strong>Improved Performance:</strong>&nbsp;Sharding can greatly enhance read/write speeds. When you fire off a query, instead of sifting through a massive database, it only has to search a specific shard, drastically improving speed.</p>
+<p><strong>Scalability:</strong>&nbsp;Sharding makes your database horizontally scalable. If your app grows and the database starts getting too large for a single server, you can always add more shards.</p>
+<p><strong>Reliability:</strong>&nbsp;If one shard goes down, it won’t bring your entire application down with it. The rest of the shards will continue to work without any hitches.</p>
+<p>While sharding has its manifold benefits, it also comes with some cons:</p>
+<p><strong>Increased Complexity:</strong>&nbsp;The overall architecture of your database environment becomes more complicated.</p>
+<p><strong>Data Distribution:</strong>&nbsp;You have to decide how to distribute your data, which can be challenging.</p>
+<p><strong>Joining Data across Shards:</strong>&nbsp;If you want to join tables that reside on different shards, it might be complicated or slow.</p>
+<p>In MySQL, sharding is typically done at the application level using sharding libraries or frameworks. Some of the popular sharding algorithms used are Range-Based, List-Based, Hash-Based, and Directory-Based sharding.</p>
+<h1 id="Topic-Table-Splitting-Partitioning-in-MySQL"><a href="#Topic-Table-Splitting-Partitioning-in-MySQL" class="headerlink" title="Topic: Table Splitting (Partitioning) in MySQL"></a><strong>Topic: Table Splitting (Partitioning) in MySQL</strong></h1><p>If you recall, earlier we discussed data distribution and why you might want to split database into multiple, smaller parts, a process known as sharding.</p>
+<p>In a similar sentiment, table partitioning is a way to divide a large table into smaller, more manageable parts, while still being able to access and manipulate the data as if the partitioned table were a single entity. In other words, even though the data is stored in separate partitions, from a user perspective, it’s as if there’s only one table. Neat, right?</p>
+<p>Now,&nbsp;<strong>when would this come handy?</strong>&nbsp;😊</p>
+<p>Partitioning can be the way to go if you have a massive table that results in slow queries and updates, especially if that table is expected to grow beyond the capacity of a single server.</p>
+<p>In its essence, partitioning is about managing and optimizing data for improved performance. Employing partitioning when it’s uncalled for may lead unwanted complexity.</p>
+<p>MySQL provides four different types of partitioning:</p>
+<p><strong>1. RANGE Partitioning:</strong>&nbsp;This is the simplest type of partitioning. It works best when dealing with data that falls into certain ranges — like dates or quantities.</p>
+<p><strong>2. LIST Partitioning:</strong>&nbsp;It partitions table based on the predefined list of values.</p>
+<p><strong>3. HASH Partitioning:</strong>&nbsp;Here, MySQL applies a hash function on the partitioning key to ascertain the partition to be used. It’s used when you want to ensure data is spread evenly across a specified number of partitions.</p>
+<p><strong>4. KEY Partitioning:</strong>&nbsp;It’s similar to hash partitioning, but in this case, MySQL server takes care of calculating the hash value in an internal way, which user can’t control.</p>
+<p>So, that’s the theory, in the next lessons we’ll talk about how you can implement these principles in MySQL and I’ll provide some real-life examples to help illustrate this concept.</p>
+<h1 id="Topic-Practical-Examples-in-Database-and-Table-Splitting"><a href="#Topic-Practical-Examples-in-Database-and-Table-Splitting" class="headerlink" title="Topic: Practical Examples in Database and Table Splitting"></a><strong>Topic: Practical Examples in Database and Table Splitting</strong></h1><p>Great! Now that we’ve discussed the theory of database sharding and table partitioning, let’s put it into practice with some hands-on examples.</p>
+<p><strong>Example 1: Database Sharding</strong><br>Suppose we have an e-commerce website with a global user base and the customer data is expanding rapidly. We can create a shard for each geographical region: North America, Europe, Asia, etc. Each region’s database shard would store only the data associated with the customers located in that region. This way, we’re improving performance by localizing data and queries.</p>
+<p><strong>Example 2: Table Partitioning</strong><br>In the case of our e-commerce site, consider a situation where we have millions of orders, and most queries are for recent orders. We can choose to partition the Orders table by date, keeping data for each month in a separate partition. With this, queries for specific periods would only need to scan fewer rows and perform much faster.</p>
+<p>But how these are implemented practically?</p>
+<p>For database sharding in MySQL, there are various sharding frameworks available like Vitess, phpMyAdmin, etc. For instance, in Vitess, you would define a VSchema which includes sharding instructions to auto-shard the desired table.</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">{  </span><br><span class="line">  "sharded": true,  </span><br><span class="line">  "vindexes": {  </span><br><span class="line">    "hash": {  </span><br><span class="line">      "type": "hash"  </span><br><span class="line">    }  </span><br><span class="line">  },  </span><br><span class="line">  "tables": {  </span><br><span class="line">    "your_table": {  </span><br><span class="line">      "column_vindexes": [  </span><br><span class="line">        {  </span><br><span class="line">          "column": "your_shard_column",  </span><br><span class="line">          "name": "hash"  </span><br><span class="line">        }  </span><br><span class="line">      ]  </span><br><span class="line">    }  </span><br><span class="line">  }  </span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure>
+
+<p>As for partitioning a table in MySQL, it can be done by ALTER TABLE command.</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">ALTER TABLE orders  </span><br><span class="line">PARTITION BY RANGE( YEAR(order_date) )  </span><br><span class="line">(  </span><br><span class="line">  PARTITION p0 VALUES LESS THAN (1990),  </span><br><span class="line">  PARTITION p1 VALUES LESS THAN (2000),  </span><br><span class="line">  PARTITION p2 VALUES LESS THAN (2010),  </span><br><span class="line">  PARTITION p3 VALUES LESS THAN (2020),  </span><br><span class="line">  PARTITION p4 VALUES LESS THAN MAXVALUE  </span><br><span class="line">);</span><br></pre></td></tr></tbody></table></figure>
+
+<p>In this script, we partition the ‘orders’ table based on the ‘order_date’ column.</p>
+<p>Remember, these processes are normally handled by your application or a framework, thus some knowledge of SQL is required. Also, both sharding and partitioning come with their complexities and should only be used when the benefits outweigh these complexities.</p>
+<h1 id="Topic-Making-an-Informed-Decision"><a href="#Topic-Making-an-Informed-Decision" class="headerlink" title="Topic: Making an Informed Decision"></a><strong>Topic: Making an Informed Decision</strong></h1><p>We’ve covered a lot of ground at this point, and last but not least, we’ll discuss how you can make an educated decision on when to split databases or tables, reiterating some key points from previous lessons as well as a few additional tips.</p>
+<p>Here are some factors to consider:</p>
+<p><strong>Database Sharding (Splitting) Decision Making:</strong></p>
+<ol>
+<li><strong>Data Size</strong>: If your database is becoming too large to handle efficiently, it might be time to consider sharding.</li>
+<li><strong>Performance</strong>: If frequent queries are significantly slowing down due to the large size of the database, sharding can help improve the processing speed by reducing the amount of data each query needs to process.</li>
+<li><strong>Scalability</strong>: If you foresee your database growing beyond the capacity of a single server, implementing sharding from an early phase can be a good preventative measure.</li>
+<li><strong>Type of Data</strong>: Sharding can also be driven by the nature of data. For example, multi-tenant applications where data from many customers is stored in the same database is a perfect candidate for sharding.</li>
+</ol>
+<p><strong>Table Partitioning Decision Making:</strong></p>
+<ol>
+<li><strong>Table Size</strong>: Just like with database sharding, if a table in your database is growing endlessly, you might want to consider partitioning it.</li>
+<li><strong>Query Performance</strong>: If the majority of the queries against a table only deal with a segment of the data (e.g., the most recent entries), partitioning can speed up these queries significantly.</li>
+<li><strong>Maintenance</strong>: Partitioning also makes it easier to perform maintenance on a table (like backups, updates, and deletes) as these operations can be performed on individual partitions instead of the tabling the entire table offline.</li>
+</ol>
+<p>In essence, the decision to partition or shard should be made based on the need to improve performance, handle large amounts of data, or both. That said, it’s not a decision to be taken lightly as it adds complexity to your database structure and application logic. It should only be implemented when necessary and other simpler optimization techniques are no longer sufficient.</p>
+<h1 id="Topic-Review-and-Assessments"><a href="#Topic-Review-and-Assessments" class="headerlink" title="Topic: Review and Assessments"></a><strong>Topic: Review and Assessments</strong></h1><p>At this point, we have completed our journey through data distribution, specifically focusing on Database Splitting (Sharding) and Table Splitting (Partitioning) in MySQL. Now, let’s take a quick look back at the key points and then move on to an assessment to consolidate your learning.</p>
+<p><strong>Key Points</strong></p>
+<ol>
+<li>Understanding Data Distribution: Data distribution has significant performance benefits but can also increase complexity. Knowing when and how to use it is crucial.</li>
+<li>Database Splitting (Sharding) in MySQL: Sharding in MySQL involves splitting a database into smaller parts based on a key. It can significantly improve query response time, increase reliability, and facilitate horizontal scalability.</li>
+<li>Table Splitting (Partitioning) in MySQL: Partitioning in MySQL involves breaking a table into smaller pieces without having to change SQL queries. The partitioning can be done based on various strategies like ranges, list values, hash values, etc.</li>
+<li>Practical Examples: We discussed how database sharding might be implemented for an e-commerce site with a global customer base, and how table partitioning can be used to improve performance for frequently accessed recent data.</li>
+<li>Making an Informed Decision: Deciding when to implement database sharding or table partitioning should consider data size, query performance, scalability, and type of data.</li>
+</ol>
+<p>Let’s now move to the assessment. You’ll be presented with a couple of scenarios, and your task is to decide whether to use sharding, partitioning, both, or none, and why.</p>
+<p><strong>Assessment Scenarios</strong></p>
+<ol>
+<li>Scenario 1: You’re designing an application for a hospital, where you have a&nbsp;<code>patients</code>&nbsp;table storing patient records. The hospital sees thousands of patients each year, and on average, a patient visits once a year. Most queries involve accessing only recent patient records. Would you implement sharding, partitioning, both or none, and why?</li>
+<li>Scenario 2: You’re developing an application for a tech news website where articles are often updated for corrections, and new information and user comments are constantly being written. The comments are stored in a&nbsp;<code>comments</code>&nbsp;table, and each comment is associated with an article. Would you implement sharding, partitioning, both or none, and why?</li>
+<li>Scenario 3: You’re working on an e-commerce site that handles transactions from all over the world. The database includes a&nbsp;<code>transactions</code>&nbsp;table, holding details of every transaction ever made on the site. Should you implement sharding, partitioning, both, or none, and why?</li>
+</ol>
+<hr>
+<ol>
+<li><strong>Scenario 1</strong>: Given the scenario, it makes sense to implement&nbsp;<strong>table partitioning</strong>&nbsp;on the&nbsp;<code>patients</code>&nbsp;table. The queries involve accessing only recent patient records, and partitioning would allow for efficient query performance. Sharding might not be necessary as we do not have a clear shard key, and managing distributed transactions and maintaining consistency among shards might add unnecessary complexity.</li>
+<li><strong>Scenario 2</strong>: In this scenario, a proper solution may be to partition the&nbsp;<code>comments</code>&nbsp;table. A date-based partitioning system might work well here, as comments related to older articles are probably read frequently, but not updated that much. Sharding might be overkill for this situation as it could add unnecessary complexity.</li>
+<li><strong>Scenario 3</strong>: Sharding the&nbsp;<code>transactions</code>&nbsp;table would be beneficial here, especially on something like the location of the transaction. This would enable transactions from the same region to be grouped together, which could lead to more efficient querying. Furthermore, sharding can also help balance the load across multiple databases which provides additional benefits in terms of scalability and performance. In addition to sharding, you might also consider partitioning of individual shards.</li>
+</ol>
+<p>These are the preferred solutions based on the information provided. However, every application can have unique requirements and constraints, and it’s crucial to consider all factors when making design decisions. Remember, measure before you optimize!</p>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/mysql-interview16/">https://programmerscareer.com/zh-cn/mysql-interview16/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.</p>
+</blockquote></body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/mysql-interview17/">My SQL Interview Question: The implementation principle of MySQL MVCC</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/software-interview-set/">Common(20+) Software Interview Questions(+ Answers) about MySQL/Redis/Kafka</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/mysql-interview16/';
+        this.page.identifier = 'mysql-interview16/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 Wesley Wei&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

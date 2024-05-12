@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL interviews: What is the difference between a clustered index and a non-clustered index? - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/mysql-interview13/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL interviews: What is the difference between a clustered index and a non-clustered index?">
+<meta property="og:url" content="https://programmerscareer.com/mysql-interview13/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.283Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-1-Introduction-to-Clustered-and-Non-Clustered-Indexes">1&nbsp;&nbsp;<b>Topic: 1.1 Introduction to Clustered and Non-Clustered Indexes</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-2-Clustered-Indexes-Explained">2&nbsp;&nbsp;<b>Topic: 1.2 Clustered Indexes Explained</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-3-Non-Clustered-Indexes-Explained">3&nbsp;&nbsp;<b>Topic: 1.3 Non-Clustered Indexes Explained</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-4-Differences-Between-Clustered-and-Non-Clustered-Indexes">4&nbsp;&nbsp;<b>Topic: 1.4 Differences Between Clustered and Non-Clustered Indexes</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-5-Choosing-the-Right-Index">5&nbsp;&nbsp;<b>Topic: 1.5 Choosing the Right Index</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-6-Examples-and-Use-cases">6&nbsp;&nbsp;<b>Topic: 1.6 Examples and Use-cases</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-1-7-Review-and-Assessments">7&nbsp;&nbsp;<b>Topic: 1.7 Review and Assessments</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview13/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview13/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL interviews: What is the difference between a clustered index and a non-clustered index?
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            16 minutes read (About 2326 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-1-1-Introduction-to-Clustered-and-Non-Clustered-Indexes"><a href="#Topic-1-1-Introduction-to-Clustered-and-Non-Clustered-Indexes" class="headerlink" title="Topic: 1.1 Introduction to Clustered and Non-Clustered Indexes"></a><strong>Topic</strong>: 1.1 Introduction to Clustered and Non-Clustered Indexes</h1><p>Knowing how your data is stored and retrieved can greatly impact the performance of your databases. More specifically, understanding&nbsp;<em>how</em>&nbsp;MySQL makes use of indexes is crucial to this understanding. This is where the concepts of&nbsp;<strong>Clustered</strong>&nbsp;and&nbsp;<strong>Non-Clustered Indexes</strong>&nbsp;come into play.</p>
+<p>Indexes, as you may have learned from your prerequisite studies, are a vital component of databases. They are essentially lookup tables that the database engine utilizes to speed up the data retrieval process, much like how an index in a book helps you quickly locate information without having to read each page.</p>
+<p>Now, let’s specifically dive into what clustered and non-clustered indexes are:</p>
+<p><strong>Clustered Indexes</strong>:</p>
+<p>Just as it sounds, a clustered index dictates the&nbsp;<em>physical order of data in a table</em>. To understand this better, consider a clustered index as a dictionary. In a dictionary, words are not randomly scattered across but are stored alphabetically, so you can quickly jump to a section for a particular letter and find the word you’re looking for. In the context of a database, this “word” is your data row. MySQL, in fact, organizes rows of data based on the clustered index so that retrieval is faster. Please note that there can only be one clustered index per table.</p>
+<p><strong>Non-Clustered Indexes</strong>:</p>
+<p>Non-clustered indexes, on the other hand, do not dictate the physical order of data. Yet, they carry a ‘pointer’ to the data. To understand better, if a clustered index is like a dictionary, then a non-clustered index can be considered like an index in a book. The index points you to the pages where information resides, but it doesn’t contain the information itself. This means that once the database engine looks through the non-clustered index, it must perform extra work to ‘go’ to the data row, compared to a clustered index where the data resides with the index. Hence, data retrieval via non-clustered indexes may be slower. However, you can have multiple non-clustered indexes, which can be beneficial for a variety of data retrieval scenarios.</p>
+<h1 id="Topic-1-2-Clustered-Indexes-Explained"><a href="#Topic-1-2-Clustered-Indexes-Explained" class="headerlink" title="Topic: 1.2 Clustered Indexes Explained"></a><strong>Topic</strong>: 1.2 Clustered Indexes Explained</h1><p>Clustered indexes are all about the physical storage of data. When you create a clustered index on a table, the rows of the table are stored on disk in the same order as the index key. There can only be one clustered index per table, and if you don’t explicitly define a clustered index, SQL Server will automatically create one for you. This is known as a heap.</p>
+<p>The structure of a clustered index is also known as a B+ tree structure. At the root of the tree, which is the topmost level, you have the root node. This root node then branches out into multiple leaf nodes at the bottom-most level. These leaf nodes contain the actual data rows in the order of the index.</p>
+<p>A primary key constraint automatically creates a clustered index on that particular column. However, in some cases, you might want to manually create a clustered index on a non-primary-key column. This depends on your requirements. For example, if you have a table with employees’ data and constantly query data in the order of employees’ hire date, it might be beneficial to create a clustered index on the hire date column to speed up these queries.</p>
+<p>Furthermore, the update of records in a table with a clustered index may be slower than that in a heap. That’s because when a record is updated in a table with a clustered index, the database might need to physically move the entire row to maintain the sort order.</p>
+<h1 id="Topic-1-3-Non-Clustered-Indexes-Explained"><a href="#Topic-1-3-Non-Clustered-Indexes-Explained" class="headerlink" title="Topic: 1.3 Non-Clustered Indexes Explained"></a><strong>Topic</strong>: 1.3 Non-Clustered Indexes Explained</h1><p>So now we have a good understanding of what a clustered index is and how it sorts and stores data on disk. But sometimes, we don’t always want to retrieve data based on the (single) clustered index. That’s where the&nbsp;<strong>non-clustered index</strong>&nbsp;comes into play.</p>
+<p>A non-clustered index is markedly different from a clustered index. For starters, creating a non-clustered index does not rearrange the physical order of data in the table. Instead, it creates a distinct object within the database that houses a sorted list of pointers that point to the data in the table.</p>
+<p>Here’s a neat example to illustrate. Imagine a book — rather than looking through every page for a particular topic, you would generally turn to the book’s index, right? It guides you straight to the pages that contain your specified topic. That quick directing is the function a non-clustered index performs!</p>
+<p>The architecture of a non-clustered index is similar to a clustered one — a B-tree data structure with root nodes, intermediate level nodes, and leaf nodes. However, the leaf nodes of a non-clustered index consist only of the index columns and a pointer to the corresponding row in the data table. You can have multiple non-clustered indexes on a single table, with each catering to a specific query you want to speed up.</p>
+<p>In MySQL, a non-clustered index is essentially all secondary indexes you create, with each of them containing a copy of the primary key columns for the rows where the search key matches.</p>
+<h1 id="Topic-1-4-Differences-Between-Clustered-and-Non-Clustered-Indexes"><a href="#Topic-1-4-Differences-Between-Clustered-and-Non-Clustered-Indexes" class="headerlink" title="Topic: 1.4 Differences Between Clustered and Non-Clustered Indexes"></a><strong>Topic</strong>: 1.4 Differences Between Clustered and Non-Clustered Indexes</h1><p>With a solid understanding of what clustered and non-clustered indexes are, let’s now clarify the key differences between the two:</p>
+<ol>
+<li><strong>Order of Data</strong>: A clustered index determines the physical order of data in a table. On the other hand, a non-clustered index doesn’t alter the way the records are stored but creates a separate object within a database that points back to those original records.</li>
+<li><strong>Number of Indexes</strong>: A table can have only one clustered index, but multiple non-clustered indexes. Remember, the more indexes, the more disk space required.</li>
+<li><strong>Data Retrieval Speed</strong>: Clustered indexes can lead to faster data retrieval than non-clustered, but that’s not always the case. If a non-clustered index covers a query (meaning, the query’s data can all be served from the index’s leaf nodes), it can retrieve data faster despite having a few extra hoops to jump through.</li>
+<li><strong>Update Performance</strong>: Clustered indexes can slow down updates, while non-clustered indexes often have little effect on performance.</li>
+<li><strong>Storage Space</strong>: As non-clustered indexes are stored separately from the table data, they require additional storage. Each non-clustered index is a separate disk structure that stores a sorted array of column values, whereas a clustered index is the actual table data and forms the lowest level of an index.</li>
+</ol>
+<p>In the grand scheme of databases — the speed at which data can be retrieved, the efficiency of storage, the quickness of updates — all of these factors rely heavily on proper indexing. Being clear on when and why to use either clustered and non-clustered indexes puts you in control of optimizing your database performance.</p>
+<h1 id="Topic-1-5-Choosing-the-Right-Index"><a href="#Topic-1-5-Choosing-the-Right-Index" class="headerlink" title="Topic: 1.5 Choosing the Right Index"></a><strong>Topic</strong>: 1.5 Choosing the Right Index</h1><p>Great job! Now that we know what clustered and non-clustered indexes are and the key differences between them, let’s dive into choosing the right index.</p>
+<p>Choosing the right index for performance optimization in MySQL comes down to understanding the queries that will be executed against your database. It’s not just about whether to use clustered or non-clustered indexes, but also includes understanding columns and their cardinality.</p>
+<p>Here are a few key points to help you decide:</p>
+<ol>
+<li><strong>Choose a Clustered Index for Wide Column Queries</strong>: Since clustered indexes are essentially the table data itself, they are excellent for wide column queries because of the reduced number of reads required.</li>
+<li><strong>Choose a Non-Clustered Index for Specific Column Queries</strong>: Non-clustered indexes are useful when you need to retrieve a smaller subset of columns often. In such cases, creating a non-clustered index on these columns can be beneficial.</li>
+<li><strong>High-Cardinality Columns</strong>: When a column has a high cardinality (each row is unique), using it as a clustered index can result in quicker look-ups.</li>
+<li><strong>Low-Cardinality Columns</strong>: For low-cardinality columns (many rows share the same value), usage of non-clustered indexes is generally more efficient.</li>
+<li><strong>Data Modification Operations</strong>: If your application entails frequent modifications (INSERT, UPDATE, DELETE operations), non-clustered indexes might be a better choice since they don’t impact the physical ordering of the data on disk.</li>
+<li><strong>Space Considerations</strong>: Since non-clustered indexes are separate disk structures, they consume additional storage space. If storage space is a constraint, clustered indexes might be a better fit, albeit at the cost of speed, in some cases.</li>
+</ol>
+<p>Remember, the best strategy is always dictated by the specific workload at hand. It’s essential to continuously monitor and analyze performance and adjust your indexing strategy accordingly.</p>
+<h1 id="Topic-1-6-Examples-and-Use-cases"><a href="#Topic-1-6-Examples-and-Use-cases" class="headerlink" title="Topic: 1.6 Examples and Use-cases"></a><strong>Topic</strong>: 1.6 Examples and Use-cases</h1><p>Wonderful! Well done so far. To solidify the understanding, let’s look at a few real-world examples and use-cases.</p>
+<p>Starting with a basic example, let’s say you directly manage an online bookstore. You have a&nbsp;<code>Books</code>&nbsp;table that contains the following columns:&nbsp;<code>BookID</code>,&nbsp;<code>Title</code>,&nbsp;<code>Author</code>,&nbsp;<code>Genre</code>,&nbsp;<code>Price</code>, and&nbsp;<code>PublicationDate</code>.</p>
+<ol>
+<li><strong>Using a Clustered Index</strong>: Let’s say customers frequently search books by the&nbsp;<code>BookID</code>&nbsp;in your store. To enhance the speed of these common pull requests, you can use a clustered index on the&nbsp;<code>BookID</code>&nbsp;column. Since a clustered index determines the physical order of data in a table, row look-ups can be significantly faster.</li>
+<li><strong>Using a Non-Clustered Index</strong>: On the flip side, if customers often look up books by&nbsp;<code>Genre</code>&nbsp;or&nbsp;<code>Author</code>, it could be beneficial to create a non-clustered index on these columns. As mentioned, non-clustered indexes are particularly useful when you need to retrieve a smaller subset of columns, which perfectly fits our case here.</li>
+</ol>
+<p><strong>Use-case</strong>: Suppose your database has a&nbsp;<code>Customers</code>&nbsp;table storing millions of records, and you frequently need to retrieve customer information based on&nbsp;<code>CustomerID</code>. A clustered index on&nbsp;<code>CustomerID</code>&nbsp;can speed up these look-ups dramatically. However, if business needs require you to retrieve records based not just on&nbsp;<code>CustomerID</code>&nbsp;but also, let’s say,&nbsp;<code>LastName</code>&nbsp;and&nbsp;<code>ZipCode</code>, then non-clustered indexes on&nbsp;<code>LastName</code>&nbsp;and&nbsp;<code>ZipCode</code>&nbsp;can be more efficient.</p>
+<p>Keep in mind that these are just examples and the actual implementation may greatly vary depending on factors like data size, query complexity, and hardware capabilities. Understanding when to use clustered and non-clustered indexes — predicated on intelligent database design — is a crucial aspect of managing SQL databases.</p>
+<h1 id="Topic-1-7-Review-and-Assessments"><a href="#Topic-1-7-Review-and-Assessments" class="headerlink" title="Topic: 1.7 Review and Assessments"></a><strong>Topic</strong>: 1.7 Review and Assessments</h1><p>Amazing progress! Let’s review the main concepts we’ve covered and then move onto some assessments.</p>
+<ol>
+<li><strong>Clustered Index</strong>: This type of index determines the physical order of data in a table. A table can have only one clustered index.</li>
+<li><strong>Non-Clustered Index</strong>: This type of index is a separate disk structure referencing the table data, which helps speed up the queries that are not covered by clustered index. A table can have multiple non-clustered indexes.</li>
+<li><strong>High vs. Low Cardinality</strong>: High-cardinality refers to columns with unique values on most, if not all, rows. Clustered indexes on high-cardinality columns can result in quicker look-ups. Low-cardinality refers to columns where many rows share the same value. Non-clustered indexes are generally more efficient for such columns.</li>
+<li><strong>Choosing the Right Index</strong>: This depends on various factors including query types, cardinality, data modification needs, and space constraints.</li>
+</ol>
+<p>Now, let’s assess our understanding with a few questions:</p>
+<ol>
+<li>What is the key difference between a clustered and a non-clustered index?</li>
+<li>In which case would a non-clustered index be a more suitable choice over a clustered index?</li>
+<li>What do high-cardinality and low-cardinality mean and how do they affect the choice of index type?</li>
+</ol>
+<hr>
+<p><strong>Question</strong>: What is the key difference between a clustered and a non-clustered index?<br><strong>Answer</strong>: The key difference between a clustered and a non-clustered index lies in the way they store and reference data. A clustered index determines the physical order of data in a table, essentially being the table itself, whereas a non-clustered index is a separate structure that points to the data located elsewhere in the database.</p>
+<p><strong>Question</strong>: In which case would a non-clustered index be a more suitable choice over a clustered index?<br><strong>Answer</strong>: A non-clustered index would be more suitable when the database needs to support a lot of search queries on columns that are not part of the clustered index. Moreover, non-clustered indexes would also be preferable when the table undergoes frequent changes as changes do not result in the entire table needing to be reorganized, unlike with a clustered index.</p>
+<p><strong>Question</strong>: What do high-cardinality and low-cardinality mean and how do they affect the choice of index type?<br><strong>Answer</strong>: Cardinality refers to the uniqueness of data values in a column. High cardinality means a column contains a large percentage of totally unique values, and low cardinality means a column contains many repeated values. High-cardinality columns are good candidates for a clustered index, whilst indexes on low-cardinality columns, where the column values are very repetitive, are less effective.</p>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/mysql-interview13/">https://programmerscareer.com/zh-cn/mysql-interview13/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/mysql-interview12/">MySQL Interviews: Briefly describe the occurrence scenarios of dirty reading and phantom reading. How does InnoDB solve phantom reading?</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/mysql-interview14/">MySQL Interviews: What are database transactions and why does MySQL use InnoDB as the default option</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/mysql-interview13/';
+        this.page.identifier = 'mysql-interview13/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

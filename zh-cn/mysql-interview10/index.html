@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL 面试：简述 MySQL 的间隙锁 - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/mysql-interview10/" rel="alternate" hreflang="en" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="你曾在面试中被要求类似的问题吗？或者将来会遇到，让我们一起探索和掌握它。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL 面试：简述 MySQL 的间隙锁">
+<meta property="og:url" content="https://programmerscareer.com/zh-cn/mysql-interview10/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="你曾在面试中被要求类似的问题吗？或者将来会遇到，让我们一起探索和掌握它。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/zh-cn">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/zh-cn/archives">归档</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/categories">分类</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/tags">标签</a>
+            
+            <a class="navbar-item "
+               href="/zh-cn/about">关于</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="搜索" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="目录">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#主题：深入探讨-MySQL">1&nbsp;&nbsp;<b>主题：深入探讨 MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：探讨-MySQL-事务">2&nbsp;&nbsp;<b>主题：探讨 MySQL 事务</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：MySQL中锁定的介绍">3&nbsp;&nbsp;<b>主题：MySQL中锁定的介绍</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：行锁和表锁在-MySQL-中">4&nbsp;&nbsp;<b>主题：行锁和表锁在 MySQL 中</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：讨论-MySQL-中的间隙锁">5&nbsp;&nbsp;<b>主题：讨论 MySQL 中的间隙锁</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：间隙锁的例子场景">6&nbsp;&nbsp;<b>主题：间隙锁的例子场景</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：通过锁的迷宫">7&nbsp;&nbsp;<b>主题：通过锁的迷宫</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#主题：复习和评估">8&nbsp;&nbsp;<b>主题：复习和评估</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#例子问题：">8.1&nbsp;&nbsp;例子问题：</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#简单问题：">8.2&nbsp;&nbsp;简单问题：</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#进阶问题：">8.3&nbsp;&nbsp;进阶问题：</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#专家问题：">8.4&nbsp;&nbsp;专家问题：</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#简单问题解决方案：">8.5&nbsp;&nbsp;简单问题解决方案：</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#进阶问题解决方案：">8.6&nbsp;&nbsp;进阶问题解决方案：</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#专家问题解决方案：">8.7&nbsp;&nbsp;专家问题解决方案：</a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>简体中文</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview10/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview10/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL 面试：简述 MySQL 的间隙锁
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">1月 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/zh-cn/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            25 分钟 读完 (约 3729 字)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>你曾在面试中被要求类似的问题吗？或者将来会遇到，让我们一起探索和掌握它。</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>感谢您阅读这篇文章。更多面试问题:<br><a href="https://programmerscareer.com/zh-cn/software-interview-set/">https://programmerscareer.com/zh-cn/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="主题：深入探讨-MySQL"><a href="#主题：深入探讨-MySQL" class="headerlink" title="主题：深入探讨 MySQL"></a><strong>主题</strong>：深入探讨 MySQL</h1><p>MySQL 是一个广泛使用的、开源的关系数据库管理系统 (RDBMS)。它使用关系数据库和结构化查询语言 (SQL) 来管理其数据。“My” 在 MySQL 中是 Michael Widenius 的女儿 My 的名字的缩写。</p>
+<p>MySQL 数据库是一个稳定、可靠和强大的解决方案，具有高级特性，例如：</p>
+<ul>
+<li>坚实事务支持</li>
+<li>复制和故障转移集群支持</li>
+<li>工作流控制和计划任务</li>
+<li>查询缓存</li>
+<li>高级复制技术</li>
+</ul>
+<p>这使 MySQL 成为应用要求完整数据保护和实时分析的优秀选择，例如财务、银行、电子商务、CRM、ERP 应用等等。</p>
+<p>接下来，让我们开始从理论上了解数据库。为了简单起见，让我们想象数据库是一个大的数字文件柜，满载的文件夹。文件夹代表表。在每个表中，包含真实数据，表示记录。每条记录包含有关单个实体的信息。</p>
+<p>例如，如果你是一个商业主人，你可能有一个数据库，其中包含一个客户表和一个订单表等等。每行在客户表中代表一个单独的客户，每行在订单表中代表一个单独的订单。</p>
+<h1 id="主题：探讨-MySQL-事务"><a href="#主题：探讨-MySQL-事务" class="headerlink" title="主题：探讨 MySQL 事务"></a><strong>主题</strong>：探讨 MySQL 事务</h1><p>事务是数据库系统的基本概念。在 MySQL 中，事务是一组 SQL 语句的执行单元。事务遵循 ACID 模型，即原子性、一致性、隔离性和持久性。这个模型确保了数据库事务的可靠性。</p>
+<p>例如，如果你在转账时从一个银行账户转移资金，这需要多个操作，例如从一个账户扣除资金并将其转移到另一个账户。在这种情况下，事务确保这些操作（信用和贷方）全部发生或不发生，确保数据一致性。</p>
+<p>我们的下一步是学习 MySQL 中的锁定机制，这与事务密切相关。在数据库的上下文中，锁是与记录相关的标志。这个标志可以控制记录是否可以被读取或写入。</p>
+<p>它是锁定使多名用户同时访问数据库时不发生冲突的关键。当记录或表被锁定时，这意味着某个事务正在访问数据，并且不应中断。</p>
+<p>中文翻译:</p>
+<h1 id="主题：MySQL中锁定的介绍"><a href="#主题：MySQL中锁定的介绍" class="headerlink" title="主题：MySQL中锁定的介绍"></a><strong>主题</strong>：MySQL中锁定的介绍</h1><p>在数据库领域，“锁定”是一个重要的特性，它确保并发数据访问的一致性和顺序。在 MySQL 中，InnoDB 存储引擎支持多种类型的锁定在不同的级别上，以确保事务不会相互干扰。</p>
+<p>锁定特别重要在多个事务试图访问和操作同一块数据时。当一个事务锁定某块数据时，它阻止其他事务进行冲突的更改，直到锁定被释放。</p>
+<p>MySQL 中有两种主要类型的锁定：</p>
+<ol>
+<li>**共享锁 (S)**：这是一个只读锁定。多个共享锁可以同时保持对同一块数据，只要没有排他锁。</li>
+<li>**排他锁 (X)**：排他锁是一个写锁定。当一个事务持有排他锁时，其他事务不能读取或写入该数据，直到锁定被释放。</li>
+</ol>
+<p>在 MySQL 中，锁定可以发生在三个级别上：</p>
+<ul>
+<li><strong>行级锁定</strong>：这些锁定被放在数据行上。这是锁定的最细粒度，并允许最高的并发性。</li>
+<li><strong>页级锁定</strong>：这些锁定被放在数据页上。页级锁定比行级锁定更粗糙，并提供中等的并发性。</li>
+<li><strong>表级锁定</strong>：这些锁定被放在整个表上。这是锁定的最粗糙的，并提供最低的并发性。通常，在高并发环境中，我们希望避免表级锁定，因为它们可能会成为瓶。</li>
+</ul>
+<p>了解这些基本锁定的概念后，我们可以深入研究 MySQL 中的更复杂的锁定类型，例如间隙锁。</p>
+<h1 id="主题：行锁和表锁在-MySQL-中"><a href="#主题：行锁和表锁在-MySQL-中" class="headerlink" title="主题：行锁和表锁在 MySQL 中"></a><strong>主题</strong>：行锁和表锁在 MySQL 中</h1><p>为了保证数据一致性并允许最高的并发性，MySQL 使用两种类型的锁定：行级锁定和表级锁定。每种类型都有自己的地方和目的。</p>
+<p><strong>行级锁定</strong></p>
+<p>行级锁定更细粒度，在更新特定行的表时使用。这意味着只锁定涉及操作的行，并不锁定整个表。这允许更高的并发性，其中多个事务可以同时访问不同行的同一表。</p>
+<p>InnoDB 支持行级锁定。它会自动设置锁定在读和写操作时，但它不会锁定整个表。</p>
+<p><strong>例子</strong>：如果您正在更新特定记录的员工表，例如，如果使用这种锁定机制，则只会阻止试图修改该特定员工记录的事务。其他员工记录的任务可以继续进行。</p>
+<p><strong>表级锁定</strong></p>
+<p>表级锁定更粗糙。它锁定整个表在特定数据库操作时。通常，MySQL 在写操作时应用这种锁定。</p>
+<p>虽然这种锁定允许简单的管理和更少的内存使用，但在高并发使用情况下，其并发性较低，因为多个事务需要同时访问同一表。</p>
+<p>通过了解这两种类型的锁定，您已经一步 closer 了解了数据库操作的内部工作原理，并且在深入研究更复杂的锁定类型，例如间隙锁，时间戳锁定等方面有所帮助。</p>
+<p>中文翻译:</p>
+<h1 id="主题：讨论-MySQL-中的间隙锁"><a href="#主题：讨论-MySQL-中的间隙锁" class="headerlink" title="主题：讨论 MySQL 中的间隙锁"></a><strong>主题</strong>：讨论 MySQL 中的间隙锁</h1><p>间隙锁是 MySQL 中一个重要的机制，用于防止幻行。幻行是一种行，它满足 WHERE 子句的条件，但是在事务中未被初始查看或更新。</p>
+<p>让我们考虑一种情况，其中我们有一个事务，它选择了特定范围内的行，并且后面要更新这些行。在这个操作期间，另一个事务插入了新行到该范围，创造了我们所称为的“幻行”。如果没有间隙锁，第一个事务不会意识到新行被第二个事务添加，并可能导致数据不一致。</p>
+<p>这就是间隙锁的作用！</p>
+<p>间隙锁是锁定索引记录之间的间隙。更具体地说，它是锁定索引记录的范围。在 MySQL 中，间隙锁防止其他事务在间隙被锁定的事务提供可重复读时插入新行。</p>
+<p>例如，假设您有一个索引列，并且运行了以下语句在 REPEATABLE READ 隔离级别下：</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM table_name WHERE index_column &gt; 100 FOR UPDATE;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>MySQL 会为所有索引记录上锁，其中 <code>index_column</code> 的值大于 100，并为其后的间隙上锁。</p>
+<p>请记，然而，间隙锁是双刃剑！虽然它可以确保一致性，但它也可能会引入锁等待或甚至死锁，如果不正确地管理。</p>
+<h1 id="主题：间隙锁的例子场景"><a href="#主题：间隙锁的例子场景" class="headerlink" title="主题：间隙锁的例子场景"></a><strong>主题</strong>：间隙锁的例子场景</h1><p>要更好地理解间隙锁，让我们考虑一个例子场景。假设我们有一个表 <code>orders</code>，它有许多行。</p>
+<p>场景 1:<br>例如，考虑以下 SQL 语句，</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM orders WHERE id &gt; 3 FOR UPDATE;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>在这个查询中的事务中，MySQL 会为所有记录上锁，其中 <code>id</code> 的值大于 3。这意味着另一事务不能在 <code>orders</code> 表中插入任何新记录，其中 <code>id</code> 的值大于 3，直到第一事务完成。</p>
+<p>场景 2:<br>现在考虑另一个 SQL 语句，</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">INSERT INTO orders (id, item) VALUES (102, 'New_Item');</span><br></pre></td></tr></tbody></table></figure>
+
+<p>如果我们试图在先前事务（带有 SELECT … FOR UPDATE 语句）仍然处于活动状态时执行此语句，它将被阻止，直到第一事务完成。这是由第一事务所应用的间隙锁所导致的，它不允许任何新记录的插入，其中 <code>id</code> 的值大于 3。</p>
+<p>这些例子场景说明了间隙锁如何控制并发事务，确保数据状态的一致性并消除幻读在某些事务隔离级别，例如 REPEATABLE READ 或 SERIALIZABLE 中。</p>
+<p>现在，我们可以深入研究 MySQL 中锁定的更复杂的细节。</p>
+<h1 id="主题：通过锁的迷宫"><a href="#主题：通过锁的迷宫" class="headerlink" title="主题：通过锁的迷宫"></a><strong>主题</strong>：通过锁的迷宫</h1><p>在 MySQL 中，锁形成了一个复杂的迷宫，每个锁都有重要的作用，但如果不处理正确，可能会导致延迟或死锁。</p>
+<p>下面是锁之间的简单交互方式：</p>
+<ol>
+<li><strong>共享锁和排他锁</strong>：</li>
+</ol>
+<ul>
+<li>共享锁允许其他事务读取（共享锁）锁定的对象，但不允许写入（排他锁）。</li>
+<li>排他锁阻止其他事务读取/写入锁定的对象。</li>
+<li>可以应用额外的共享锁到已锁定的对象上，但请求排他锁将等待。</li>
+</ul>
+<ol>
+<li><strong>表锁和行锁</strong>：</li>
+</ol>
+<ul>
+<li>表锁简单明了，但提供了更低的并发性，可能会导致事务延迟。</li>
+<li>行锁提供更高的并发性，因为它们只锁定特定行在表中。</li>
+</ul>
+<ol>
+<li><strong>Gap 锁和 Next-Key 锁</strong>：</li>
+</ol>
+<ul>
+<li>Gap 锁阻止插入到特定范围内的索引记录。它们与行锁（或 Next-Key 锁）配合起来防止 REPEATABLE READ 或 SERIALIZABLE 隔离级别中的幻读。</li>
+</ul>
+<ol>
+<li><strong>意向锁</strong>：</li>
+</ol>
+<ul>
+<li>意向锁表明事务计划要获取的锁（共享或排他）之前就已经获取了它。它们是通知机制，不是控制机制。</li>
+</ul>
+<ol>
+<li><strong>自增锁</strong>：</li>
+</ol>
+<ul>
+<li>自增锁用于维护自增值的序列。它们避免了多个事务同时尝试插入到自增列中的冲突。</li>
+</ul>
+<p>成功地通过这个迷宫需要对每种锁类型和事务之间的影响有清晰的理解。</p>
+<h1 id="主题：复习和评估"><a href="#主题：复习和评估" class="headerlink" title="主题：复习和评估"></a><strong>主题</strong>：复习和评估</h1><p>在过去的课程中，我们深入探讨了 MySQL 和其锁机制。让我们回顾一下这些主题，以确保良好的理解：</p>
+<ol>
+<li><strong>深入了解 MySQL</strong>：我们开始时，了解了 MySQL 的界面、命令和与其他 SQL 实现的差异，为学习过程奠定了坚实的基础。</li>
+<li><strong>探索 MySQL 事务</strong>：我们深入探讨了 MySQL 事务的核心概念，讨论了其一致性和隔离级别，确保数据的准确性和并发性。</li>
+<li><strong>了解 MySQL 锁</strong>：我们介绍了 MySQL 锁的概念，这是维护数据完整性和并发控制的关键。</li>
+<li><strong>行锁和表锁</strong>：我们探讨了行级锁和表级锁，并讨论了它们在 MySQL 中的重要性。</li>
+<li><strong>讨论 MySQL 的Gap 锁</strong>：我们深入探讨了 gap 锁，包括它是什么、它是如何工作的和它在 REPEATABLE READ 或 SERIALIZABLE 隔离级别中的重要性。</li>
+<li><strong>Gap 锁的示例场景</strong>：我们步行了常见的场景，以了解 gap 锁的实际应用。</li>
+<li><strong>通过锁的迷宫</strong>：我们讨论了 MySQL 中锁之间的交互和影响，这是一个复杂但有趣的主题。</li>
+</ol>
+<h2 id="例子问题："><a href="#例子问题：" class="headerlink" title="例子问题："></a>例子问题：</h2><p>考虑一种高流量数据库，您经常遇到死锁。您的任务是识别一个可能的解决方案来最小化这些发生的可能性。</p>
+<p><strong>解决方案</strong>：可能的解决方案包括缩短事务时间、确保事务访问表的相同顺序或者增加 innodb_lock_wait_timeout 值。还可以确保使用最具体的锁来帮助减少死锁的可能性。</p>
+<p>中文翻译：</p>
+<h2 id="简单问题："><a href="#简单问题：" class="headerlink" title="简单问题："></a>简单问题：</h2><p>考虑一个事务，它读取和写入表中的多条记录。要确保高流量数据库中的最小阻塞，应该使用哪种锁（行级锁、表级锁或Gap锁），并且避免幻读？</p>
+<h2 id="进阶问题："><a href="#进阶问题：" class="headerlink" title="进阶问题："></a>进阶问题：</h2><p>在票务预订系统中，可能会有多个并发事务试图同时预订同一座位。如何使用 MySQL 的锁机制来确保公平的系统？</p>
+<h2 id="专家问题："><a href="#专家问题：" class="headerlink" title="专家问题："></a>专家问题：</h2><p>在 MySQL 的上下文中，如何处理银行应用中的死锁场景，其中两个事务同时尝试转移两个账户之间的资金？</p>
+<h2 id="简单问题解决方案："><a href="#简单问题解决方案：" class="headerlink" title="简单问题解决方案："></a>简单问题解决方案：</h2><p>对于这种场景，使用行级锁机制将是最有效的。它会提供所需的锁定来确保数据完整性，同时避免高流量情况下不相关行的不必要阻塞。此外，包含“FOR UPDATE”子句在 SELECT 语句中可能会避免幻读。</p>
+<h2 id="进阶问题解决方案："><a href="#进阶问题解决方案：" class="headerlink" title="进阶问题解决方案："></a>进阶问题解决方案：</h2><p>在票务预订系统中，要确保公平的系统，我们可以使用 SELECT FOR UPDATE 命令。这会为所遇到的所有索引记录放置排他的 Next-Key 锁，从而防止其他事务在覆盖的记录锁下插入新行。它还会选择座位的当前状态，并如果它可用，则更新其为已预订，确保座位不会被双预订。</p>
+<h2 id="专家问题解决方案："><a href="#专家问题解决方案：" class="headerlink" title="专家问题解决方案："></a>专家问题解决方案：</h2><p>在银行应用中，如果两个事务同时尝试转移两个账户之间的资金，我们可能会遇到死锁场景。要处理这种情况，我们可以使用访问帐户的固定顺序。例如，事务可能会先访问具有较低 ID 的帐户。这将防止死锁，因为两个事务不会无限期地等待对方，消除了死锁的循环等待条件。</p>
+<blockquote class="colorquote danger"><p>English post: <a href="https://programmerscareer.com/mysql-interview10/">https://programmerscareer.com/mysql-interview10/</a><br>作者：<a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>注意：本文为作者原创，转载请注明出处。  </p>
+</blockquote>
+</body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/zh-cn/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/zh-cn/mysql-interview1/">MySQL面试:简要介绍MySQL的主从同步机制</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/zh-cn/mysql-interview11/">MySQL 面试：唯一索引与普通索引的区别是什么？使用索引会有哪些优缺点？</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">评论</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/zh-cn/mysql-interview10/';
+        this.page.identifier = 'zh-cn/mysql-interview10/';
+        
+        this.language = 'zh';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("zh-CN");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="站内搜索" />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: '文章',
+                PAGES: '页面',
+                CATEGORIES: '分类',
+                TAGS: '标签',
+                UNTITLED: '(无标题)',
+            },
+            CONTENT_URL: '/content.zh-cn.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

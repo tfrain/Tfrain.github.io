@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>MySQL interviews: When doesn’t MySQL use the index? - Tfrain - Tfrain&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<link href="/zh-cn/mysql-interview8/" rel="alternate" hreflang="zh-CN" />
+    
+
+
+<meta name="description" content="">
+
+
+
+
+
+    <meta name="description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL interviews: When doesn’t MySQL use the index?">
+<meta property="og:url" content="https://programmerscareer.com/mysql-interview8/">
+<meta property="og:site_name" content="Tfrain - Tfrain&#39;s Blog">
+<meta property="og:description" content="Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-03T00:54:09.000Z">
+<meta property="article:modified_time" content="2024-05-12T13:00:48.287Z">
+<meta property="article:author" content="tfrain">
+<meta property="article:tag" content="interview">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@WesleyWei0316">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script async
+        src="https://www.googletagmanager.com/gtag/js?id=GTM-TQ227R45"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', "GTM-TQ227R45");
+    </script>
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', "GTM-TQ227R45");
+    </script> -->
+
+    
+    
+
+
+<meta name="generator" content="Hexo 7.0.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="Tfrain - Tfrain's Blog" type="application/atom+xml">
+</head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    Tfrain
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Topic-MySQL-Index-Deep-Dive">1&nbsp;&nbsp;<b>Topic: MySQL Index Deep Dive</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Types-of-Indexes-in-MySQL">2&nbsp;&nbsp;<b>Topic: Types of Indexes in MySQL</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-MySQL-Index-Management">3&nbsp;&nbsp;<b>Topic: MySQL Index Management</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Creating-an-Index">3.1&nbsp;&nbsp;Creating an Index:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Dropping-an-Index">3.2&nbsp;&nbsp;Dropping an Index:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Disabling-an-Index">3.3&nbsp;&nbsp;Disabling an Index:</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Renaming-an-Index">3.4&nbsp;&nbsp;Renaming an Index:</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Optimizing-MySQL-with-Indexes">4&nbsp;&nbsp;<b>Topic: Optimizing MySQL with Indexes</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-When-MySQL-Doesn’t-Use-The-Index">5&nbsp;&nbsp;<b>Topic: When MySQL Doesn’t Use The Index</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Topic-Review-and-Assessments">6&nbsp;&nbsp;<b>Topic: Review and Assessments</b></a>
+                    
+                </div>
+            </div>
+            
+            
+            <a class="navbar-item" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+<div class="column is-narrow has-text-centered">
+    <div class="dropdown is-up is-right is-hoverable" style="margin-top: -0.2em;">
+        <div class="dropdown-trigger">
+            <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu7">
+                <span class="icon">
+                    <i class="fas fa-globe"></i>
+                </span>
+                <span>English</span>
+                <span class="icon is-small">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
+          </span>
+            </button>
+        </div>
+        <div class="dropdown-menu has-text-left" role="menu" style="top:100%">
+            <div class="dropdown-content">
+            
+                <a href="/mysql-interview8/" class="dropdown-item">
+                    English
+                </a>
+            
+                <a href="/zh-cn/mysql-interview8/" class="dropdown-item">
+                    简体中文
+                </a>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+               
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            MySQL interviews: When doesn’t MySQL use the index?
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-01-03T00:54:09.000Z" itemprop="datePublished">Jan 3 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/mysql/">mysql</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            13 minutes read (About 1990 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>Have you ever been asked a similar question in an interview? Or you will meet in the future, let’s explore and master it together</p>
+<span id="more"></span>
+
+<blockquote class="colorquote warning"><p>Thank you for reading this article. More Interview Questions here:<br><a href="https://programmerscareer.com/software-interview-set/">https://programmerscareer.com/software-interview-set/</a></p>
+</blockquote>
+
+<h1 id="Topic-MySQL-Index-Deep-Dive"><a href="#Topic-MySQL-Index-Deep-Dive" class="headerlink" title="Topic: MySQL Index Deep Dive"></a>Topic: MySQL Index Deep Dive</h1><p>Detailed analysis of indexes in MySQL</p>
+<p>Indexes in MySQL play an essential role in optimizing database search performance. To get a more in-depth understanding of indexes, let’s break down the concept further.</p>
+<p>What exactly is an index in MySQL?<br>Think of an index as the equivalent of a book’s index. In a book, if you needed to find information, you’d refer to the index, which would quickly guide you to the relevant page containing the information you require.</p>
+<p>In MySQL, an index is a data structure (most commonly a B-Tree) that improves the speed of data retrieval operations on a database table. Indexes are used to quickly locate data without having to search every row in a database table every time a database table is accessed.</p>
+<p>They can be created using one or more columns of a database table, providing a basis for both rapid random lookups and efficient ordering of access to records.</p>
+<p>Benefits of using indexes in MySQL:</p>
+<ol>
+<li><strong>Faster Data Retrieval:</strong>&nbsp;The primary advantage of using indexes is the speed they bring to data retrieval. Indexes enable the database application to find the record much faster.</li>
+<li><strong>Order By Optimization:</strong>&nbsp;Indexes can also optimize the order by clause to sort the data more quickly.</li>
+<li><strong>Better Performance:</strong>&nbsp;They significantly improve the performance of SELECT queries and WHERE clauses.</li>
+</ol>
+<p>However, keep in mind that while indexes speed up data retrieval, they slow down data modification operations like INSERT, DELETE, and UPDATE. This is because each time we modify data in the table, the indexes need to be updated as well.</p>
+<h1 id="Topic-Types-of-Indexes-in-MySQL"><a href="#Topic-Types-of-Indexes-in-MySQL" class="headerlink" title="Topic: Types of Indexes in MySQL"></a>Topic: Types of Indexes in MySQL</h1><p>Understanding the different types of indexes available in MySQL like PRIMARY, UNIQUE, INDEX, FULLTEXT, and their usage.</p>
+<p>There are several types of Indexes available in MySQL. Each type is used in specific scenarios and offers its own set of advantages. Let’s take a closer look at these different types:</p>
+<ol>
+<li><strong>PRIMARY Index:</strong>&nbsp;This is the main index of a table. Each MySQL table should have a primary index. The value in this index is unique and not null. In most cases, this is the primary key of your table.</li>
+<li><strong>UNIQUE Index:</strong>&nbsp;As the name suggests, this index prevents two records from having identical values in a particular column. This helps maintain data integrity. It allows null values, but the uniqueness is still enforced.</li>
+<li><strong>INDEX (or KEY):</strong>&nbsp;This is the simplest kind of index. It allows duplicates and null values. It’s generally used when you want to improve the performance of certain searches, and you don’t need to enforce uniqueness or non-nullability.</li>
+<li><strong>FULLTEXT Index:</strong>&nbsp;This is an index that’s used for full-text searches. It’s a very powerful index type for searching text values. However, it’s a specialized type of index and only applies to text (not numbers or dates).</li>
+</ol>
+<p>Each of these indexes serves a specific purpose. The optimal usage of these indexes can greatly enhance the performance of your database.</p>
+<p>Understanding when and where to use the appropriate index is crucial. It depends on various factors like the data stored, the integrity needed, the type of queries executed, and many others.</p>
+<h1 id="Topic-MySQL-Index-Management"><a href="#Topic-MySQL-Index-Management" class="headerlink" title="Topic: MySQL Index Management"></a>Topic: MySQL Index Management</h1><p>Familiarizing ourselves with how to manage indexes in MySQL is a crucial skill for optimizing database performance.</p>
+<p>There are several primary operations you can carry out when working with indexes:</p>
+<h2 id="Creating-an-Index"><a href="#Creating-an-Index" class="headerlink" title="Creating an Index:"></a>Creating an Index:</h2><p>To create an index in MySQL, you could use the&nbsp;<code>CREATE INDEX</code>&nbsp;statement:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">CREATE INDEX index_name  </span><br><span class="line">ON table_name (column1, column2, …);</span><br></pre></td></tr></tbody></table></figure>
+
+<p>For example, if we had a table named&nbsp;<code>Students</code>&nbsp;and we wanted to create an index on the&nbsp;<code>LastName</code>&nbsp;and&nbsp;<code>FirstName</code>&nbsp;columns, we would write:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">CREATE INDEX idx_students_name  </span><br><span class="line">ON Students (LastName, FirstName);</span><br></pre></td></tr></tbody></table></figure>
+
+<h2 id="Dropping-an-Index"><a href="#Dropping-an-Index" class="headerlink" title="Dropping an Index:"></a>Dropping an Index:</h2><p>To delete an index in MySQL, you could use the&nbsp;<code>DROP INDEX</code>&nbsp;statement:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DROP INDEX index_name ON table_name;</span><br></pre></td></tr></tbody></table></figure>
+
+<h2 id="Disabling-an-Index"><a href="#Disabling-an-Index" class="headerlink" title="Disabling an Index:"></a>Disabling an Index:</h2><p>In some cases, you might want to disable an index temporarily. MySQL allows you to disable an index using the&nbsp;<code>ALTER TABLE</code>&nbsp;statement:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ALTER TABLE table_name DISABLE KEYS;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>To enable it again, you would use&nbsp;<code>ENABLE KEYS</code>:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ALTER TABLE table_name ENABLE KEYS;</span><br></pre></td></tr></tbody></table></figure>
+
+<h2 id="Renaming-an-Index"><a href="#Renaming-an-Index" class="headerlink" title="Renaming an Index:"></a>Renaming an Index:</h2><p>MySQL does not support direct renaming of an index. To rename an index, you would have to drop (delete) the index and then create it again with the new name.</p>
+<p>Remember, while indexes are beneficial and may speed up data retrieval, they come with their own costs. Indexes take up storage space and slow down the speed of updating data (because when data is updated, indexes need to be updated as well).</p>
+<h1 id="Topic-Optimizing-MySQL-with-Indexes"><a href="#Topic-Optimizing-MySQL-with-Indexes" class="headerlink" title="Topic: Optimizing MySQL with Indexes"></a>Topic: Optimizing MySQL with Indexes</h1><p>Understanding how to optimize MySQL performance using indexes is a crucial part of managing a database.</p>
+<p>One of the key factors that affect the efficiency of your data retrieval operations is the proper use of indexes. But how do you know if your indexes are efficient? Enter the&nbsp;<code>EXPLAIN</code>&nbsp;command.</p>
+<p>The&nbsp;<code>EXPLAIN</code>&nbsp;command in MySQL is a powerful tool to help understand how MySQL executes a query. By using the&nbsp;<code>EXPLAIN</code>&nbsp;command before a SQL statement, MySQL will return information about how it would process the statement and the order in which tables are read.</p>
+<p>Here’s an example:</p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">EXPLAIN SELECT * FROM Students WHERE LastName = "Smith";</span><br></pre></td></tr></tbody></table></figure>
+
+<p>The output may return a lot of data, but what one needs to focus on are mainly three columns:</p>
+<ol>
+<li><strong>select_type:</strong>&nbsp;This tells us what type of select the query is.</li>
+<li><strong>key:</strong>&nbsp;This tells us what index MySQL is using to run the query.</li>
+<li><strong>rows:</strong>&nbsp;This tells us how many rows MySQL had to consider to give the result of the query.</li>
+</ol>
+<p>Another important thing to note is that different queries require different types of tuning. For example, a&nbsp;<code>SELECT</code>&nbsp;query that retrieves data may be optimized differently from an&nbsp;<code>UPDATE</code>&nbsp;query that modifies data.</p>
+<p>As a general rule, indexing the columns that you often use in your&nbsp;<code>WHERE</code>,&nbsp;<code>JOIN</code>,&nbsp;<code>ORDER BY</code>, and&nbsp;<code>GROUP BY</code>&nbsp;clauses can significantly increase the speed of your&nbsp;<code>SELECT</code>&nbsp;queries.</p>
+<p>However, keep in mind that indexes add overhead to the database when it comes to&nbsp;<code>INSERT</code>,&nbsp;<code>UPDATE</code>, and&nbsp;<code>DELETE</code>&nbsp;statements. Therefore, the number of indexes should be kept to a minimum to reduce overhead.</p>
+<p>This understanding of SQL indexes and how to use the&nbsp;<code>EXPLAIN</code>&nbsp;command to analyze query performance is vital for managing and optimizing your MySQL database.</p>
+<h1 id="Topic-When-MySQL-Doesn’t-Use-The-Index"><a href="#Topic-When-MySQL-Doesn’t-Use-The-Index" class="headerlink" title="Topic: When MySQL Doesn’t Use The Index"></a>Topic: When MySQL Doesn’t Use The Index</h1><p>Even though indexes are designed to optimize data retrieval, there are scenarios where MySQL doesn’t use an index even if one exists. Let’s dive into some of these scenarios:</p>
+<ol>
+<li><strong>Small Tables:</strong>&nbsp;In tables where the total number of rows is less, the MySQL optimizer may ignore the index and execute a full table scan instead. This is because reading the index first and then fetching the row may involve more overhead than simply reading every row directly.</li>
+<li><strong>Poor Selectivity:</strong>&nbsp;Indexes with low selectivity (meaning the indexed column has many duplicate values) are less effective. If an indexed column can’t sufficiently narrow down the rows, MySQL may skip using the index in favor of a full table scan.</li>
+<li><strong>NULL Values:</strong>&nbsp;If the indexed column has NULL values and the WHERE clause is IS NULL or IS NOT NULL, MySQL can’t use an index because comparison operators do not work with NULL.</li>
+<li><strong>Not using the leftmost prefix of the index:</strong>&nbsp;MySQL can use an index efficiently when the WHERE clause uses the leftmost part of a multi-column index. However, when the query does not involve the leftmost part, MySQL can’t use the index effectively.</li>
+<li><strong>LIKE Operator with Wildcards at the Start:</strong>&nbsp;When you use a LIKE operator in a WHERE clause and the pattern starts with a wildcard, MySQL can’t leverage the index.</li>
+</ol>
+<p>Remember, indexes are a great tool for optimizing data retrieval, but they are not always used. A solid understanding of how and when indexes are utilized by MySQL can inform your database design and query construction.</p>
+<h1 id="Topic-Review-and-Assessments"><a href="#Topic-Review-and-Assessments" class="headerlink" title="Topic: Review and Assessments"></a>Topic: Review and Assessments</h1><p>We have now reached the end of our curriculum. Before we wrap up, let’s do a quick recap:</p>
+<ul>
+<li>We deep-dived into the concept of MySQL indexes.</li>
+<li>We learned about the different types of indexes in MySQL.</li>
+<li>We understood how to manage indexes in MySQL.</li>
+<li>We saw how indexes can be used to optimize MySQL performance and how to evaluate this performance using the&nbsp;<code>EXPLAIN</code>&nbsp;command.</li>
+<li>And, we delved into scenarios when MySQL may not use an index.</li>
+</ul>
+<p>Now, it’s time to put your knowledge to the test. Here are a few thought-provoking questions:</p>
+<ol>
+<li>What is the main purpose of an index in MySQL, and how does it enhance database performance?</li>
+<li>Can you describe two different types of indexes in MySQL and when you would use them?</li>
+<li>How would you disable and then re-enable an index in MySQL?</li>
+<li>In what scenario would MySQL choose not to use an index even when it’s available?</li>
+<li>Can you draft a SQL query using an EXPLAIN statement when querying data from a&nbsp;<code>employees</code>&nbsp;table based on an&nbsp;<code>employee_id</code>?</li>
+</ol>
+<p>Try to write down your answers, then compare them to your notes or any resources you’ve used throughout this journey. Reviewing your knowledge like this will reinforce your learning immensely.</p>
+<p>Remember, mastering any subject is a matter of time, practice, and consistent effort. Keep striving!</p>
+<hr>
+<ol>
+<li><strong>What is the main purpose of an index in MySQL and how does it enhance database performance?</strong><br> An index in MySQL is a data structure that improves the speed of data retrieval operations on a database table. It works similarly to an index in a book, enabling the database to find data without scanning each row of the database every time a database table is accessed. Indexes can dramatically improve database performance.</li>
+<li><strong>Can you describe two different types of indexes in MySQL and when you would use them?</strong></li>
+</ol>
+<ul>
+<li>PRIMARY index: This is a type of unique index where a column must contain unique and not null values. This is typically used for the primary key.</li>
+<li>FULLTEXT index: This is used for full-text searches. It’s dedicated to the search of text through SQL queries where the search in the string localization pattern is complex.</li>
+</ul>
+<ol>
+<li><strong>How would you disable and then re-enable an index in MySQL?</strong></li>
+</ol>
+<ul>
+<li>To disable non-unique indexes:&nbsp;<code>ALTER TABLE table_name DISABLE KEYS;</code></li>
+<li>To enable non-unique indexes:&nbsp;<code>ALTER TABLE table_name ENABLE KEYS;</code></li>
+</ul>
+<ol>
+<li><strong>In what scenario would MySQL choose not to use an index even when it’s available?</strong><br> MySQL may choose not to use an index if it estimates that using the index would be slower than a full table scan. For example, if the table is small or the indexed column has very low selectivity (many repeated values), MySQL may prefer a full table scan.</li>
+<li><strong>Can you draft a SQL query using an EXPLAIN statement when querying data from a</strong>&nbsp;<code>**employees**</code>&nbsp;<strong>table based on an</strong>&nbsp;<code>**employee_id**</code><strong>?</strong><br> Here’s a basic example:</li>
+</ol>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">EXPLAIN SELECT * FROM employees WHERE employee_id = 101</span><br></pre></td></tr></tbody></table></figure>
+
+<p>Remember, practice is key in mastering these concepts. Don’t hesitate to dive deeper and try out these commands in a real MySQL environment to explore further!</p>
+<blockquote class="colorquote danger"><p>中文文章: <a href="https://programmerscareer.com/zh-cn/mysql-interview8/">https://programmerscareer.com/zh-cn/mysql-interview8/</a><br>Author: <a target="_blank" rel="noopener" href="https://twitter.com/WesleyWei0316">Wesley Wei – Twitter</a> <a target="_blank" rel="noopener" href="https://wesley-wei.medium.com/">Wesley Wei – Medium</a><br>Note: If you choose to repost or use this article, please cite the original source.  </p>
+</blockquote></body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/interview/">#interview</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/mysql-interview7/">MySQL interviews: What is an SQL injection attack? How can such attacks be prevented?</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/mysql-interview9/">MySQL interviews: How to tune MySQL performance</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+<div class="sharebox">
+    
+<div class="sharethis-inline-share-buttons"></div>
+<script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=6592b6cfffbcf100127cdcec&amp;product=inline-share-buttons&amp;source=platform' async='async'></script>
+
+</div>
+
+
+
+<div class="comments">
+    <h3 class="title is-4">Comments</h3>
+    
+<script>
+    var disqus_config = function () {
+        this.page.url = 'https://programmerscareer.com/mysql-interview8/';
+        this.page.identifier = 'mysql-interview8/';
+        
+        this.language = 'en';
+        
+    };
+    (function() {
+        var d = document, s = d.createElement('script');  
+        s.src = '//' + 'tfrain-blog' + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+<div id="disqus_thread">
+    
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</div>
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-narrow has-text-centered">
+                &copy; 2024 tfrain&nbsp;
+                Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a
+                        target="_blank" rel="noopener" href="http://github.com/ppoffice/hexo-theme-minos">Minos</a>
+            </div>
+            <div class="column is-hidden-mobile"></div>
+
+            
+            <div class="column is-narrow">
+                <div class="columns is-mobile is-multiline is-centered">
+                
+                    
+                <a class="column is-narrow has-text-black" title="GitHub" target="_blank" rel="noopener" href="https://github.com/tfrain">
+                    
+                    GitHub
+                    
+                </a>
+                
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" target="_blank" rel="noopener" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    
+    
+    
+
+
+
+<script src="/js/script.js"></script>
+
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>
